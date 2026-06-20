@@ -1,165 +1,211 @@
-# Plain Act GitHub Pages Website
+# Plain Act Astro Website
 
-This is a clean, static, GitHub Pages-ready website package for Plain Act and the book **The First 30 Days as a New Manager**.
+Professional static website for **Plain Act**, published by **PlainAct Publishing**.
 
-The site is designed for:
+The site is built for GitHub Pages, Google indexing, author verification workflows, and future expansion into a wider Plain Act catalog. It uses Astro with no backend, no database, no paid hosting requirement, no WordPress, and no tracking scripts.
 
-- Goodreads Author Program verification
-- Google indexing
-- official author/book presence
-- linking to Amazon book pages
-- public contact and verification information
+## Current status
 
-No external JavaScript frameworks, tracking scripts, popups, reviews, ratings, fake logos, testimonials, or unsupported claims are included.
+This revised package is live-deployment oriented:
 
-## Files included
+- Public pages do not display unavailable third-party profile URLs.
+- JSON-LD `sameAs` fields include only real live URLs; because no verified profile URLs were supplied, those fields are omitted.
+- The contact page uses the official email only: `osamabooks2023@gmail.com`.
+- The unfinished contact form has been removed until a real static-form endpoint exists.
+- `DO THE WORK` is marked as **In development / metadata pending** and is not listed as published.
+- Book schema sales-availability claims have been removed.
+- Sitemap is maintained as a single manual source at `public/sitemap.xml`. Because `DO THE WORK` is metadata pending, it is intentionally omitted from the XML sitemap until final publication metadata is confirmed.
 
-- `index.html` — home / official landing page
-- `about.html` — Plain Act author and publisher identity page
-- `book.html` — detailed book page
-- `contact.html` — static contact and verification page
-- `404.html` — branded not found page
-- `styles.css` — responsive editorial styling
-- `robots.txt` — allows crawling and links the sitemap
-- `sitemap.xml` — sitemap using the GitHub Pages placeholder domain
-- `assets/plain-act-logo.png` — placeholder logo image
-- `assets/book-cover.jpg` — placeholder book cover image
-- `assets/book-mockup.jpg` — placeholder mockup image
-- `images/.gitkeep` — keeps the images folder present in Git
+## Stack
 
-## How to upload to GitHub
+- Astro
+- Static HTML/CSS output
+- GitHub Pages deployment via GitHub Actions
+- No backend
+- No database
+- No client-side framework requirement
 
-1. Create a new GitHub repository.
-2. Download and unzip this package.
-3. Upload all files and folders to the root of the repository.
-4. Commit the files to the `main` branch.
+## Important URLs
 
-The files should be at the repository root, not inside an extra nested folder, unless you intentionally configure GitHub Pages for that folder.
-
-## How to enable GitHub Pages
-
-1. Open the repository on GitHub.
-2. Go to **Settings**.
-3. Go to **Pages**.
-4. Under **Build and deployment**, choose:
-   - Source: **Deploy from a branch**
-   - Branch: **main**
-   - Folder: **/root**
-5. Save.
-6. GitHub will publish the site at a URL similar to:
+Live base URL:
 
 ```text
-https://USERNAME.github.io/REPOSITORY-NAME/
+https://plainact-crypto.github.io/plain-act/
 ```
 
-## Replace placeholder URLs
+Astro config:
 
-After GitHub Pages gives you the final site URL, replace the following placeholders in all `.html`, `robots.txt`, and `sitemap.xml` files.
+```js
+site: 'https://plainact-crypto.github.io'
+base: '/plain-act/'
+```
 
-### Replace `SITE_URL_HERE`
-
-Use your published site URL without a trailing slash, for example:
+## Project structure
 
 ```text
-https://USERNAME.github.io/REPOSITORY-NAME
+.github/workflows/deploy.yml
+public/
+  assets/
+    plain-act-logo.png
+    book-cover-first-30-days.jpg
+    book-mockup-first-30-days.jpg
+    og-image.jpg
+  favicon.ico
+  robots.txt
+src/
+  components/
+  data/
+    books.js
+    site.js
+  layouts/
+  pages/
+  styles/
+astro.config.mjs
+package.json
+package-lock.json
+README.md
+QA-CHECKLIST.md
+LAUNCH-CHECKLIST.md
+FUTURE-UPDATES.md
 ```
 
-### Replace sitemap domain
+## Run locally
 
-In `sitemap.xml` and `robots.txt`, replace:
+```bash
+npm install
+npm run dev
+```
+
+Then open the local Astro URL shown in the terminal.
+
+## Build
+
+```bash
+npm run build
+```
+
+The production output is created in:
 
 ```text
-https://USERNAME.github.io/REPOSITORY-NAME/
+dist/
 ```
 
-with the actual GitHub Pages URL.
+## Preview the production build
 
-### Replace `GOODREADS_BOOK_URL_HERE`
+```bash
+npm run preview
+```
 
-Replace this placeholder with the Goodreads book page URL once available.
+## Deploy to GitHub Pages
 
-### Replace `AMAZON_AUTHOR_PAGE_URL_HERE`
-
-Replace this placeholder with the Amazon Author Central page URL once available.
-
-## Replace logo and book images
-
-The package includes placeholder image files so there are no broken image paths.
-
-Replace these files with the final images while keeping the same filenames:
+1. Upload this project to the repository root.
+2. Commit `package.json`, `package-lock.json`, `astro.config.mjs`, `src/`, `public/`, and `.github/workflows/deploy.yml`.
+3. In GitHub, go to **Settings → Pages**.
+4. Set **Build and deployment** to **GitHub Actions**.
+5. Push to the `main` branch.
+6. Confirm the workflow completes successfully in the **Actions** tab.
+7. Open:
 
 ```text
-assets/plain-act-logo.png
-assets/book-cover.jpg
-assets/book-mockup.jpg
+https://plainact-crypto.github.io/plain-act/
 ```
 
-Recommended image notes:
+## Contact page
 
-- Keep the logo simple and readable.
-- Use a real book cover image for `book-cover.jpg`.
-- Use a clean book mockup for `book-mockup.jpg` if you want one later.
-- Compress images before uploading for faster page speed.
-
-## Test locally
-
-Open `index.html` directly in a browser. The site should work locally without a web server.
-
-Check these pages:
-
-- `index.html`
-- `about.html`
-- `book.html`
-- `contact.html`
-- `404.html`
-
-Internal links are relative so they work locally and on GitHub Pages.
-
-## Submit sitemap to Google Search Console later
-
-After the site is live:
-
-1. Go to Google Search Console.
-2. Add the GitHub Pages URL as a property.
-3. Verify ownership using one of Google's available methods.
-4. Open **Sitemaps**.
-5. Submit:
-
-```text
-https://USERNAME.github.io/REPOSITORY-NAME/sitemap.xml
-```
-
-Use the final published URL after replacing the placeholder.
-
-## Use for Goodreads Author Program verification
-
-The `about.html` and `contact.html` pages visibly list the official author email:
+The contact page intentionally uses the official email only:
 
 ```text
 osamabooks2023@gmail.com
 ```
 
-Use the live GitHub Pages URL for author/profile verification and public book information. The about page includes this statement:
+A static contact form can be added later after a real Formspree or FormSubmit endpoint exists. Do not add a form action that has not been created and tested.
+
+## Updating book data
+
+Primary book data is in:
 
 ```text
-This page is maintained for author/profile verification and public book information.
+src/data/books.js
 ```
 
-## Amazon book links included
+Update this file when final metadata changes. Keep the current approved subtitle for the primary book everywhere:
 
-- Kindle: https://www.amazon.com/dp/B0GNSXZP21
-- Paperback: https://www.amazon.com/dp/B0H5WHFLYY
-- Hardcover: https://www.amazon.com/dp/B0H5WPDTNB
+```text
+A Practical Manual for First-Time Managers on Authority, Feedback, Delegation, and Decision Timing
+```
 
-## SEO notes
+Do not restore earlier subtitle wording for this book.
 
-Each page includes:
+## DO THE WORK status
 
-- title tag
-- meta description
-- canonical link placeholder
-- Open Graph tags
-- Twitter card tags
-- JSON-LD structured data where appropriate
+`DO THE WORK` is currently treated as:
 
-The book schema does not include reviews, aggregate ratings, awards, bestseller claims, or pricing claims.
+```text
+In development / metadata pending
+```
+
+Move it into the Published section only after final public details are supplied and verified, including final cover, ISBN/ASIN data if applicable, retail availability, and finished description.
+
+## Third-party profile links
+
+Author Central, Goodreads, and Google Books links are omitted until real live URLs are available. When verified URLs exist, add them to `src/data/site.js` and relevant page copy. Add only real live URLs to schema `sameAs` arrays.
+
+## Sitemap and robots
+
+Sitemap is maintained as a single manual source at `public/sitemap.xml` and copied into `dist/` during build.
+
+Robots file:
+
+```text
+public/robots.txt
+```
+
+Expected sitemap URL after deployment:
+
+```text
+https://plainact-crypto.github.io/plain-act/sitemap.xml
+```
+
+## Submit sitemap to Google Search Console
+
+1. Open Google Search Console.
+2. Add or open the GitHub Pages property.
+3. Submit:
+
+```text
+https://plainact-crypto.github.io/plain-act/sitemap.xml
+```
+
+4. Request indexing for the home page, primary book page, and about page.
+
+## Assets
+
+The following asset paths are required by the site:
+
+```text
+public/assets/plain-act-logo.png
+public/assets/book-cover-first-30-days.jpg
+public/assets/book-mockup-first-30-days.jpg
+public/assets/og-image.jpg
+public/favicon.ico
+```
+
+Replace image files only with brand-approved final files using the same paths to avoid breaking references.
+
+## Notes on claims
+
+This site intentionally avoids:
+
+- fake reviews
+- fake testimonials
+- fake awards
+- bestseller claims
+- fake media logos
+- unsupported institutional authority
+- stock business imagery
+- tracking scripts
+
+## Final cleanup decision
+
+- New Manager Guide breadcrumb is simplified to `Home → New Manager Guide` because no `/guides/` index page exists.
+- `/books/do-the-work/` remains accessible as an in-development status page, but is intentionally omitted from `public/sitemap.xml` while metadata is pending.

@@ -1,0 +1,83 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import AmazonButtons from '../components/AmazonButtons.astro';
+import { site } from '../data/site.js';
+import { books, futureThemes } from '../data/books.js';
+const primary = books[0];
+const work = books[1];
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: site.brand,
+  alternateName: site.publisher,
+  url: site.fullUrl,
+  logo: new URL(`${base}${site.logo.replace(/^\//, '')}`, site.siteUrl).toString(),
+  email: site.email,
+  ...(site.sameAs.length ? { sameAs: site.sameAs } : {})
+};
+---
+<BaseLayout title="Plain Act | Quiet management manuals" description="Plain Act publishes quiet management manuals for people carrying authority under pressure." path="/" schema={[organizationSchema]}>
+  <section class="hero">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Plain Act</p>
+        <h1>Quiet manuals for authority under pressure.</h1>
+        <p class="lede">{site.positioning}</p>
+        <p>Plain Act is built for readers who need practical judgment, restraint, communication, feedback, delegation, and decision timing without hype or inflated leadership language.</p>
+        <div class="button-row">
+          <a class="button" href={href('/books/the-first-30-days-as-a-new-manager/')}>View the primary book</a>
+          <a class="button secondary" href={href('/books/')}>Browse catalog</a>
+        </div>
+      </div>
+      <article class="card">
+        <img class="mockup" src={href(primary.mockup)} alt="Mockup for The First 30 Days as a New Manager" width="900" height="1200" />
+        <h2>{primary.title}</h2>
+        <p class="small">{primary.subtitle}</p>
+        <AmazonButtons book={primary} />
+      </article>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container grid grid-2">
+      <div>
+        <h2>Management gets difficult before it feels natural.</h2>
+        <p>{primary.description.split('\\n\\n')[0]}</p>
+        <p>{primary.description.split('\\n\\n')[1]}</p>
+      </div>
+      <div class="card flat">
+        <h3>Plain Act method</h3>
+        <ol class="list-clean">
+          <li>Notice pressure.</li>
+          <li>Reduce reaction.</li>
+          <li>Take one useful action.</li>
+          <li>Stop.</li>
+        </ol>
+        <p><a href={href('/method/')}>Read the method</a></p>
+      </div>
+    </div>
+  </section>
+  <section class="section-sm">
+    <div class="container">
+      <h2>Catalog preview</h2>
+      <div class="grid grid-3">
+        <article class="card book-card">
+          <img class="cover" src={href(primary.cover)} alt="Cover for The First 30 Days as a New Manager" width="600" height="900" />
+          <div><h3>{primary.title}</h3><p class="small">Published. A practical manual for early management pressure.</p></div>
+        </article>
+        <article class="card">
+          <p class="eyebrow">Metadata pending</p>
+          <h3>{work.title}</h3>
+          <p class="small">{work.description}</p>
+          <p class="small"><a href={href('/books/do-the-work/')}>Read current status</a></p>
+        </article>
+        <article class="card development-card">
+          <h3>More Plain Act manuals are in development.</h3>
+          <p class="small">Planned themes include {futureThemes.slice(0,5).join(', ')}, and related practical manuals.</p>
+        </article>
+      </div>
+      <div class="button-row"><a class="button quiet" href={href('/coming-soon/')}>View planned topics</a></div>
+    </div>
+  </section>
+</BaseLayout>

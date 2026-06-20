@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { books, futureThemes } from '../../data/books.js';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<BaseLayout title="Books | Plain Act catalog" description="Published and planned Plain Act manuals for management, responsibility, execution, decision-making, communication, and related themes." path="/books/" current="Books">
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Books', url:'/books/'}]} />
+      <p class="eyebrow">Catalog</p>
+      <h1>Plain Act books</h1>
+      <p class="lede">Current books and future manuals from Plain Act. A wider Plain Act catalog is being built.</p>
+      <h2>Published</h2>
+      <div class="grid grid-2">
+        <article class="card book-card">
+          <img class="cover" src={href(books[0].cover)} alt="Cover for The First 30 Days as a New Manager" width="600" height="900" />
+          <div><h3><a href={href('/books/the-first-30-days-as-a-new-manager/')}>{books[0].title}</a></h3><p>{books[0].subtitle}</p></div>
+        </article>
+      </div>
+      <h2>Metadata pending</h2>
+      <div class="grid grid-2">
+        <article class="card">
+          <p class="eyebrow">In development / metadata pending</p>
+          <h3><a href={href('/books/do-the-work/')}>{books[1].title}</a></h3>
+          <p>{books[1].description}</p>
+        </article>
+      </div>
+      <h2>Coming soon</h2>
+      <div class="grid grid-3">
+        {futureThemes.slice(0,3).map((theme) => <article class="card development-card"><h3>{theme}</h3><p>Plain Act manual in development. More details later.</p></article>)}
+      </div>
+      <h2>In development</h2>
+      <div class="grid grid-3">
+        {futureThemes.slice(3).map((theme) => <article class="card development-card"><h3>{theme}</h3><p>Title in development. No publication date announced.</p></article>)}
+      </div>
+    </div>
+  </section>
+</BaseLayout>

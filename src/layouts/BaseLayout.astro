@@ -1,0 +1,93 @@
+---
+import '../styles/global.css';
+import { site } from '../data/site.js';
+
+const {
+  title,
+  description,
+  path = '/',
+  ogTitle = title,
+  ogDescription = description,
+  ogImage = site.ogImage,
+  schema = [],
+  current = ''
+} = Astro.props;
+
+const base = import.meta.env.BASE_URL;
+const absoluteUrl = new URL(path.replace(/^\//, ''), site.fullUrl).toString();
+const imageUrl = new URL(`${base}${ogImage.replace(/^\//, '')}`, site.siteUrl).toString();
+const logoUrl = new URL(`${base}${site.logo.replace(/^\//, '')}`, site.siteUrl).toString();
+const nav = [
+  ['Books', '/books/'],
+  ['Method', '/method/'],
+  ['About', '/about/'],
+  ['Resources', '/resources/'],
+  ['Contact', '/contact/']
+];
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: site.brand,
+  url: site.fullUrl,
+  publisher: { '@type': 'Organization', name: site.brand }
+};
+const allSchema = [websiteSchema, ...schema];
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={absoluteUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.brand} />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    <meta property="og:url" content={absoluteUrl} />
+    <meta property="og:image" content={imageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    <meta name="twitter:image" content={imageUrl} />
+    <link rel="icon" href={href('/favicon.ico')} sizes="any" />
+    <script type="application/ld+json" set:html={JSON.stringify(allSchema.length === 1 ? allSchema[0] : allSchema)} />
+  </head>
+  <body>
+    <div class="site-wrap">
+      <a class="skip-link" href="#main">Skip to content</a>
+      <header class="header">
+        <div class="container nav" aria-label="Main navigation">
+          <a class="brand-link" href={href('/')}>
+            <img src={href(site.logo)} alt="Plain Act logo" width="42" height="42" />
+            <span>Plain Act</span>
+          </a>
+          <nav class="nav-links">
+            {nav.map(([label, url]) => (
+              <a href={href(url)} aria-current={current === label ? 'page' : undefined}>{label}</a>
+            ))}
+          </nav>
+        </div>
+      </header>
+      <main id="main"><slot /></main>
+      <footer class="footer">
+        <div class="container footer-grid">
+          <div>
+            <strong>{site.brand}</strong>
+            <p class="small">{site.positioning}</p>
+            <p class="small">Publisher: {site.publisher}. Contact: <a href={`mailto:${site.email}`}>{site.email}</a></p>
+          </div>
+          <nav class="footer-links" aria-label="Footer navigation">
+            <a href={href('/books/')}>Books</a>
+            <a href={href('/method/')}>Method</a>
+            <a href={href('/about/')}>About</a>
+            <a href={href('/contact/')}>Contact</a>
+            <a href={href('/sitemap/')}>Sitemap</a>
+          </nav>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
