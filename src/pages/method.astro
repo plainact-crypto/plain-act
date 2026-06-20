@@ -1,0 +1,13 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+const steps = ['Notice pressure', 'Reduce reaction', 'Take one useful action', 'Stop'];
+---
+<BaseLayout title="Plain Act Method | Notice pressure, reduce reaction" description="Plain Act's restrained reading and action philosophy for management, responsibility, execution, and decision-making." path="/method/" current="Method">
+  <section class="section"><div class="container">
+    <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Method', url:'/method/'}]} />
+    <p class="eyebrow">Plain Act method</p><h1>Read under pressure. Act with restraint.</h1>
+    <p class="lede">Plain Act uses a simple reading rhythm for management, responsibility, execution, and decision-making. It is not a proprietary method or a guaranteed system.</p>
+    <div class="grid grid-2">{steps.map((step) => <article class="card flat"><h2>{step}</h2><p>{step === 'Notice pressure' && 'Name the moment where authority, uncertainty, urgency, or embarrassment is pulling you into reaction.'}{step === 'Reduce reaction' && 'Lower the amount of explanation, rescue, overcommitment, or delay before it becomes the new pattern.'}{step === 'Take one useful action' && 'Choose the next concrete move: a question, a boundary, a feedback conversation, a decision, or a repair.'}{step === 'Stop' && 'Avoid turning every moment into a performance. Let the action settle before adding more.'}</p></article>)}</div>
+  </div></section>
+</BaseLayout>

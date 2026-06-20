@@ -1,0 +1,25 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { site } from '../data/site.js';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<BaseLayout title="Contact Plain Act | Official email" description="Contact Plain Act for reader questions, media, rights, bulk order, professional use, and website or metadata corrections." path="/contact/" current="Contact">
+  <section class="section"><div class="container grid grid-2">
+    <div>
+      <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Contact', url:'/contact/'}]} />
+      <p class="eyebrow">Contact</p><h1>Contact Plain Act</h1>
+      <p class="lede">For reader questions, media, rights, bulk order, professional use, or website and metadata corrections, email Plain Act directly.</p>
+      <p>Official author/contact email: <a href={`mailto:${site.email}`}>{site.email}</a></p>
+      <p>No postal address is published on this site.</p>
+    </div>
+    <aside class="card">
+      <h2>Email instructions</h2>
+      <p>Send your message to <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+      <p>Useful subject lines include reader question, media inquiry, rights inquiry, bulk order inquiry, professional use, or metadata correction.</p>
+      <p class="small">Plain Act may use your email address to reply to your inquiry. Your message will not be sold or published.</p>
+      <div class="button-row"><a class="button" href={`mailto:${site.email}`}>Email Plain Act</a><a class="button quiet" href={href('/about/')}>About Plain Act</a></div>
+    </aside>
+  </div></section>
+</BaseLayout>

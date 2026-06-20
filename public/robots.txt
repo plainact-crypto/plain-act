@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://plainact-crypto.github.io/plain-act/sitemap.xml

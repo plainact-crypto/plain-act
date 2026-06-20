@@ -1,0 +1,84 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+import AmazonButtons from '../../../components/AmazonButtons.astro';
+import { site } from '../../../data/site.js';
+import { books } from '../../../data/books.js';
+const book = books[0];
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+const bookUrl = new URL('books/the-first-30-days-as-a-new-manager/', site.fullUrl).toString();
+const coverUrl = new URL(`${base}${book.cover.replace(/^\//, '')}`, site.siteUrl).toString();
+const bookSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Book',
+  name: book.title,
+  alternateName: book.subtitle,
+  author: { '@type': 'Organization', name: book.author },
+  publisher: { '@type': 'Organization', name: book.publisher },
+  inLanguage: 'en',
+  isbn: [book.paperbackIsbn13, book.hardcoverIsbn13],
+  bookFormat: ['https://schema.org/EBook', 'https://schema.org/Paperback', 'https://schema.org/Hardcover'],
+  description: book.description,
+  image: coverUrl,
+  url: bookUrl,
+  sameAs: [book.amazon.kindle, book.amazon.paperback, book.amazon.hardcover]
+};
+---
+<BaseLayout title={`${book.title} | Plain Act`} description="Official page for The First 30 Days as a New Manager by Plain Act, published by PlainAct Publishing." path="/books/the-first-30-days-as-a-new-manager/" current="Books" schema={[bookSchema]}>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Books', url:'/books/'}, {name: book.title, url:'/books/the-first-30-days-as-a-new-manager/'}]} />
+      <div class="grid grid-2">
+        <div>
+          <p class="eyebrow">Official book page</p>
+          <h1>{book.title}</h1>
+          <p class="lede">{book.subtitle}</p>
+          <p>Author: {book.author}<br />Publisher: {book.publisher}</p>
+          <AmazonButtons book={book} />
+        </div>
+        <img class="mockup" src={href(book.mockup)} alt="Book mockup for The First 30 Days as a New Manager" width="900" height="1200" />
+      </div>
+    </div>
+  </section>
+  <section class="section-sm">
+    <div class="container grid grid-2">
+      <article>
+        <h2>Description</h2>
+        {book.description.split('\n\n').map((p) => <p>{p}</p>)}
+      </article>
+      <aside class="card">
+        <h2>Book details</h2>
+        <table class="table">
+          <tbody>
+            <tr><th>Language</th><td>{book.language}</td></tr>
+            <tr><th>Paperback ISBN-13</th><td>{book.paperbackIsbn13}</td></tr>
+            <tr><th>Hardcover ISBN-13</th><td>{book.hardcoverIsbn13}</td></tr>
+            <tr><th>Kindle ASIN</th><td>{book.kindleAsin}</td></tr>
+            <tr><th>Paperback ASIN</th><td>{book.paperbackAsin}</td></tr>
+            <tr><th>Hardcover ASIN</th><td>{book.hardcoverAsin}</td></tr>
+          </tbody>
+        </table>
+      </aside>
+    </div>
+  </section>
+  <section class="section-sm">
+    <div class="container grid grid-2">
+      <div>
+        <h2>Topics covered</h2>
+        <ul class="pill-list">{book.topics.map((topic) => <li>{topic}</li>)}</ul>
+      </div>
+      <div class="card flat">
+        <h2>Reading rhythm</h2>
+        <p>Notice pressure.<br />Reduce reaction.<br />Take one useful action.<br />Stop.</p>
+      </div>
+    </div>
+  </section>
+  <section class="section-sm">
+    <div class="container grid grid-2">
+      <article class="card flat"><h2>Who this book is for</h2><p>First-time managers, newly promoted team leads, supervisors, and middle managers who need clear tools for early authority, feedback, delegation, pushback, and weekly rhythm.</p></article>
+      <article class="card flat"><h2>Who it is not for</h2><p>This is not a motivational leadership book, a personal branding manual, or a promise of easy authority. It is practical, restrained, and situation-focused.</p></article>
+    </div>
+    <div class="container button-row"><a class="button quiet" href={href('/guides/new-manager/')}>Read the new manager guide</a><a class="button quiet" href={href('/method/')}>Plain Act method</a></div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,15 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { futureThemes } from '../data/books.js';
+import { site } from '../data/site.js';
+---
+<BaseLayout title="Coming Soon | Plain Act" description="Additional Plain Act manuals are in development across authority, confrontation, delegation, fairness, accountability, and related themes." path="/coming-soon/">
+  <section class="section"><div class="container">
+    <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Coming Soon', url:'/coming-soon/'}]} />
+    <p class="eyebrow">Coming soon</p><h1>More Plain Act manuals are in development.</h1>
+    <p class="lede">Planned topics include authority, confrontation, empathy boundaries, delegation, fairness, sustainability, transparency, accountability, decision closure, and availability rhythm.</p>
+    <div class="grid grid-3">{futureThemes.map((theme) => <article class="card development-card"><h3>{theme}</h3><p>Plain Act manual in development. No publication date announced. More details later.</p></article>)}</div>
+    <p class="section-sm">For updates or metadata corrections, email <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+  </div></section>
+</BaseLayout>
