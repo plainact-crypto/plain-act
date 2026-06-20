@@ -26,10 +26,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+
+      - name: Clean npm state
+        run: |
+          rm -f package-lock.json
+          rm -rf node_modules
+          npm cache clean --force
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --no-audit --no-fund
 
       - name: Build with Astro
         run: npm run build
