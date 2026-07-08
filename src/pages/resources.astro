@@ -1,13 +1,254 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Breadcrumbs from '../components/Breadcrumbs.astro';
-const resources = ['New Manager Pressure Checklist', 'First 30 Days Reflection Sheet', 'Delegation Reset Worksheet', 'Feedback Preparation Card'];
+import { site } from '../data/site.js';
+import { books } from '../data/books.js';
+
+const primary = books[0];
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+
+const resourcesSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Plain Act Resources',
+  description: 'Management resources, links, media pages, and practical materials from Plain Act.',
+  url: new URL(`${base}resources/`, site.siteUrl).toString(),
+  publisher: {
+    '@type': 'Organization',
+    name: site.brand,
+    url: site.fullUrl,
+    email: site.email
+  }
+};
+
+const resources = [
+  {
+    label: 'Primary Book',
+    title: primary.title,
+    text: 'A practical day-by-day manual for first-time managers carrying authority before it feels natural.',
+    link: href('/books/the-first-30-days-as-a-new-manager/'),
+    cta: 'Open book page'
+  },
+  {
+    label: 'Press',
+    title: 'Press Kit',
+    text: 'Official Plain Act media information, book details, useful links, and downloadable assets.',
+    link: href('/press-kit/'),
+    cta: 'Open press kit'
+  },
+  {
+    label: 'Media',
+    title: 'Media Bio',
+    text: 'Short, standard, and long Plain Act bios for interviews, guest posts, podcasts, and press references.',
+    link: href('/media-bio/'),
+    cta: 'Open media bio'
+  },
+  {
+    label: 'Video',
+    title: 'Plain Act on YouTube',
+    text: 'Cinematic business episodes about management pressure, authority, feedback, delegation, and decision timing.',
+    link: 'https://www.youtube.com/@Plan-Act',
+    cta: 'Visit YouTube'
+  },
+  {
+    label: 'Social',
+    title: 'LinkedIn',
+    text: 'Follow Plain Act updates, posts, business content, and publishing announcements.',
+    link: 'https://www.linkedin.com/company/136024511/',
+    cta: 'Visit LinkedIn'
+  },
+  {
+    label: 'Contact',
+    title: 'Media and collaboration inquiries',
+    text: 'For interviews, review requests, guest posts, podcast invitations, or partnership discussions.',
+    link: `mailto:${site.email}`,
+    cta: 'Contact Plain Act'
+  }
+];
+
+const newsletterTopics = [
+  'First-time manager pressure',
+  'Authority without overexplaining',
+  'Delegation without micromanaging',
+  'Feedback without damaging morale',
+  'Decision timing under pressure',
+  'Quiet management systems'
+];
 ---
-<BaseLayout title="Resources | Plain Act" description="Future Plain Act resource hub for new managers and readers. Resources are in development." path="/resources/" current="Resources">
-  <section class="section"><div class="container">
-    <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Resources', url:'/resources/'}]} />
-    <p class="eyebrow">Resources</p><h1>Resources are in development.</h1>
-    <p class="lede">This page will hold practical reader resources when they are ready. No downloadable files are currently published.</p>
-    <div class="grid grid-2">{resources.map((r) => <article class="card development-card"><h2>{r}</h2><p>Planned resource. Details will be announced later.</p></article>)}</div>
-  </div></section>
+
+<BaseLayout
+  title="Resources | Plain Act"
+  description="Plain Act resources for readers, managers, media, podcasters, newsletters, and social channels."
+  path="/resources/"
+  schema={[resourcesSchema]}
+>
+  <section class="hero resources-hero">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Resources</p>
+        <h1>Useful Plain Act links in one place.</h1>
+        <p class="lede">
+          Start with the book, watch the latest episode, find media materials, or contact Plain Act for
+          interviews, guest posts, reviews, and collaborations.
+        </p>
+        <div class="button-row">
+          <a class="button" href={href('/books/the-first-30-days-as-a-new-manager/')}>
+            Start with the book
+          </a>
+          <a class="button secondary" href="#newsletter">
+            Newsletter topics
+          </a>
+        </div>
+      </div>
+
+      <div class="card resource-feature">
+        <p class="eyebrow">Primary manual</p>
+        <h2>{primary.title}</h2>
+        <p class="small">
+          A restraint-based manual for first-time managers learning authority, feedback,
+          delegation, communication, and decision timing.
+        </p>
+        <div class="button-row">
+          <a class="button quiet" href={href('/books/the-first-30-days-as-a-new-manager/')}>
+            Book page
+          </a>
+          <a class="button quiet" href="https://www.amazon.com/dp/B0H5WHFLYY">
+            Amazon
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container">
+      <h2>Resource directory</h2>
+      <p class="small section-intro">
+        For readers, journalists, newsletter subscribers, podcast hosts, reviewers, and social visitors.
+      </p>
+
+      <div class="grid grid-3 resources-grid">
+        {resources.map((item) => (
+          <article class="card resource-card">
+            <p class="eyebrow">{item.label}</p>
+            <h3>{item.title}</h3>
+            <p class="small">{item.text}</p>
+            <p><a href={item.link}>{item.cta}</a></p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Watch</p>
+        <h2>Latest Plain Act episode</h2>
+        <p>
+          A cinematic business episode based on <em>The First 30 Days as a New Manager</em>.
+          Watch it directly here, then continue to the YouTube channel for future episodes.
+        </p>
+        <p><a href="https://www.youtube.com/@Plan-Act">Visit the YouTube channel</a></p>
+      </div>
+
+      <div class="resource-video">
+        <iframe
+          src="https://www.youtube.com/embed/uG_sWEEuYEY"
+          title="Day -1: The First Mistake New Managers Make"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm" id="newsletter">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Newsletter</p>
+        <h2>Newsletter topics</h2>
+        <p>
+          A Plain Act newsletter can focus on calm, practical management notes for people carrying
+          authority under pressure.
+        </p>
+        <p class="small">
+          Newsletter signup is not active yet. Until it is connected, readers can follow the website,
+          YouTube, and LinkedIn updates.
+        </p>
+      </div>
+
+      <div class="card flat">
+        <h3>Suggested recurring themes</h3>
+        <ul class="list-clean">
+          {newsletterTopics.map((topic) => <li>{topic}</li>)}
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container">
+      <h2>For media, guest posts, and interviews</h2>
+      <div class="grid grid-3">
+        <article class="card">
+          <h3>Press Kit</h3>
+          <p class="small">
+            Book overview, official links, media assets, and suggested interview topics.
+          </p>
+          <p><a href={href('/press-kit/')}>Open press kit</a></p>
+        </article>
+
+        <article class="card">
+          <h3>Media Bio</h3>
+          <p class="small">
+            Ready-to-use short, standard, and long bios for podcasts, guest posts, and articles.
+          </p>
+          <p><a href={href('/media-bio/')}>Open media bio</a></p>
+        </article>
+
+        <article class="card">
+          <h3>Contact</h3>
+          <p class="small">
+            For review copies, interviews, collaborations, podcast invitations, or guest post requests.
+          </p>
+          <p><a href={`mailto:${site.email}`}>{site.email}</a></p>
+        </article>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  .resources-hero .resource-feature {
+    align-self: stretch;
+  }
+
+  .section-intro {
+    margin-bottom: 1.5rem;
+  }
+
+  .resources-grid .resource-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 250px;
+  }
+
+  .resource-video {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(22, 50, 79, 0.18);
+    background: #111;
+  }
+
+  .resource-video iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+  }
+</style>
