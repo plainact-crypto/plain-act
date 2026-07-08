@@ -10,4 +10,10 @@
   <url><loc>https://plainact-crypto.github.io/plain-act/resources/</loc></url>
   <url><loc>https://plainact-crypto.github.io/plain-act/guides/new-manager/</loc></url>
   <url><loc>https://plainact-crypto.github.io/plain-act/sitemap/</loc></url>
+  <url>
+  <loc>https://plainact-crypto.github.io/plain-act/press-kit/</loc>
+  <lastmod>2026-07-08</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
+</url>
 </urlset>
