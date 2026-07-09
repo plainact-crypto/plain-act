@@ -1,0 +1,52 @@
+---
+import BaseLayout from '../../../../layouts/BaseLayout.astro';
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanUrl}`;
+};
+
+
+const bookUrl = href('/books/the-first-30-days-as-a-new-manager/');
+const articlesUrl = href('/articles/');
+const resourcesUrl = href('/resources/');
+const schema = { '@context': 'https://schema.org', '@type': 'Book', name: 'The First 30 Days as a New Manager', description: 'A practical management manual for first-time managers carrying authority, feedback, delegation, and decision pressure.', author: { '@type': 'Organization', name: 'Plain Act' } };
+---
+<BaseLayout title="The First 30 Days as a New Manager Summary | Plain Act" description="A practical summary of The First 30 Days as a New Manager by Plain Act: authority, feedback, delegation, decision pressure, and early management restraint." path="/books/the-first-30-days-as-a-new-manager/summary/" schema={[schema]}>
+  <main class="plain-page">
+    <header class="plain-hero"><p class="kicker">Book Summary</p><h1>The First 30 Days as a New Manager — summary.</h1><p>A practical summary of the Plain Act manual for first-time managers. This page is not a replacement for the book. It is a field guide to the core pressure points: authority, feedback, delegation, and decision timing.</p><div class="actions"><a href={bookUrl}>Open the book page</a><a href={articlesUrl}>Read articles</a><a href={resourcesUrl}>Resources</a></div></header>
+    <section class="content-grid"><article class="main-card"><h2>What the book is about</h2><p><strong>The First 30 Days as a New Manager</strong> is a practical manual for the first month after promotion. It is written for people who are suddenly responsible for decisions, feedback, delegation, standards, meetings, and team pressure.</p><p>The central idea is simple: early management does not fail because new managers lack intelligence. It fails because pressure changes their behavior. They overexplain, delay feedback, absorb tension, say yes too often, and try to prove themselves too quickly.</p><h2>The core argument</h2><p>New managers do not need a louder personality. They need a steadier operating system. The book focuses on restraint, clarity, and timing: when to speak, when to stop, when to decide, when to wait, and when to let discomfort remain where it belongs.</p><h2>Main areas covered</h2><ul><li><strong>Authority:</strong> how to build it without harshness, performance, or overcorrection.</li><li><strong>Feedback:</strong> how to make feedback factual, narrow, and useful instead of heavy and emotional.</li><li><strong>Delegation:</strong> how to transfer ownership without disappearing or hovering.</li><li><strong>Communication:</strong> how to stop overexplaining when silence feels unsafe.</li><li><strong>Boundaries:</strong> how to manage former peers, capacity, and pressure from above.</li></ul><h2>Who should read it</h2><p>The book is for first-time managers, newly promoted managers, team leads, and professionals stepping into authority for the first time. It is also useful for experienced managers who feel they are carrying too much of the work themselves.</p><h2>What makes it different</h2><p>This is not a motivational leadership book. It does not tell managers to inspire harder or become more charismatic. It treats management as pressure behavior. The goal is not to sound impressive. The goal is to become reliable under pressure.</p></article><aside class="side-card"><h2>Quick summary</h2><p>The first 30 days are not about proving you deserved the role. They are about creating stable signals the team can trust.</p><ul><li>Say less when pressure rises.</li><li>Give feedback earlier and narrower.</li><li>Delegate outcomes, not vague tasks.</li><li>Do not fix everything in week one.</li><li>Build authority through consistency.</li></ul></aside></section>
+  </main>
+</BaseLayout>
+
+<style>
+  .plain-page { max-width: 1040px; margin: 0 auto; padding: 3rem 1.2rem 4rem; }
+  .plain-hero { max-width: 820px; margin-bottom: 2rem; }
+  .kicker { margin: 0 0 0.65rem; color: var(--accent); font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; }
+  .plain-hero h1 { margin: 0; font-size: clamp(2.2rem, 5vw, 4.35rem); line-height: 0.96; letter-spacing: -0.06em; }
+  .plain-hero p { margin-top: 1rem; color: var(--muted); font-size: 1.05rem; line-height: 1.7; }
+  .actions { display: flex; flex-wrap: wrap; gap: 0.7rem; margin-top: 1.2rem; }
+  .actions a, .text-card a { color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 0.55rem 0.85rem; font-size: 0.9rem; background: rgba(255,255,255,.035); }
+  .actions a:first-child { color: var(--accent); }
+  .content-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .6fr); gap: 1rem; align-items: start; }
+  .main-card, .side-card, .text-card, .quote-card, .faq-card { border: 1px solid var(--border); border-radius: 1.15rem; background: rgba(255,255,255,.035); padding: 1.15rem; box-shadow: 0 24px 70px rgba(0,0,0,.16); }
+  .main-card h2, .side-card h2, .text-card h2, .faq-card h2 { margin-top: 0; font-size: clamp(1.35rem, 2.5vw, 2rem); letter-spacing: -0.035em; }
+  .main-card h3, .text-card h3 { margin-top: 1.55rem; margin-bottom: .45rem; }
+  .main-card p, .main-card li, .side-card p, .side-card li, .text-card p, .text-card li, .faq-card p { color: var(--muted); line-height: 1.75; font-size: 0.98rem; }
+  .main-card strong, .text-card strong { color: var(--text); }
+  .list-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+  .text-card { min-height: 100%; }
+  .quote-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
+  .quote-card blockquote { margin: 0; color: var(--text); font-size: 1.08rem; line-height: 1.55; letter-spacing: -0.02em; }
+  .quote-card p { color: var(--muted); margin-bottom: 0; font-size: .9rem; }
+  .checklist { display: grid; gap: .75rem; }
+  .check-item { border: 1px solid var(--border); border-radius: .95rem; padding: .9rem; background: rgba(255,255,255,.025); }
+  .check-item strong { display: block; margin-bottom: .35rem; }
+  .check-item p { margin: 0; }
+  .faq-list { display: grid; gap: .9rem; }
+  .faq-card h2 { margin-bottom: .35rem; }
+  @media (max-width: 860px) { .content-grid, .list-grid, .quote-grid { grid-template-columns: 1fr; } .plain-page { padding-top: 2rem; } }
+</style>
