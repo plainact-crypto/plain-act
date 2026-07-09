@@ -1,0 +1,393 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site.js';
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanUrl}`;
+};
+
+const title = "Why New Managers Avoid Difficult Conversations and How to Stop";
+const description = "Avoiding hard conversations doesn't keep the peace. It kills it. A simple script for new managers to address issues early and calmly.";
+const topic = "Conflict";
+const number = "07";
+const longEmbed = null;
+const longWatch = null;
+const shorts = [];
+const related = [
+  {
+    "title": "How to Manage Up Without Sounding Insecure as a New Manager",
+    "slug": "/articles/manage-up-without-sounding-insecure/",
+    "topic": "Managing Up"
+  },
+  {
+    "title": "How to Run Your First Team Meeting Without Losing Control",
+    "slug": "/articles/first-team-meeting-new-manager/",
+    "topic": "Meetings"
+  }
+];
+
+const bookUrl = href('/books/the-first-30-days-as-a-new-manager/');
+const articlesUrl = href('/articles/');
+const resourcesUrl = href('/resources/');
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  author: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+    url: site.siteUrl,
+  },
+  mainEntityOfPage: new URL(`${base}articles/difficult-conversations-new-manager/`, site.siteUrl).toString(),
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  path={`/articles/difficult-conversations-new-manager/`}
+  schema={[schema]}
+>
+  <main class="article-page">
+    <nav class="crumbs">
+      <a href={articlesUrl}>Articles</a>
+      <span>/</span>
+      <span>{number}</span>
+    </nav>
+
+    <header class="article-hero">
+      <p class="kicker">{topic}</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Read the book</a>
+        <a href={resourcesUrl}>Resources</a>
+        {longWatch && <a href={longWatch} target="_blank" rel="noreferrer">Watch video</a>}
+      </div>
+    </header>
+
+    {longEmbed && (
+      <section class="media-block">
+        <div class="video-frame long">
+          <iframe
+            src={longEmbed}
+            title={title}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    )}
+
+    <article class="article-body">
+      <h1>Why New Managers Avoid Difficult Conversations and How to Stop</h1>
+<p>Difficult conversations don’t get easier with time.</p>
+<p>They get more expensive.</p>
+<p>New managers know something needs to be said. A missed standard, a bad attitude in meetings, tension between two people. You feel it on Monday. By Friday you still haven’t said anything. By next month, it’s a real problem, and now the conversation feels huge.</p>
+<p>Avoidance doesn’t keep the peace. It rots it.</p>
+<h2>What usually happens</h2>
+<p>Someone is late repeatedly. You notice. You say nothing, because maybe it’s temporary.</p>
+<p>Someone interrupts others in meetings. You cringe, but you move on.</p>
+<p>Two team members clearly don’t work well together. You hope they sort it out.</p>
+<p>You tell yourself: I don’t want to be that harsh new manager. I’ll wait and see. I’ll bring it up in the performance review.</p>
+<p>The review is three months away. The behavior hardens into habit in three weeks.</p>
+<p>When you finally speak, you’re frustrated, so your tone is sharp. The person is blindsided, because you never said anything before. Now it IS a big confrontation, exactly what you were trying to avoid.</p>
+<h2>Why this becomes a problem</h2>
+<p>Small issues become culture. What you tolerate, you teach. If lateness gets no response, lateness becomes normal. For everyone.</p>
+<p>Trust drops. The rest of the team sees the issue. When you say nothing, they conclude you either don’t notice or don’t care. Both hurt.</p>
+<p>You lose sleep over a 90-second conversation. Avoidance is exhausting. You replay the conversation in your head ten times instead of having it once out loud.</p>
+<p>Conflict goes underground. People stop bringing issues to you, because you don’t address them. Then you hear about problems third-hand, too late.</p>
+<h2>The mistake managers make</h2>
+<p>The mistake is waiting until you feel ready.</p>
+<p>You will never feel ready. Confidence does not come before the conversation. It comes after.</p>
+<p>The other mistake is making it a personality talk. “You have a bad attitude.” That triggers defense instantly. Talk about behavior, not character. Behavior is fixable. Character feels like an attack.</p>
+<h2>What to do instead</h2>
+<p>Have it early. Have it short. Have it private. Use SBI: Situation. Behavior. Impact.</p>
+<p><strong>1. Situation. Where and when.</strong> “I want to talk about yesterday’s standup.” Specific, recent, small.</p>
+<p><strong>2. Behavior. What you saw.</strong> No labels. Just observable facts. “You interrupted Layla twice before she finished.” Not “you’re disrespectful.”</p>
+<p><strong>3. Impact. What it caused.</strong> “It shut down the discussion and we missed her update.” One sentence.</p>
+<p>Then pause. Ask: “What happened from your side?” Listen for 30 seconds.</p>
+<p>Then close with one clear next step: “In meetings, let people finish before jumping in. Can you do that?”</p>
+<p>Total time: under 3 minutes. Calm voice. Private room or call. Same day if possible, next day at latest.</p>
+<p>If they get emotional, stay level. “I hear you. The expectation still stands.” You don’t need to win the debate. You need to set the standard clearly.</p>
+<p>Write one line in your notes after: date, topic, agreed next step. That protects you if it repeats.</p>
+<h2>Example</h2>
+<p><strong>Avoided version:</strong> Three weeks of interrupting. Team morale drops. You finally snap in a meeting: “Can you just LET people talk for once?!” NowHR is involved.</p>
+<p><strong>Early version, Day 2:</strong> “Hey, quick chat. Situation: today’s standup. Behavior: you cut in twice while Layla was presenting. Impact: we lost her numbers and had to follow up after. Next time, let her finish, then go. Good?”</p>
+<p>Done. 45 seconds. No drama. Standard set. Most people correct immediately when it’s early and specific.</p>
+<p>If it repeats, you have your note: “We talked about this on the 12th. It happened again today. This needs to change now.” Second conversation is firmer, because the first one was clear.</p>
+<h2>How to apply this this week</h2>
+<ol>
+<li><strong>Name the one conversation you’re avoiding.</strong> Write it down. That’s your target. Have it within 48 hours.</li>
+<li><strong>Script the three lines.</strong> Situation / Behavior / Impact. Write them before you walk in. Keeps you from rambling or softening.</li>
+<li><strong>Do it private, do it early.</strong> Not in Slack, not in a meeting. 3 minutes, closed door, within 24 hours of the behavior.</li>
+<li><strong>End with one next step, out loud.</strong> “Next time, do X.” Get a yes. That’s your agreement.</li>
+<li><strong>Log it.</strong> Date, behavior, next step. If it never repeats, great. If it does, you have a clean record for conversation two.</li>
+</ol>
+<p>Do one hard conversation this week. Just one. It will be easier the second time. It will always be harder if you wait.</p>
+<h2>Final note</h2>
+<p>Difficult conversations are not cruel. Avoiding them is.</p>
+<p>The kindest thing you can do as a new manager is address issues early, specifically, and calmly. People want to know where the line is. Tell them.</p>
+<p>Early. Short. Private. SBI. Repeat.</p>
+<p>This article is based on the Plain Act approach to early management pressure.</p>
+<p>---</p>
+    </article>
+
+    {shorts.length > 0 && (
+      <section class="shorts-section">
+        <p class="kicker">Shorts</p>
+        <h2>Short clips from this lesson</h2>
+        <div class="shorts-grid">
+          {shorts.map((short, index) => (
+            <div class="short-frame">
+              <iframe
+                src={short.embed}
+                title={`${title} short ${index + 1}`}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="cta-box">
+      <p class="kicker">Plain Act</p>
+      <h2>The First 30 Days as a New Manager</h2>
+      <p>A practical manual for first-time managers carrying authority, feedback, delegation, and decision pressure.</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Open the book page</a>
+        <a href={articlesUrl}>Back to articles</a>
+      </div>
+    </section>
+
+    <section class="related">
+      <p class="kicker">Related</p>
+      <div class="related-grid">
+        {related.map((item) => (
+          <a class="related-card" href={href(item.slug)}>
+            <span>{item.topic}</span>
+            <strong>{item.title}</strong>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .article-page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2.6rem 1.2rem 4rem;
+  }
+
+  .crumbs {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    margin-bottom: 1.4rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .crumbs a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .article-hero {
+    max-width: 780px;
+  }
+
+  .kicker {
+    margin: 0 0 0.6rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .article-hero h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 5vw, 4.4rem);
+    line-height: 0.96;
+    letter-spacing: -0.06em;
+  }
+
+  .article-hero p {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+  }
+
+  .hero-actions a {
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.55rem 0.82rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .media-block {
+    margin: 2rem 0;
+  }
+
+  .video-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: #05070a;
+    box-shadow: 0 24px 70px rgba(0,0,0,.2);
+  }
+
+  .video-frame.long {
+    aspect-ratio: 16 / 9;
+  }
+
+  .video-frame iframe,
+  .short-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .article-body {
+    margin-top: 2rem;
+    padding: 1.2rem 0;
+    color: var(--text);
+  }
+
+  .article-body :global(h1) {
+    display: none;
+  }
+
+  .article-body :global(h2) {
+    margin-top: 2.1rem;
+    margin-bottom: 0.7rem;
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    letter-spacing: -0.035em;
+  }
+
+  .article-body :global(h3) {
+    margin-top: 1.6rem;
+  }
+
+  .article-body :global(p),
+  .article-body :global(li) {
+    color: var(--muted);
+    line-height: 1.78;
+    font-size: 1rem;
+  }
+
+  .article-body :global(strong) {
+    color: var(--text);
+  }
+
+  .article-body :global(blockquote) {
+    margin: 1.2rem 0;
+    padding: 1rem 1.1rem;
+    border-left: 3px solid var(--accent);
+    background: rgba(255,255,255,.035);
+    color: var(--text);
+    border-radius: .75rem;
+  }
+
+  .shorts-section,
+  .cta-box,
+  .related {
+    margin-top: 2.2rem;
+  }
+
+  .shorts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+  }
+
+  .short-frame {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: .9rem;
+    background: #05070a;
+  }
+
+  .cta-box {
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    background: rgba(255,255,255,.035);
+    padding: 1.2rem;
+  }
+
+  .cta-box h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 2.4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .cta-box p {
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,.035);
+  }
+
+  .related-card span {
+    color: var(--accent);
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 760px) {
+    .shorts-grid,
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

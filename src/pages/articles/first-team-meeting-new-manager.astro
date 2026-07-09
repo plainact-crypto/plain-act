@@ -1,0 +1,394 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site.js';
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanUrl}`;
+};
+
+const title = "How to Run Your First Team Meeting Without Losing Control";
+const description = "Your first team meeting sets the tone. A simple 30-minute agenda for new managers that builds authority without a big speech.";
+const topic = "Meetings";
+const number = "08";
+const longEmbed = null;
+const longWatch = null;
+const shorts = [];
+const related = [
+  {
+    "title": "Why New Managers Avoid Difficult Conversations and How to Stop",
+    "slug": "/articles/difficult-conversations-new-manager/",
+    "topic": "Conflict"
+  },
+  {
+    "title": "Why New Managers Try to Fix Everything in Week One and Fail",
+    "slug": "/articles/fix-everything-week-one/",
+    "topic": "First Week"
+  }
+];
+
+const bookUrl = href('/books/the-first-30-days-as-a-new-manager/');
+const articlesUrl = href('/articles/');
+const resourcesUrl = href('/resources/');
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  author: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+    url: site.siteUrl,
+  },
+  mainEntityOfPage: new URL(`${base}articles/first-team-meeting-new-manager/`, site.siteUrl).toString(),
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  path={`/articles/first-team-meeting-new-manager/`}
+  schema={[schema]}
+>
+  <main class="article-page">
+    <nav class="crumbs">
+      <a href={articlesUrl}>Articles</a>
+      <span>/</span>
+      <span>{number}</span>
+    </nav>
+
+    <header class="article-hero">
+      <p class="kicker">{topic}</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Read the book</a>
+        <a href={resourcesUrl}>Resources</a>
+        {longWatch && <a href={longWatch} target="_blank" rel="noreferrer">Watch video</a>}
+      </div>
+    </header>
+
+    {longEmbed && (
+      <section class="media-block">
+        <div class="video-frame long">
+          <iframe
+            src={longEmbed}
+            title={title}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    )}
+
+    <article class="article-body">
+      <h1>How to Run Your First Team Meeting Without Losing Control</h1>
+<p>Your first team meeting is not a speech.</p>
+<p>It is a signal.</p>
+<p>New managers either over-prepare a 20-slide introduction about themselves, or they wing it and let the meeting drift for an hour. Both lose the room.</p>
+<p>You don’t need to impress anyone in meeting one. You need to show three things: I’m clear, I’m listening, we’re moving.</p>
+<p>Thirty minutes is enough.</p>
+<h2>What usually happens</h2>
+<p>You spend all night building slides. Vision, values, your background, your management philosophy. You talk for 25 minutes. The team nods politely. No one remembers anything.</p>
+<p>Or you go the other way: “So, yeah, I’m the new manager, let’s just go around and everyone share what they’re working on.” Forty-five minutes later, you have a status dump, no decisions, and no sense of direction.</p>
+<p>Another classic: someone senior on the team takes over the meeting. You let them, because you don’t want to seem controlling. Now the team just saw who really runs the room.</p>
+<p>Meeting one sets a pattern. Vague meeting one leads to vague meetings every week.</p>
+<h2>Why this becomes a problem</h2>
+<p>You burn your first impression on talking about yourself. The team doesn’t need your life story. They need to know how meetings will work now.</p>
+<p>No structure equals no authority. If meeting one drifts, meeting two will drift more. People stop preparing. They multitask.</p>
+<p>You lose control quietly. Not by being challenged, by never taking the wheel. If you don’t set the pace, someone else will.</p>
+<p>Time is trust. Wasting 60 minutes of 7 people’s time in week one tells them you don’t respect their time. That is hard to undo.</p>
+<h2>The mistake managers make</h2>
+<p>The mistake is making the first meeting about you.</p>
+<p>It should be about how we work together, starting now.</p>
+<p>No long intro. No big vision speech in week one. You don’t know enough yet to give a vision speech, and the team knows that. Credibility drops when you pretend otherwise.</p>
+<h2>What to do instead</h2>
+<p>Run a tight 30-minute meeting. Four parts. Time-boxed.</p>
+<p><strong>1. Open – 3 minutes.</strong> “Hi, I’m [Name]. Glad to be here. My job is to clear blockers and keep us focused. That’s it for me today, let’s get to work.” Short. Calm. No slides about yourself.</p>
+<p><strong>2. Round – 12 minutes.</strong> Each person: Name, current top priority, one blocker. 90 seconds each. You go last. Write blockers down visibly. Don’t solve them live. “Noted. I’ll follow up after.” This shows you listen, and you capture issues instead of ignoring them.</p>
+<p><strong>3. How we’ll work – 10 minutes.</strong> Set three simple operating rules, out loud:</p>
+<ul>
+<li>Meetings start on time, end on time.</li>
+<li>Deadlines are real. If you’ll miss one, flag early.</li>
+<li>Bring problems with one proposed solution.</li>
+</ul>
+<p>That’s it. Three rules. Clear, memorable, enforceable.</p>
+<p><strong>4. Close – 5 minutes.</strong> Recap blockers you captured. Name next meeting time. “Same time next week, 30 minutes, same format. Send me your priority before noon Monday. Thanks.” End on time. Even if there’s silence left. Especially if there’s silence left.</p>
+<p>Send a 5-line recap after: decisions, owners, dates. That follow-up is what makes meeting one stick.</p>
+<h2>Example</h2>
+<p><strong>Losing control version:</strong> 60-minute “get to know you” meeting. No agenda. One person talks for 20 minutes about a side project. You let it run to be nice. Meeting ends with “great chat, let’s do this again!” Nothing decided. Nothing captured.</p>
+<p><strong>Controlled version:</strong> 30 minutes. Timer on. 90 seconds per person. Three operating rules stated clearly. Blockers written down. Recap sent 20 minutes later: “Blockers: A – Karim to fix access by Wed. B – I’m escalating budget. Next meeting Tues 10am.” The team leaves thinking: okay, meetings are different now. Shorter. Clearer. That is authority, built in 30 minutes.</p>
+<h2>How to apply this this week</h2>
+<ol>
+<li><strong>Kill the intro deck.</strong> Three sentences about you, max. The meeting is about work, not your biography.</li>
+<li><strong>Send an agenda 24 hours before.</strong> 4 bullets with times: Open 3 min / Round 12 min / Ways of working 10 min / Close 5 min. An agenda signals control before you walk in.</li>
+<li><strong>Use a timer.</strong> Literally. 90 seconds per person in the round. When time’s up, “Thanks, next.” Kind, firm, fair.</li>
+<li><strong>Capture blockers live.</strong> Shared doc or whiteboard. People trust a manager who writes things down.</li>
+<li><strong>End on time, send a recap.</strong> 5 lines, within an hour. Decisions, owners, dates. That recap is more powerful than anything you said in the meeting.</li>
+</ol>
+<p>If someone tries to hijack the meeting, interrupt calmly: “Good point, let’s take that offline so we stay on time. I’ll follow up with you.” Then actually follow up. That is how you hold the room without being harsh.</p>
+<h2>Final note</h2>
+<p>Your first team meeting is not about inspiring anyone.</p>
+<p>It’s about showing the team that time with you is structured, useful, and short.</p>
+<p>Clear open. Tight round. Three rules. Clean close. Recap after.</p>
+<p>Do that, and meeting two runs itself.</p>
+<p>This article is based on the Plain Act approach to early management pressure.</p>
+<p>---</p>
+    </article>
+
+    {shorts.length > 0 && (
+      <section class="shorts-section">
+        <p class="kicker">Shorts</p>
+        <h2>Short clips from this lesson</h2>
+        <div class="shorts-grid">
+          {shorts.map((short, index) => (
+            <div class="short-frame">
+              <iframe
+                src={short.embed}
+                title={`${title} short ${index + 1}`}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="cta-box">
+      <p class="kicker">Plain Act</p>
+      <h2>The First 30 Days as a New Manager</h2>
+      <p>A practical manual for first-time managers carrying authority, feedback, delegation, and decision pressure.</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Open the book page</a>
+        <a href={articlesUrl}>Back to articles</a>
+      </div>
+    </section>
+
+    <section class="related">
+      <p class="kicker">Related</p>
+      <div class="related-grid">
+        {related.map((item) => (
+          <a class="related-card" href={href(item.slug)}>
+            <span>{item.topic}</span>
+            <strong>{item.title}</strong>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .article-page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2.6rem 1.2rem 4rem;
+  }
+
+  .crumbs {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    margin-bottom: 1.4rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .crumbs a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .article-hero {
+    max-width: 780px;
+  }
+
+  .kicker {
+    margin: 0 0 0.6rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .article-hero h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 5vw, 4.4rem);
+    line-height: 0.96;
+    letter-spacing: -0.06em;
+  }
+
+  .article-hero p {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+  }
+
+  .hero-actions a {
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.55rem 0.82rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .media-block {
+    margin: 2rem 0;
+  }
+
+  .video-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: #05070a;
+    box-shadow: 0 24px 70px rgba(0,0,0,.2);
+  }
+
+  .video-frame.long {
+    aspect-ratio: 16 / 9;
+  }
+
+  .video-frame iframe,
+  .short-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .article-body {
+    margin-top: 2rem;
+    padding: 1.2rem 0;
+    color: var(--text);
+  }
+
+  .article-body :global(h1) {
+    display: none;
+  }
+
+  .article-body :global(h2) {
+    margin-top: 2.1rem;
+    margin-bottom: 0.7rem;
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    letter-spacing: -0.035em;
+  }
+
+  .article-body :global(h3) {
+    margin-top: 1.6rem;
+  }
+
+  .article-body :global(p),
+  .article-body :global(li) {
+    color: var(--muted);
+    line-height: 1.78;
+    font-size: 1rem;
+  }
+
+  .article-body :global(strong) {
+    color: var(--text);
+  }
+
+  .article-body :global(blockquote) {
+    margin: 1.2rem 0;
+    padding: 1rem 1.1rem;
+    border-left: 3px solid var(--accent);
+    background: rgba(255,255,255,.035);
+    color: var(--text);
+    border-radius: .75rem;
+  }
+
+  .shorts-section,
+  .cta-box,
+  .related {
+    margin-top: 2.2rem;
+  }
+
+  .shorts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+  }
+
+  .short-frame {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: .9rem;
+    background: #05070a;
+  }
+
+  .cta-box {
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    background: rgba(255,255,255,.035);
+    padding: 1.2rem;
+  }
+
+  .cta-box h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 2.4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .cta-box p {
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,.035);
+  }
+
+  .related-card span {
+    color: var(--accent);
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 760px) {
+    .shorts-grid,
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

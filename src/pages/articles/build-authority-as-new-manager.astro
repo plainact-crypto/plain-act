@@ -1,0 +1,390 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site.js';
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanUrl}`;
+};
+
+const title = "How New Managers Can Build Authority Without Being Harsh";
+const description = "Authority isn't loud. Learn how new managers can build quiet, steady authority in the first 30 days without being harsh or fake.";
+const topic = "Authority";
+const number = "04";
+const longEmbed = null;
+const longWatch = null;
+const shorts = [];
+const related = [
+  {
+    "title": "Why First-Time Managers Struggle to Give Feedback and How to Fix It",
+    "slug": "/articles/feedback-without-killing-morale/",
+    "topic": "Feedback"
+  },
+  {
+    "title": "Why New Managers Say Yes to Everything and Burn Out in 30 Days",
+    "slug": "/articles/new-managers-say-yes/",
+    "topic": "Capacity"
+  }
+];
+
+const bookUrl = href('/books/the-first-30-days-as-a-new-manager/');
+const articlesUrl = href('/articles/');
+const resourcesUrl = href('/resources/');
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description,
+  author: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+    url: site.siteUrl,
+  },
+  mainEntityOfPage: new URL(`${base}articles/build-authority-as-new-manager/`, site.siteUrl).toString(),
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  path={`/articles/build-authority-as-new-manager/`}
+  schema={[schema]}
+>
+  <main class="article-page">
+    <nav class="crumbs">
+      <a href={articlesUrl}>Articles</a>
+      <span>/</span>
+      <span>{number}</span>
+    </nav>
+
+    <header class="article-hero">
+      <p class="kicker">{topic}</p>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Read the book</a>
+        <a href={resourcesUrl}>Resources</a>
+        {longWatch && <a href={longWatch} target="_blank" rel="noreferrer">Watch video</a>}
+      </div>
+    </header>
+
+    {longEmbed && (
+      <section class="media-block">
+        <div class="video-frame long">
+          <iframe
+            src={longEmbed}
+            title={title}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    )}
+
+    <article class="article-body">
+      <h1>How New Managers Can Build Authority Without Being Harsh</h1>
+<p>New managers think authority is a personality.</p>
+<p>It is not. Authority is a pattern.</p>
+<p>You don&#x27;t need to be louder, older, or tougher than your team. You need to be steady. The team is watching for one thing in your first month: are your signals stable?</p>
+<p>If they are, authority builds on its own. If they are not, no title will save you.</p>
+<h2>What usually happens</h2>
+<p>Day one. You want to be liked, and respected. So you swing between two modes.</p>
+<p>Mode one: too soft. You ask instead of decide. “Would it be okay if we…?” You let meetings run long. You agree to everything to show you are collaborative.</p>
+<p>Mode two: too hard. You feel the softness slipping, so you overcorrect. A sharp email. A sudden hard deadline. A public correction that feels out of proportion.</p>
+<p>The team gets whiplash. They don&#x27;t know which version is showing up today. That instability is what kills authority, not your age or your experience.</p>
+<p>Authority is not granted on promotion day. It is built, day by day, in small signals.</p>
+<h2>Why this becomes a problem</h2>
+<p>If your signals are unstable, the team tests you. Not maliciously. People test unclear boundaries automatically. Deadlines slip. Decisions get re-opened.</p>
+<p>You start managing by mood. Good day, you are flexible. Stressed day, you are sharp. The team learns to work around your mood, not with your direction.</p>
+<p>You either chase likability or chase control. Both fail. Likability without clarity makes you a peer, not a manager. Control without calm makes you a manager people avoid.</p>
+<p>Real authority is quiet. It does not need to be defended every meeting.</p>
+<h2>The mistake managers make</h2>
+<p>The mistake is performing authority instead of practicing it.</p>
+<p>Performing authority looks like: talking more in meetings, using a serious voice, shutting down pushback fast, making big changes in week one to “set the tone”.</p>
+<p>None of that builds real authority. It builds distance.</p>
+<p>Authority comes from three boring things, repeated: clarity, consistency, calm.</p>
+<h2>What to do instead</h2>
+<p>Build quiet authority with three levers: Decide clearly. Follow through. Stay level.</p>
+<p><strong>1. Decide clearly.</strong> One plain decision, out loud. No hedging. “We’re doing A.” You can listen before you decide. Once you decide, state it cleanly. That is 50% of authority.</p>
+<p><strong>2. Follow through.</strong> If you said Friday, mean Friday. If you said you’d review it, review it. If you set a standard, hold it next time too. Consistency is what turns a decision into authority. People trust patterns, not speeches.</p>
+<p><strong>3. Stay level.</strong> Your voice, your pace, your face. Under pressure, slow down, don’t speed up. Don’t match panic with panic. Don’t match anger with anger. A level signal in a tense room is authority. You don’t need to be cold. Just steady.</p>
+<p>That’s it. No harshness required. No fake confidence. Just clear decisions, repeated follow-through, and a level tone.</p>
+<p>Authority compounds. Day 5, no one notices. Day 25, the team adjusts to your pace without thinking about it.</p>
+<h2>Example</h2>
+<p><strong>Harsh version:</strong> “Guys, I’m the manager now, so we’re doing it my way. I need this by EOD no excuses. Is that clear?”</p>
+<p>That buys compliance for one day and resentment for a month.</p>
+<p><strong>Quiet authority version:</strong> “Here’s the plan for this week. Ali owns the report, deadline Thursday 2pm. I’ll review once Thursday afternoon. Questions now, then we execute.”</p>
+<p>Calm. Named owner. Named deadline. Named checkpoint. No threats. No performance.</p>
+<p>The second version gets followed, because it is clear and it will clearly be followed up.</p>
+<h2>How to apply this this week</h2>
+<ol>
+<li><strong>Make three small decisions out loud, cleanly.</strong> No “I think maybe”. Just “We’re doing X”. Practice on low-stakes calls first.</li>
+<li><strong>Follow through on two things you already said.</strong> Check your notes from last week. What did you promise? Close those loops today. That is authority building in public.</li>
+<li><strong>Slow your pace by 15%.</strong> In your next meeting, speak slightly slower than you want to. Pause before answering questions. Steady pace reads as steady authority.</li>
+<li><strong>Hold one standard, kindly.</strong> Pick one missed standard this week – a late update, a messy handoff. Address it calmly with Observation/Impact/Next step. Holding the line once does more than ten speeches.</li>
+<li><strong>Stop trying to be liked in meetings.</strong> Aim to be clear instead. Likability follows clarity. It never works the other way around.</li>
+</ol>
+<h2>Final note</h2>
+<p>You do not build authority by being harsh. You build it by being predictable.</p>
+<p>Clear decision. Consistent follow-through. Level tone. Repeat for 30 days.</p>
+<p>The team does not need a strong personality. It needs a stable signal. Be that signal.</p>
+<p>This article is based on the Plain Act approach to early management pressure.</p>
+<p>---</p>
+    </article>
+
+    {shorts.length > 0 && (
+      <section class="shorts-section">
+        <p class="kicker">Shorts</p>
+        <h2>Short clips from this lesson</h2>
+        <div class="shorts-grid">
+          {shorts.map((short, index) => (
+            <div class="short-frame">
+              <iframe
+                src={short.embed}
+                title={`${title} short ${index + 1}`}
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+              ></iframe>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <section class="cta-box">
+      <p class="kicker">Plain Act</p>
+      <h2>The First 30 Days as a New Manager</h2>
+      <p>A practical manual for first-time managers carrying authority, feedback, delegation, and decision pressure.</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Open the book page</a>
+        <a href={articlesUrl}>Back to articles</a>
+      </div>
+    </section>
+
+    <section class="related">
+      <p class="kicker">Related</p>
+      <div class="related-grid">
+        {related.map((item) => (
+          <a class="related-card" href={href(item.slug)}>
+            <span>{item.topic}</span>
+            <strong>{item.title}</strong>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .article-page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 2.6rem 1.2rem 4rem;
+  }
+
+  .crumbs {
+    display: flex;
+    gap: 0.45rem;
+    align-items: center;
+    margin-bottom: 1.4rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  .crumbs a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .article-hero {
+    max-width: 780px;
+  }
+
+  .kicker {
+    margin: 0 0 0.6rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+
+  .article-hero h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 5vw, 4.4rem);
+    line-height: 0.96;
+    letter-spacing: -0.06em;
+  }
+
+  .article-hero p {
+    margin-top: 1rem;
+    color: var(--muted);
+    font-size: 1.06rem;
+    line-height: 1.65;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin-top: 1.2rem;
+  }
+
+  .hero-actions a {
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.55rem 0.82rem;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.035);
+  }
+
+  .media-block {
+    margin: 2rem 0;
+  }
+
+  .video-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: #05070a;
+    box-shadow: 0 24px 70px rgba(0,0,0,.2);
+  }
+
+  .video-frame.long {
+    aspect-ratio: 16 / 9;
+  }
+
+  .video-frame iframe,
+  .short-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .article-body {
+    margin-top: 2rem;
+    padding: 1.2rem 0;
+    color: var(--text);
+  }
+
+  .article-body :global(h1) {
+    display: none;
+  }
+
+  .article-body :global(h2) {
+    margin-top: 2.1rem;
+    margin-bottom: 0.7rem;
+    font-size: clamp(1.35rem, 2.5vw, 2rem);
+    letter-spacing: -0.035em;
+  }
+
+  .article-body :global(h3) {
+    margin-top: 1.6rem;
+  }
+
+  .article-body :global(p),
+  .article-body :global(li) {
+    color: var(--muted);
+    line-height: 1.78;
+    font-size: 1rem;
+  }
+
+  .article-body :global(strong) {
+    color: var(--text);
+  }
+
+  .article-body :global(blockquote) {
+    margin: 1.2rem 0;
+    padding: 1rem 1.1rem;
+    border-left: 3px solid var(--accent);
+    background: rgba(255,255,255,.035);
+    color: var(--text);
+    border-radius: .75rem;
+  }
+
+  .shorts-section,
+  .cta-box,
+  .related {
+    margin-top: 2.2rem;
+  }
+
+  .shorts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .85rem;
+  }
+
+  .short-frame {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: .9rem;
+    background: #05070a;
+  }
+
+  .cta-box {
+    border: 1px solid var(--border);
+    border-radius: 1.2rem;
+    background: rgba(255,255,255,.035);
+    padding: 1.2rem;
+  }
+
+  .cta-box h2 {
+    margin: 0;
+    font-size: clamp(1.45rem, 3vw, 2.4rem);
+    letter-spacing: -0.04em;
+  }
+
+  .cta-box p {
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .related-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .85rem;
+  }
+
+  .related-card {
+    display: flex;
+    flex-direction: column;
+    gap: .45rem;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1rem;
+    background: rgba(255,255,255,.035);
+  }
+
+  .related-card span {
+    color: var(--accent);
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 760px) {
+    .shorts-grid,
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
