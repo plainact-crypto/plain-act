@@ -1,0 +1,439 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../data/site.js';
+
+const base = import.meta.env.BASE_URL;
+
+const href = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanUrl}`;
+};
+
+const bookUrl = href('/books/the-first-30-days-as-a-new-manager/');
+const resourcesUrl = href('/resources/');
+const youtubeUrl = 'https://www.youtube.com/@Plan-Act';
+
+const articles = [
+  {
+    number: '01',
+    title: 'Why New Managers Overexplain Under Pressure and How to Fix It',
+    shortTitle: 'Why New Managers Overexplain',
+    slug: '/articles/why-new-managers-overexplain/',
+    topic: 'Communication',
+    status: 'Video available',
+    description:
+      'New managers often overexplain to sound competent. Learn why it weakens authority and how to communicate with more restraint.',
+    longVideo: 'https://www.youtube.com/embed/ZC7cIHJPhho',
+    shorts: ['https://www.youtube.com/embed/9thjZ3fbRvs'],
+  },
+  {
+    number: '02',
+    title: 'How to Delegate Without Micromanaging as a New Manager',
+    shortTitle: 'How to Delegate Without Micromanaging',
+    slug: '/articles/delegate-without-micromanaging/',
+    topic: 'Delegation',
+    status: 'Video available',
+    description:
+      'New managers either hoard work or hover. Learn a simple delegation method that builds trust and gets results.',
+    longVideo: 'https://www.youtube.com/embed/oWsC7tHsI38',
+    shorts: [
+      'https://www.youtube.com/embed/a6_tVVRPPvA',
+      'https://www.youtube.com/embed/wf8nNnS0d4M',
+      'https://www.youtube.com/embed/CJrRZKdNQ38',
+    ],
+  },
+  {
+    number: '03',
+    title: 'Why First-Time Managers Struggle to Give Feedback and How to Fix It',
+    shortTitle: 'Why First-Time Managers Struggle to Give Feedback',
+    slug: '/articles/feedback-without-killing-morale/',
+    topic: 'Feedback',
+    status: 'Article planned',
+    description:
+      'Avoiding feedback usually makes it heavier. Learn how to give clear, factual feedback without killing morale.',
+  },
+  {
+    number: '04',
+    title: 'How New Managers Can Build Authority Without Being Harsh',
+    shortTitle: 'Build Authority Without Being Harsh',
+    slug: '/articles/build-authority-as-new-manager/',
+    topic: 'Authority',
+    status: 'Article planned',
+    description:
+      'Authority is not loud. It comes from clear, consistent signals repeated under pressure.',
+  },
+  {
+    number: '05',
+    title: 'Why New Managers Say Yes to Everything and Burn Out in 30 Days',
+    shortTitle: 'Why New Managers Say Yes to Everything',
+    slug: '/articles/new-managers-say-yes/',
+    topic: 'Capacity',
+    status: 'Article planned',
+    description:
+      'Saying yes feels helpful in month one, but it can quietly destroy focus, capacity, and authority.',
+  },
+  {
+    number: '06',
+    title: 'How to Manage Up Without Sounding Insecure as a New Manager',
+    shortTitle: 'How to Manage Up Without Sounding Insecure',
+    slug: '/articles/manage-up-without-sounding-insecure/',
+    topic: 'Managing Up',
+    status: 'Article planned',
+    description:
+      'Managing up is not performing competence. It is reducing uncertainty with a calm, steady signal.',
+  },
+  {
+    number: '07',
+    title: 'Why New Managers Avoid Difficult Conversations and How to Stop',
+    shortTitle: 'Why New Managers Avoid Difficult Conversations',
+    slug: '/articles/difficult-conversations-new-manager/',
+    topic: 'Conflict',
+    status: 'Article planned',
+    description:
+      'Difficult conversations do not get easier with time. They get more expensive.',
+  },
+  {
+    number: '08',
+    title: 'How to Run Your First Team Meeting Without Losing Control',
+    shortTitle: 'How to Run Your First Team Meeting',
+    slug: '/articles/first-team-meeting-new-manager/',
+    topic: 'Meetings',
+    status: 'Article planned',
+    description:
+      'Your first team meeting is not a speech. It is a signal about how work will move now.',
+  },
+  {
+    number: '09',
+    title: 'Why New Managers Try to Fix Everything in Week One and Fail',
+    shortTitle: 'Why New Managers Try to Fix Everything in Week One',
+    slug: '/articles/fix-everything-week-one/',
+    topic: 'First 30 Days',
+    status: 'Article planned',
+    description:
+      'Fixing everything in week one is usually anxiety in action. Observation builds more authority than motion.',
+  },
+  {
+    number: '10',
+    title: 'How to Set Boundaries With Former Peers After Promotion',
+    shortTitle: 'Set Boundaries With Former Peers',
+    slug: '/articles/boundaries-former-peers/',
+    topic: 'Peer Transition',
+    status: 'Article planned',
+    description:
+      'Yesterday you were peers. Today you are their manager. The relationship can stay warm, but it cannot stay the same.',
+  },
+];
+
+const pageUrl = new URL(`${base}articles/`, site.siteUrl).toString();
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Plain Act Articles',
+  description:
+    'Practical articles and video lessons for first-time managers, newly promoted managers, and team leads under early management pressure.',
+  url: pageUrl,
+  publisher: {
+    '@type': 'Organization',
+    name: 'Plain Act',
+    url: site.siteUrl,
+  },
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: articles.map((article, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: article.title,
+      url: new URL(`${base}${article.slug.replace(/^\//, '')}`, site.siteUrl).toString(),
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title="Articles | Plain Act"
+  description="Practical articles and video lessons for first-time managers, newly promoted managers, and team leads under pressure."
+  path="/articles/"
+  schema={schema}
+>
+  <section class="hero articles-hero">
+    <div class="hero-copy">
+      <p class="eyebrow">Plain Act Articles</p>
+      <h1>Quiet management lessons for the first 30 days.</h1>
+      <p class="hero-text">
+        Practical articles and video lessons for first-time managers, newly promoted managers, team leads, and professionals carrying early management pressure.
+      </p>
+      <div class="button-row">
+        <a class="button" href={bookUrl}>Read the book</a>
+        <a class="button secondary" href={resourcesUrl}>Explore resources</a>
+      </div>
+    </div>
+    <div class="card hero-card">
+      <p class="eyebrow">Series</p>
+      <h2>10 articles. 10 management pressure points.</h2>
+      <p class="small">
+        Each article is designed as a practical field note: one problem, one mistake, one usable framework, and one clearer way to respond.
+      </p>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="section-heading">
+      <p class="eyebrow">Published video lessons</p>
+      <h2>Start with the first two lessons.</h2>
+      <p>
+        These first lessons include embedded YouTube screens. More video embeds will be added as the remaining episodes and Shorts are uploaded.
+      </p>
+    </div>
+
+    <div class="featured-video-grid">
+      {articles.slice(0, 2).map((article) => (
+        <article class="card feature-card">
+          <div class="article-meta-row">
+            <span>{article.number}</span>
+            <span>{article.topic}</span>
+          </div>
+          <h3>{article.title}</h3>
+          <p>{article.description}</p>
+
+          <div class="video-frame long-video">
+            <iframe
+              src={article.longVideo}
+              title={`${article.shortTitle} long video`}
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+            ></iframe>
+          </div>
+
+          {article.shorts?.length > 0 && (
+            <div class="shorts-block">
+              <p class="eyebrow">Shorts</p>
+              <div class="shorts-row">
+                {article.shorts.map((shortUrl, index) => (
+                  <div class="video-frame short-video">
+                    <iframe
+                      src={shortUrl}
+                      title={`${article.shortTitle} short ${index + 1}`}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowfullscreen
+                    ></iframe>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div class="button-row compact">
+            <a class="button secondary" href={href(article.slug)}>Read article</a>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="section-heading">
+      <p class="eyebrow">Article directory</p>
+      <h2>All articles in the series.</h2>
+      <p>
+        Use this page as the central hub for the series. Each title can later link to its full article page with its long video and Shorts.
+      </p>
+    </div>
+
+    <div class="article-list">
+      {articles.map((article) => (
+        <article class="card article-row">
+          <div class="article-number">{article.number}</div>
+          <div class="article-content">
+            <div class="article-meta-row">
+              <span>{article.topic}</span>
+              <span>{article.status}</span>
+            </div>
+            <h3>{article.title}</h3>
+            <p>{article.description}</p>
+            <div class="button-row compact">
+              <a class="button secondary" href={href(article.slug)}>Read article</a>
+              {article.longVideo && <a class="text-link" href={article.longVideo.replace('/embed/', '/watch?v=')} target="_blank" rel="noreferrer">Watch on YouTube</a>}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="card cta-card">
+      <p class="eyebrow">Plain Act</p>
+      <h2>The First 30 Days as a New Manager</h2>
+      <p>
+        A practical manual for first-time managers carrying authority, feedback, delegation, and decision pressure.
+      </p>
+      <div class="button-row">
+        <a class="button" href={bookUrl}>Open the book page</a>
+        <a class="button secondary" href={youtubeUrl} target="_blank" rel="noreferrer">Watch the channel</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .articles-hero {
+    align-items: stretch;
+  }
+
+  .hero-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .featured-video-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .feature-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .article-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .article-meta-row span {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.25rem 0.55rem;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .video-frame {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    background: #05070a;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  }
+
+  .video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .long-video {
+    aspect-ratio: 16 / 9;
+  }
+
+  .shorts-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  .shorts-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .short-video {
+    aspect-ratio: 9 / 16;
+    border-radius: 0.85rem;
+  }
+
+  .article-list {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .article-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .article-number {
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--accent);
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .article-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .article-content h3,
+  .feature-card h3 {
+    margin: 0;
+  }
+
+  .article-content p,
+  .feature-card p {
+    margin: 0;
+  }
+
+  .compact {
+    margin-top: 0.35rem;
+  }
+
+  .text-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .text-link:hover {
+    text-decoration: underline;
+  }
+
+  .cta-card {
+    text-align: center;
+  }
+
+  .cta-card .button-row {
+    justify-content: center;
+  }
+
+  @media (max-width: 900px) {
+    .featured-video-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .article-row {
+      grid-template-columns: 1fr;
+    }
+
+    .shorts-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
