@@ -218,4 +218,11 @@
     <priority>0.75</priority>
   </url>
 
+  <url>
+    <loc>https://plainact-crypto.github.io/plain-act/privacy-policy/</loc>
+    <lastmod>2026-07-12</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
 </urlset>
