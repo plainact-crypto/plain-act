@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { site } from '../data/site.js';
+---
+<BaseLayout
+  title="Affiliate Disclosure | Plain Act"
+  description="Plain Act's disclosure of potential affiliate relationships and how they affect recommendations on this website."
+  path="/affiliate-disclosure/"
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={[{ name: 'Home', url: '/' }, { name: 'Affiliate Disclosure', url: '/affiliate-disclosure/' }]} />
+      <p class="eyebrow">Disclosure</p>
+      <h1>Affiliate disclosure</h1>
+      <p class="lede">Plain Act may earn a commission when a reader purchases through certain links on this website.</p>
+
+      <div class="grid grid-2">
+        <div>
+          <h2>How affiliate links work</h2>
+          <p>Some links may connect to third-party products, books, tools, or services through an affiliate arrangement. If you follow one of those links and make a qualifying purchase, Plain Act may receive a commission. This does not increase the price you pay.</p>
+
+          <h2>How recommendations are handled</h2>
+          <p>Affiliate relationships do not determine whether a product is mentioned or how it is described. Plain Act aims to recommend only resources that are relevant to the subject and useful to the intended reader.</p>
+          <p>Not every external link is an affiliate link. Where practical, affiliate links or affiliate-supported sections will be identified clearly.</p>
+
+          <h2>Your judgment still matters</h2>
+          <p>Product details, availability, prices, and third-party terms can change. Review the seller's current information before making a purchase or relying on a product.</p>
+        </div>
+
+        <aside class="card flat">
+          <h2>Questions</h2>
+          <p>If you have a question about this disclosure or a link on the site, contact Plain Act at <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+          <p class="small">Last updated: July 12, 2026.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
