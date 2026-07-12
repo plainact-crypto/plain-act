@@ -1,0 +1,102 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+const books = [
+  {
+    title: 'The First 30 Days as a New Manager',
+    author: 'Plain Act',
+    bestFor: 'The first month: authority, feedback, delegation, pushback, and weekly rhythm.',
+    strength: 'Narrow, situation-based guidance for the pressure immediately after promotion.',
+    limit: 'It is deliberately focused on early management rather than company-wide systems.',
+    url: 'https://www.amazon.com/dp/B0GNSXZP21',
+    linkLabel: 'View the book'
+  },
+  {
+    title: 'The First 90 Days',
+    author: 'Michael D. Watkins',
+    bestFor: 'Planning a structured transition into a new role or organization.',
+    strength: 'A broad transition framework that helps managers diagnose context and build momentum.',
+    limit: 'Its scope is wider than day-to-day first-line management conversations.',
+    url: 'https://www.harpercollins.com/pages/thefirst90days',
+    linkLabel: 'View publisher information'
+  },
+  {
+    title: 'High Output Management',
+    author: 'Andrew S. Grove',
+    bestFor: 'Building operating rhythm, meetings, leverage, and managerial output.',
+    strength: 'Clear systems thinking for managers who need to organize work and improve team performance.',
+    limit: 'Some examples come from a different business era and require translation to the reader’s context.',
+    url: 'https://www.penguinrandomhouse.com/books/72467/high-output-management-by-andrew-s-grove-former-chairman-and-ceo-of-intel/',
+    linkLabel: 'View publisher information'
+  },
+  {
+    title: 'Turn the Ship Around!',
+    author: 'L. David Marquet',
+    bestFor: 'Delegating control and building ownership without abandoning accountability.',
+    strength: 'A memorable case for replacing leader-follower habits with leadership at every level.',
+    limit: 'It is a leadership case study, not a step-by-step first-month manual.',
+    url: 'https://www.penguinrandomhouse.com/books/314163/turn-the-ship-around-by-l-david-marquet/',
+    linkLabel: 'View publisher information'
+  }
+];
+
+const itemListSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'Best books for new managers',
+  itemListElement: books.map((book, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: { '@type': 'Book', name: book.title, author: { '@type': 'Person', name: book.author } }
+  }))
+};
+---
+<BaseLayout
+  title="Best Books for New Managers: A Practical Shortlist | Plain Act"
+  description="A focused comparison of practical books for new managers covering the first month, role transitions, operating rhythm, delegation, and team ownership."
+  path="/best-books-for-new-managers/"
+  schema={[itemListSchema]}
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={[{ name: 'Home', url: '/' }, { name: 'Books', url: '/books/' }, { name: 'Best Books for New Managers', url: '/best-books-for-new-managers/' }]} />
+      <p class="eyebrow">Buyer guide</p>
+      <h1>Best books for new managers</h1>
+      <p class="lede">The useful question is not which management book is most famous. It is which book matches the problem directly in front of you.</p>
+
+      <div class="notice">
+        <p><strong>Disclosure:</strong> Plain Act may earn a commission from certain qualifying purchases. Not every link on this page is an affiliate link, and the price you pay is not increased. Read the <a href={href('/affiliate-disclosure/')}>full affiliate disclosure</a>.</p>
+      </div>
+
+      <h2>Quick selection guide</h2>
+      <table class="table">
+        <tbody>
+          {books.map((book) => (
+            <tr><th>{book.title}</th><td>{book.bestFor}</td></tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div class="section-sm grid grid-2">
+        {books.map((book, index) => (
+          <article class="card">
+            <p class="eyebrow">Choice {index + 1}</p>
+            <h2>{book.title}</h2>
+            <p class="small">By {book.author}</p>
+            <p><strong>Best for:</strong> {book.bestFor}</p>
+            <p><strong>Strength:</strong> {book.strength}</p>
+            <p><strong>Limitation:</strong> {book.limit}</p>
+            <p><a class="button quiet" href={book.url} rel="noopener noreferrer">{book.linkLabel}</a></p>
+          </article>
+        ))}
+      </div>
+
+      <h2>How to choose one</h2>
+      <p>If the promotion is recent and the pressure is immediate, begin with the book closest to the next thirty days. If the challenge is a broader role transition, choose a transition framework. If the team lacks operating discipline, choose a systems book. If delegation keeps collapsing back into control, choose a book centered on ownership.</p>
+      <p>One relevant book, used against a real management problem, is more useful than a long reading list left untouched.</p>
+    </div>
+  </section>
+</BaseLayout>
