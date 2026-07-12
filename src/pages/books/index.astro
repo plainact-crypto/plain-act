@@ -19,6 +19,11 @@ const href = (url) => `${base}${url.replace(/^\//, '')}`;
           <div><h3><a href={href('/books/the-first-30-days-as-a-new-manager/')}>{books[0].title}</a></h3><p>{books[0].subtitle}</p></div>
         </article>
       </div>
+      <h2>Choose by management problem</h2>
+      <div class="card flat">
+        <h3><a href={href('/best-books-for-new-managers/')}>Best books for new managers</a></h3>
+        <p>A practical comparison of books for early authority, operating rhythm, delegation, and team ownership.</p>
+      </div>
       <h2>Metadata pending</h2>
       <div class="grid grid-2">
         <article class="card">
