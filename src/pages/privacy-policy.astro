@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { site } from '../data/site.js';
+---
+<BaseLayout
+  title="Privacy Policy | Plain Act"
+  description="How Plain Act handles website analytics, cookies, contact messages, outbound links, third-party platforms, retention, and privacy rights."
+  path="/privacy-policy/"
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={[{ name: 'Home', url: '/' }, { name: 'Privacy Policy', url: '/privacy-policy/' }]} />
+      <p class="eyebrow">Privacy</p>
+      <h1>Privacy policy</h1>
+      <p class="lede">This policy explains what information may be processed when you visit the Plain Act website, follow an external link, or contact Plain Act.</p>
+
+      <div class="grid grid-2">
+        <div>
+          <h2>Information this website processes</h2>
+          <p>Plain Act does not currently offer an active newsletter sign-up, user account, checkout, or comment system on this website. The site does not intentionally ask visitors to submit personal information through a web form.</p>
+          <p>If you contact Plain Act by email, the information you provide—such as your email address, name, message, and any attachments—will be used to review and respond to your inquiry.</p>
+
+          <h2>Analytics and cookies</h2>
+          <p>This website uses Google Analytics 4 to understand how the site is used. Google Analytics may collect information such as pages viewed, approximate location, device and browser information, referral source, session activity, and identifiers associated with analytics cookies or similar technologies.</p>
+          <p>Google may process this information on Plain Act's behalf under its own terms and privacy practices. You can limit cookies through your browser settings. Blocking analytics cookies or scripts may reduce the data collected and should not prevent you from reading the site's public content.</p>
+
+          <h2>Outbound links and third-party platforms</h2>
+          <p>The site links to third-party websites and platforms, including book retailers, publishers, YouTube, LinkedIn, Goodreads, and other resources. Some pages may also embed third-party content, such as YouTube videos. When you follow a link or load embedded content, the third party may receive information such as your IP address, browser details, referring page, and interaction data, and may use its own cookies or similar technologies.</p>
+          <p>Plain Act does not control the privacy, security, availability, or content practices of third-party services. Review the relevant third party's current privacy notice before providing information or making a purchase.</p>
+
+          <h2>How information is used and shared</h2>
+          <p>Information is used to operate and improve the website, understand aggregate traffic, maintain security, respond to inquiries, correct site or metadata issues, and comply with legal obligations. Plain Act does not sell personal information.</p>
+          <p>Information may be processed by service providers that support website hosting, analytics, email, and external platforms. It may also be disclosed when reasonably necessary to comply with law, protect rights or security, or address misuse.</p>
+
+          <h2>Data retention</h2>
+          <p>Analytics information is retained according to the settings and policies of Google Analytics and related service providers. Email correspondence is kept only as long as reasonably needed to answer the inquiry, maintain appropriate business records, resolve disputes, protect legal rights, or meet legal obligations. Retention periods may vary with the purpose and applicable requirements.</p>
+
+          <h2>Your choices and rights</h2>
+          <p>Depending on where you live, you may have rights to request access to, correction of, deletion of, restriction of, or objection to certain processing of your personal information, and in some cases data portability or withdrawal of consent. These rights may be subject to legal limits and identity verification.</p>
+          <p>You may also manage cookies in your browser and use Google's available controls or opt-out tools for analytics. Requests concerning information held directly by a third-party platform should be sent to that platform.</p>
+
+          <h2>Changes to this policy</h2>
+          <p>This policy may be updated when the website, its tools, or legal requirements change. The date below identifies the current version.</p>
+        </div>
+
+        <aside class="card flat">
+          <h2>Contact</h2>
+          <p>For a privacy question or request, email Plain Act at <a href={`mailto:${site.email}`}>{site.email}</a>. Include enough detail to identify the relevant interaction or message.</p>
+          <p class="small">Last updated: July 12, 2026.</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
