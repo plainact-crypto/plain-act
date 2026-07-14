@@ -4,81 +4,678 @@ import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import AmazonButtons from '../../../components/AmazonButtons.astro';
 import { site } from '../../../data/site.js';
 import { books } from '../../../data/books.js';
-const book = books[0];
+
+const book = books.find((item) => item.slug === 'the-first-30-days-as-a-new-manager') ?? books[0];
 const base = import.meta.env.BASE_URL;
 const href = (url) => `${base}${url.replace(/^\//, '')}`;
-const bookUrl = new URL('books/the-first-30-days-as-a-new-manager/', site.fullUrl).toString();
+
+const pagePath = '/books/the-first-30-days-as-a-new-manager/';
+const bookUrl = new URL(pagePath.replace(/^\//, ''), site.fullUrl).toString();
 const coverUrl = new URL(`${base}${book.cover.replace(/^\//, '')}`, site.siteUrl).toString();
+const organizationUrl = site.fullUrl;
+const socialProfiles = site.sameAs
+  .map((url) => ({
+    url,
+    label: url.includes('youtube.com') ? 'YouTube' : url.includes('linkedin.com') ? 'LinkedIn' : 'Official profile'
+  }));
+
+const organizationEntity = {
+  '@type': 'Organization',
+  '@id': `${organizationUrl}#organization`,
+  name: site.brand,
+  alternateName: site.publisher,
+  url: organizationUrl,
+  ...(site.sameAs.length ? { sameAs: site.sameAs } : {})
+};
+
+const formatExamples = [
+  {
+    '@type': 'Book',
+    name: book.title,
+    bookFormat: 'https://schema.org/EBook',
+    inLanguage: 'en',
+    identifier: {
+      '@type': 'PropertyValue',
+      propertyID: 'ASIN',
+      value: book.kindleAsin
+    },
+    sameAs: book.amazon.kindle
+  },
+  {
+    '@type': 'Book',
+    name: book.title,
+    bookFormat: 'https://schema.org/Paperback',
+    inLanguage: 'en',
+    isbn: book.paperbackIsbn13,
+    identifier: {
+      '@type': 'PropertyValue',
+      propertyID: 'ASIN',
+      value: book.paperbackAsin
+    },
+    sameAs: book.amazon.paperback
+  },
+  {
+    '@type': 'Book',
+    name: book.title,
+    bookFormat: 'https://schema.org/Hardcover',
+    inLanguage: 'en',
+    isbn: book.hardcoverIsbn13,
+    identifier: {
+      '@type': 'PropertyValue',
+      propertyID: 'ASIN',
+      value: book.hardcoverAsin
+    },
+    sameAs: book.amazon.hardcover
+  }
+];
+
 const bookSchema = {
   '@context': 'https://schema.org',
   '@type': 'Book',
+  '@id': `${bookUrl}#book`,
   name: book.title,
   alternateName: book.subtitle,
-  author: { '@type': 'Organization', name: book.author },
-  publisher: { '@type': 'Organization', name: book.publisher },
+  description: 'A practical manual for first-time and newly promoted managers dealing with authority, feedback, delegation, pushback, boundaries, and decision timing during the first 30 days.',
+  url: bookUrl,
+  mainEntityOfPage: {
+    '@type': 'WebPage',
+    '@id': bookUrl
+  },
+  image: coverUrl,
   inLanguage: 'en',
   isbn: [book.paperbackIsbn13, book.hardcoverIsbn13],
-  bookFormat: ['https://schema.org/EBook', 'https://schema.org/Paperback', 'https://schema.org/Hardcover'],
-  description: book.description,
-  image: coverUrl,
-  url: bookUrl,
-  sameAs: [book.amazon.kindle, book.amazon.paperback, book.amazon.hardcover]
+  author: organizationEntity,
+  publisher: organizationEntity,
+  genre: 'Business and management',
+  audience: {
+    '@type': 'Audience',
+    audienceType: 'First-time managers, newly promoted managers, team leads, supervisors, and professionals preparing for their first management role'
+  },
+  about: [
+    { '@type': 'Thing', name: 'First-time management' },
+    { '@type': 'Thing', name: 'Delegation' },
+    { '@type': 'Thing', name: 'Employee feedback' },
+    { '@type': 'Thing', name: 'Managerial authority' },
+    { '@type': 'Thing', name: 'Decision making' }
+  ],
+  sameAs: [book.amazon.kindle, book.amazon.paperback, book.amazon.hardcover],
+  workExample: formatExamples
 };
+
+const faqItems = [
+  {
+    question: 'What should a new manager do in the first 30 days?',
+    answer: 'A new manager should first understand the team, clarify responsibilities, establish a reliable meeting rhythm, and identify where decisions or expectations are unclear. Early authority is usually strengthened by consistency rather than dramatic change. The manager should listen carefully, address visible problems without delay, and avoid changing systems before understanding why they exist.'
+  },
+  {
+    question: 'Is this book suitable for first-time managers?',
+    answer: 'Yes. The book is written primarily for first-time managers, newly promoted team leads, supervisors, and professionals preparing for a formal management role. It focuses on recognizable early situations: giving feedback, delegating without taking work back, responding to pushback, setting availability boundaries, and making decisions before authority feels fully natural.'
+  },
+  {
+    question: 'Does the book include a 30-day plan?',
+    answer: 'The book uses the first 30 days as a practical operating period and provides direction for what to observe, clarify, establish, and correct. It is an orientation rather than a guaranteed formula. The emphasis is on making sound decisions in sequence, because different teams have different histories, risks, workloads, and levels of trust.'
+  },
+  {
+    question: 'Does the book cover delegation and feedback?',
+    answer: 'Yes. Delegation and feedback are central topics. The book addresses how a new manager can define ownership, set checkpoints, resist rescuing delegated work, name performance problems early, and make the next expected action clear. The approach is practical and situation-based rather than built around broad leadership theory.'
+  },
+  {
+    question: 'Does the book address authority and role changes?',
+    answer: 'Yes. The book addresses the shift from doing the work to carrying responsibility for decisions, expectations, performance, and team rhythm. It treats authority as a matter of role clarity, fair standards, dependable decisions, and appropriate boundaries—not as a need to prove status in every interaction.'
+  },
+  {
+    question: 'Is this a leadership-theory book or a practical manual?',
+    answer: 'It is a practical manual. The book concentrates on early management situations such as 1:1 meetings, delegation, feedback, pushback, managing up, saying no, underperformance, availability, and weekly rhythm. It is not a motivational-performance book, a personal-branding guide, or a promise of instant authority.'
+  },
+  {
+    question: 'Which formats are available?',
+    answer: 'The book is available from Amazon in Kindle, paperback, and hardcover formats. The official identifiers are listed on this page so readers can distinguish the formats: Kindle ASIN B0GNSXZP21, paperback ISBN-13 9798248744442, and hardcover ISBN-13 9798182137096.'
+  },
+  {
+    question: 'Where can the book be purchased?',
+    answer: 'The book can be purchased through Amazon. This official page links directly to the Kindle, paperback, and hardcover listings using the format URLs maintained in the Plain Act book data. Availability, delivery, and retailer terms are controlled by Amazon and may vary by location.'
+  }
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  '@id': `${bookUrl}#faq`,
+  mainEntity: faqItems.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.answer
+    }
+  }))
+};
+
+const benefits = [
+  ['Understand before changing', 'Map the team’s responsibilities, recurring work, current pressures, and hidden dependencies before redesigning processes.'],
+  ['Clarify expectations', 'Make ownership, standards, deadlines, and escalation points visible so people are not forced to interpret the manager’s intentions.'],
+  ['Run useful 1:1 meetings', 'Use 1:1s to understand work, identify risk, clarify decisions, and address issues before they become larger problems.'],
+  ['Delegate without taking work back', 'Define the outcome and checkpoints, then keep responsibility with the person doing the work unless the situation genuinely changes.'],
+  ['Give feedback while it can still help', 'Name specific behavior, explain its effect, and agree on the next expected action before frustration hardens into judgment.'],
+  ['Respond to pushback calmly', 'Separate useful disagreement from avoidance, status testing, or repeated refusal, then answer at the correct level.'],
+  ['Set boundaries around availability', 'Create dependable access and escalation rules without becoming the immediate answer to every question.'],
+  ['Make decisions without overexplaining', 'Give enough context for the decision to be understood, then stop before explanation becomes a request for permission.'],
+  ['Establish a weekly rhythm', 'Create repeatable times for priorities, 1:1s, feedback, decisions, follow-up, and review so management becomes sustainable.']
+];
+
+const bookStructure = [
+  ['Day -1', 'Reduce the panic', 'Understand why feeling late can trigger overcorrection, overexplaining, people-pleasing, and premature change. The opening section reframes the problem before asking the reader to act.'],
+  ['Day 0', 'Stabilize your position', 'Lower reactivity before trying to fix performance, perception, or team systems. The aim is to stop creating new noise while clarity is still forming.'],
+  ['Phase 1', 'Establish control without losing people', 'Build predictable authority through clearer working rules, useful 1:1s, reduced bottlenecks, and small credibility wins.'],
+  ['Phase 2', 'Communication, feedback, and damage control', 'Work through managing up, saying no, delegation, underperformance, feedback, pushback, meetings, uncertainty, and uneven performance.'],
+  ['Phase 3', 'Authority, trust, and long-term stability', 'Address conflict, expectations, documentation, mistakes, influence, burnout, decision speed, hard conversations, trust repair, and weekly rhythm.']
+];
+
+const problems = [
+  ['Overexplaining', 'A new manager keeps adding reasons after a decision is already clear, often because silence feels like disapproval.', 'Explain the relevant reasoning once, invite material information, then let the decision stand.'],
+  ['Delegation', 'Work is assigned, but the manager remains the hidden owner and takes it back when progress becomes uncomfortable.', 'Define the outcome, authority, constraints, and checkpoints before the work begins.'],
+  ['Delayed feedback', 'The manager waits for the perfect moment while a correctable behavior becomes an established pattern.', 'Give feedback when the pattern is specific enough to name and early enough to change.'],
+  ['Authority', 'The manager tries to prove authority through intensity, certainty, or constant intervention.', 'Build authority through clear standards, fair decisions, follow-through, and calm limits.'],
+  ['Pushback', 'Disagreement, resistance, and requests for clarification are treated as though they are the same behavior.', 'Identify whether the team member is adding useful information, avoiding ownership, or refusing a reasonable expectation.'],
+  ['Saying no', 'The manager accepts every request to appear helpful, then creates missed commitments and unclear priorities.', 'Connect each yes to capacity and priority; decline, defer, or renegotiate work that cannot be carried responsibly.'],
+  ['Underperformance', 'Concern remains private while expectations stay vague and the employee receives no usable direction.', 'Describe the gap, restate the standard, agree on the next action, and follow up at a defined time.'],
+  ['Managing up', 'The manager either sends raw problems upward or hides risk until options have narrowed.', 'Bring concise context, the decision needed, the recommended action, and the consequence of delay.'],
+  ['Decision timing', 'The manager decides too early to look decisive or too late to avoid discomfort.', 'Match decision speed to reversibility, risk, available evidence, and the cost of waiting.'],
+  ['Availability and dependency', 'Immediate access becomes the team’s default route for uncertainty, weakening ownership.', 'Provide reliable access while requiring people to bring context, options, and a recommendation.'],
+  ['Weekly management rhythm', 'Management becomes a stream of interruptions because important conversations have no dependable place.', 'Create recurring moments for priorities, 1:1s, feedback, decisions, escalation, and review.']
+];
 ---
-<BaseLayout title={`${book.title} | Plain Act`} description="Official page for The First 30 Days as a New Manager by Plain Act, published by PlainAct Publishing." path="/books/the-first-30-days-as-a-new-manager/" current="Books" schema={[bookSchema]}>
-  <section class="section">
+
+<BaseLayout
+  title={`${book.title}: A Practical First-Time Manager Book | Plain Act`}
+  description="Official page for The First 30 Days as a New Manager, a practical book on authority, feedback, delegation, boundaries, and decision timing."
+  path={pagePath}
+  ogImage={book.mockup}
+  current="Books"
+  schema={[bookSchema, faqSchema]}
+>
+  <section class="section book-hero">
     <div class="container">
-      <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Books', url:'/books/'}, {name: book.title, url:'/books/the-first-30-days-as-a-new-manager/'}]} />
-      <div class="grid grid-2">
-        <div>
+      <Breadcrumbs items={[{ name: 'Home', url: '/' }, { name: 'Books', url: '/books/' }, { name: book.title, url: pagePath }]} />
+
+      <div class="hero-grid">
+        <div class="hero-copy">
           <p class="eyebrow">Official book page</p>
           <h1>{book.title}</h1>
           <p class="lede">{book.subtitle}</p>
-          <p>Author: {book.author}<br />Publisher: {book.publisher}</p>
+          <p class="byline"><strong>Author:</strong> {book.author}<br /><strong>Publisher:</strong> {book.publisher}</p>
+
+          <p class="opening-copy">
+            A practical book for first-time managers, newly promoted team leads, supervisors, and people preparing to manage a team. It focuses on the decisions that make early authority steadier: understanding the team, setting expectations, delegating clearly, giving feedback, responding to pushback, and choosing when to act.
+          </p>
+
+          <div class="answer-card" aria-labelledby="first-30-days-answer">
+            <h2 id="first-30-days-answer">What should a new manager focus on in the first 30 days?</h2>
+            <p>A new manager should understand the team before changing it, clarify ownership and expectations, establish a dependable communication rhythm, and address visible problems early. The goal is not to perform authority. The goal is to make work clearer, decisions more reliable, and responsibility easier to hold.</p>
+          </div>
+
           <AmazonButtons book={book} />
+          <p class="retailer-note small">Amazon controls current pricing, availability, delivery, and regional purchasing terms.</p>
         </div>
-        <img class="mockup" src={href(book.mockup)} alt="Book mockup for The First 30 Days as a New Manager" width="900" height="1200" />
+
+        <div class="hero-image">
+          <img
+            class="mockup"
+            src={href(book.mockup)}
+            alt={`Book mockup for ${book.title}`}
+            width="900"
+            height="1200"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
       </div>
     </div>
   </section>
+
   <section class="section-sm">
-    <div class="container grid grid-2">
+    <div class="container reading-width">
+      <h2>Book summary</h2>
+      <p><em>The First 30 Days as a New Manager</em> addresses a common early-management problem: a capable professional receives formal authority, but the habits that helped as an individual contributor no longer produce clear ownership. The new manager may overexplain decisions, rescue delegated work, remain constantly available, postpone feedback, or change too much before understanding the team.</p>
+      <p>The book offers a restrained, practical approach to the first month. It works through 1:1 meetings, delegation, feedback, pushback, managing up, underperformance, boundaries, and decision timing. It is intended for readers who need usable guidance for real conversations and operating choices—not broad leadership theory or motivational performance advice.</p>
+    </div>
+  </section>
+
+  <section class="section-sm section-tint">
+    <div class="container reading-width">
+      <h2>The core idea</h2>
+      <p class="core-idea">A new manager often weakens authority not through one dramatic mistake, but through repeated reactive patterns: explaining past the point of clarity, helping past the point of ownership, committing past available capacity, delaying feedback, rescuing delegated work, staying permanently available, and changing systems before understanding them. Early authority becomes steadier when the manager replaces reaction with clear expectations, proportionate decisions, and consistent follow-through.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading reading-width">
+        <h2>What the book helps a new manager do</h2>
+        <p>The book is organized around practical management behavior. The aim is not to make management look effortless; it is to help a new manager act clearly when the role still feels unfamiliar.</p>
+      </div>
+
+      <div class="benefit-grid">
+        {benefits.map(([title, text]) => (
+          <article class="card compact-card">
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
+      </div>
+
+      <div class="mid-page-cta card">
+        <div>
+          <h2>Choose the format that fits how you read</h2>
+          <p>Kindle is suited to immediate digital reading. Paperback and hardcover provide physical reference copies for annotation, review, and returning to specific management situations.</p>
+        </div>
+        <AmazonButtons book={book} />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-tint">
+    <div class="container">
+      <div class="section-heading reading-width">
+        <h2>How the book is structured</h2>
+        <p>The book is organized by days, but it is not a countdown. Each day stands on its own, allowing the reader to choose the management situation that needs attention now.</p>
+      </div>
+
+      <ol class="timeline" aria-label="Book structure">
+        {bookStructure.map(([period, title, text]) => (
+          <li class="timeline-item">
+            <p class="timeline-period">{period}</p>
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </li>
+        ))}
+      </ol>
+      <p class="small reading-width">Readers can begin at the start or jump to the day that matches the pressure they are facing. The book is designed to be used in small, deliberate steps rather than consumed as a fixed 30-day program.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading reading-width">
+        <h2>Problems covered in the book</h2>
+        <p>Each problem below is treated as a management situation with a practical response—not as a personality defect or a reason to perform confidence.</p>
+      </div>
+
+      <div class="problem-list">
+        {problems.map(([title, definition, principle]) => (
+          <article class="problem-entry">
+            <h3>{title}</h3>
+            <p><strong>The problem:</strong> {definition}</p>
+            <p><strong>Practical principle:</strong> {principle}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-tint">
+    <div class="container audience-grid">
       <article>
-        <h2>Description</h2>
-        {book.description.split('\n\n').map((p) => <p>{p}</p>)}
+        <h2>Who this book is for</h2>
+        <ul class="check-list">
+                    <li>A first-time manager worried that clear expectations will sound controlling.</li>
+          <li>A manager who delegates work and then repeatedly takes it back.</li>
+          <li>Someone delaying difficult feedback because the relationship feels fragile.</li>
+          <li>A team lead unsure what to do during the first week in formal authority.</li>
+          <li>A manager whose constant availability is creating dependency.</li>
+          <li>A supervisor dealing with pushback, underperformance, or unclear ownership.</li>
+          <li>A professional preparing for a first management promotion.</li>
+        </ul>
       </article>
+
       <aside class="card">
+        <h2>Who it is not for</h2>
+        <p>This is not a broad leadership-theory book, a motivational-performance manual, a personal-branding guide, or a promise of instant authority. It is also not a substitute for an employer’s policies, legal guidance, or role-specific technical training.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container details-grid">
+      <article>
+        <h2>What makes this book different</h2>
+        <p>The book stays close to the early situations in which a new manager’s habits become visible. It does not ask the reader to build a leadership persona or imitate a high-energy style. It asks what the role requires in a specific moment.</p>
+        <p>That means working through 1:1s, feedback, delegation, boundaries, pushback, managing up, saying no, underperformance, decision timing, and weekly rhythm. The emphasis is on making responsibility clearer and reducing the reactive patterns that cause a manager to become the bottleneck.</p>
+        <p>For broader free education about entering management, use the <a href={href('/guides/new-manager/')}>Plain Act New Manager Guide</a>. This page remains focused on the book, its framework, its intended reader, and its available formats.</p>
+      </article>
+
+      <aside class="card details-card">
         <h2>Book details</h2>
         <table class="table">
+          <caption class="visually-hidden">Identifiers and format details for {book.title}</caption>
           <tbody>
-            <tr><th>Language</th><td>{book.language}</td></tr>
-            <tr><th>Paperback ISBN-13</th><td>{book.paperbackIsbn13}</td></tr>
-            <tr><th>Hardcover ISBN-13</th><td>{book.hardcoverIsbn13}</td></tr>
-            <tr><th>Kindle ASIN</th><td>{book.kindleAsin}</td></tr>
-            <tr><th>Paperback ASIN</th><td>{book.paperbackAsin}</td></tr>
-            <tr><th>Hardcover ASIN</th><td>{book.hardcoverAsin}</td></tr>
+            <tr><th scope="row">Language</th><td>{book.language}</td></tr>
+            <tr><th scope="row">Paperback ISBN-13</th><td>{book.paperbackIsbn13}</td></tr>
+            <tr><th scope="row">Hardcover ISBN-13</th><td>{book.hardcoverIsbn13}</td></tr>
+            <tr><th scope="row">Kindle ASIN</th><td>{book.kindleAsin}</td></tr>
+            <tr><th scope="row">Paperback ASIN</th><td>{book.paperbackAsin}</td></tr>
+            <tr><th scope="row">Hardcover ASIN</th><td>{book.hardcoverAsin}</td></tr>
           </tbody>
         </table>
       </aside>
     </div>
   </section>
-  <section class="section-sm">
-    <div class="container grid grid-2">
-      <div>
-        <h2>Topics covered</h2>
-        <ul class="pill-list">{book.topics.map((topic) => <li>{topic}</li>)}</ul>
+
+  <section class="section-sm section-tint">
+    <div class="container">
+      <div class="section-heading reading-width">
+        <h2>Related Plain Act resources</h2>
+        <p>The book page is the commercial reference for the manual. These free and supporting pages provide broader education, condensed reference, and practical tools.</p>
       </div>
-      <div class="card flat">
-        <h2>Reading rhythm</h2>
-        <p>Notice pressure.<br />Reduce reaction.<br />Take one useful action.<br />Stop.</p>
+
+      <nav class="resource-grid" aria-label="Related Plain Act resources">
+        <a class="resource-link" href={href('/guides/new-manager/')}>
+          <strong>Read the complete New Manager Guide</strong>
+          <span>Broader free guidance for first-time managers and people preparing for the role.</span>
+        </a>
+        <a class="resource-link" href={href('/books/the-first-30-days-as-a-new-manager/summary/')}>
+          <strong>Read the book summary</strong>
+          <span>A concise overview of the book’s focus and practical approach.</span>
+        </a>
+        <a class="resource-link" href={href('/books/the-first-30-days-as-a-new-manager/key-ideas/')}>
+          <strong>Explore the book’s key ideas</strong>
+          <span>Selected management principles organized for quick reference.</span>
+        </a>
+        <a class="resource-link" href={href('/books/the-first-30-days-as-a-new-manager/quotes/')}>
+          <strong>Review selected Plain Act lines</strong>
+          <span>Short passages and ideas associated with the book’s management themes.</span>
+        </a>
+        <a class="resource-link" href={href('/articles/')}>
+          <strong>Browse practical management articles</strong>
+          <span>Focused articles on delegation, feedback, authority, pushback, and related problems.</span>
+        </a>
+        <a class="resource-link" href={href('/resources/new-manager-checklist/')}>
+          <strong>Use the New Manager Checklist</strong>
+          <span>A practical reference for the first days and weeks in the role.</span>
+        </a>
+        <a class="resource-link" href={href('/method/')}>
+          <strong>Understand the Plain Act method</strong>
+          <span>The restrained operating approach behind Plain Act management manuals.</span>
+        </a>
+      </nav>
+
+      {socialProfiles.length > 0 && (
+        <p class="profile-links small">
+          Follow Plain Act on{' '}
+          {socialProfiles.map((profile, index) => (
+            <>
+              {index > 0 && (index === socialProfiles.length - 1 ? ' and ' : ', ')}
+              <a href={profile.url} rel="me">{profile.label}</a>
+            </>
+          ))}.
+        </p>
+      )}
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container reading-width">
+      <h2>Frequently asked questions</h2>
+      <div class="faq-list">
+        {faqItems.map((item) => (
+          <article class="faq-item">
+            <h3>{item.question}</h3>
+            <p>{item.answer}</p>
+          </article>
+        ))}
       </div>
     </div>
   </section>
-  <section class="section-sm">
-    <div class="container grid grid-2">
-      <article class="card flat"><h2>Who this book is for</h2><p>First-time managers, newly promoted team leads, supervisors, and middle managers who need clear tools for early authority, feedback, delegation, pushback, and weekly rhythm.</p></article>
-      <article class="card flat"><h2>Who it is not for</h2><p>This is not a motivational leadership book, a personal branding manual, or a promise of easy authority. It is practical, restrained, and situation-focused.</p></article>
+
+  <section class="section final-cta">
+    <div class="container reading-width">
+      <p class="eyebrow">The First 30 Days as a New Manager</p>
+      <h2>A practical manual for the early decisions that shape management</h2>
+      <p>The book is for first-time and newly promoted managers who need a clear approach to authority, delegation, feedback, pushback, availability, and decision timing. Choose Kindle for digital reading or a paperback or hardcover copy for ongoing reference.</p>
+      <AmazonButtons book={book} />
+      <p class="small">Published by {book.publisher}. Written by {book.author}. Purchase links lead to Amazon format pages.</p>
     </div>
-    <div class="container button-row"><a class="button quiet" href={href('/guides/new-manager/')}>Read the new manager guide</a><a class="button quiet" href={href('/method/')}>Plain Act method</a></div>
   </section>
 </BaseLayout>
+
+<style>
+  .book-hero {
+    padding-top: 2.75rem;
+  }
+
+  .hero-grid,
+  .audience-grid,
+  .details-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+
+  .hero-copy {
+    max-width: 720px;
+  }
+
+  .hero-image {
+    position: sticky;
+    top: 7rem;
+  }
+
+  .mockup {
+    display: block;
+    width: min(100%, 460px);
+    margin-inline: auto;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .byline,
+  .opening-copy,
+  .retailer-note {
+    margin-top: 1.25rem;
+  }
+
+  .answer-card {
+    margin: 1.75rem 0;
+    padding: 1.25rem 1.35rem;
+    border-left: 4px solid var(--accent);
+    background: var(--paper);
+  }
+
+  .answer-card h2 {
+    margin-top: 0;
+    font-size: clamp(1.2rem, 2vw, 1.45rem);
+  }
+
+  .answer-card p,
+  .compact-card p,
+  .problem-entry p,
+  .faq-item p,
+  .resource-link span,
+  .timeline-item p {
+    margin-bottom: 0;
+  }
+
+  .reading-width,
+  .section-heading {
+    max-width: 790px;
+  }
+
+  .section-tint {
+    background: var(--card);
+    border-block: 1px solid var(--border);
+  }
+
+  .core-idea {
+    font-size: clamp(1.15rem, 2.2vw, 1.4rem);
+    line-height: 1.65;
+  }
+
+  .benefit-grid,
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .compact-card h3,
+  .problem-entry h3,
+  .timeline-item h3,
+  .faq-item h3 {
+    margin-top: 0;
+  }
+
+  .mid-page-cta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 2rem;
+  }
+
+  .mid-page-cta h2 {
+    margin-top: 0;
+  }
+
+  .timeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0 1rem;
+    padding: 0;
+    list-style: none;
+    counter-reset: period;
+  }
+
+  .timeline-item {
+    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--paper);
+  }
+
+  .timeline-period {
+    margin-top: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .problem-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 2rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .problem-entry {
+    padding: 1.4rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .check-list {
+    padding-left: 1.2rem;
+  }
+
+  .check-list li + li {
+    margin-top: 0.65rem;
+  }
+
+  .details-card {
+    align-self: start;
+  }
+
+  .details-card h2 {
+    margin-top: 0;
+  }
+
+  .resource-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--paper);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .resource-link:hover {
+    border-color: var(--accent);
+  }
+
+  .resource-link strong {
+    color: var(--accent);
+  }
+
+  .profile-links {
+    margin-top: 1.5rem;
+  }
+
+  .faq-list {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .faq-item {
+    padding: 1.35rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .final-cta {
+    text-align: center;
+    background: var(--accent-soft);
+  }
+
+  .final-cta .button-row {
+    justify-content: center;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 900px) {
+    .hero-grid,
+    .audience-grid,
+    .details-grid,
+    .mid-page-cta {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-image {
+      position: static;
+      order: -1;
+    }
+
+    .mockup {
+      width: min(72vw, 380px);
+    }
+
+  }
+
+  @media (max-width: 640px) {
+    .benefit-grid,
+    .resource-grid,
+    .problem-list,
+    .timeline {
+      grid-template-columns: 1fr;
+    }
+
+    .answer-card,
+    .timeline-item,
+    .resource-link {
+      border-radius: 10px;
+    }
+  }
+</style>
