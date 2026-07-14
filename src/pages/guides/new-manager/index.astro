@@ -1,4 +1,4 @@
-﻿---
+---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../../components/Breadcrumbs.astro';
 import AmazonButtons from '../../../components/AmazonButtons.astro';
@@ -873,6 +873,72 @@ const relatedArticles = [
       </div>
     </div>
   </article>
+
+  <section class="plainact-guide-book-cta" aria-labelledby="plainact-guide-book-cta-title">
+    <div class="plainact-guide-book-cta__inner">
+      <p class="plainact-guide-book-cta__eyebrow">Need more structure?</p>
+      <h2 id="plainact-guide-book-cta-title">Turn your first month into focused daily actions</h2>
+      <p>
+        <em>The First 30 Days as a New Manager</em> is designed for the moments when
+        you need a practical next step, a usable script, or a clearer decision under pressure.
+      </p>
+      <a
+        class="plainact-guide-book-cta__link"
+        href={`${import.meta.env.BASE_URL}books/the-first-30-days-as-a-new-manager/`}
+      >
+        Explore the first 30 days book
+      </a>
+    </div>
+  </section>
+
+  <style>
+    .plainact-guide-book-cta {
+      margin: 4rem auto 1rem;
+      padding: 0 1rem;
+      max-width: 74rem;
+    }
+
+    .plainact-guide-book-cta__inner {
+      padding: clamp(1.5rem, 4vw, 3rem);
+      border: 1px solid var(--border, #d8d8d8);
+      border-radius: 1rem;
+      background: var(--card, #ffffff);
+      box-shadow: var(--shadow, 0 12px 30px rgba(0, 0, 0, 0.08));
+    }
+
+    .plainact-guide-book-cta__eyebrow {
+      margin: 0 0 0.6rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .plainact-guide-book-cta h2 {
+      margin: 0 0 0.9rem;
+      max-width: 24ch;
+    }
+
+    .plainact-guide-book-cta p {
+      max-width: 68ch;
+    }
+
+    .plainact-guide-book-cta__link {
+      display: inline-flex;
+      margin-top: 0.75rem;
+      padding: 0.8rem 1.1rem;
+      border-radius: 0.7rem;
+      font-weight: 700;
+      text-decoration: none;
+      background: var(--accent, #111111);
+      color: #ffffff;
+    }
+
+    .plainact-guide-book-cta__link:hover,
+    .plainact-guide-book-cta__link:focus-visible {
+      text-decoration: underline;
+    }
+  </style>
 </BaseLayout>
 
 <style>
