@@ -28,7 +28,7 @@ const books = [
     author: 'Andrew S. Grove',
     bestFor: 'Building operating rhythm, meetings, leverage, and managerial output.',
     strength: 'Clear systems thinking for managers who need to organize work and improve team performance.',
-    limit: 'Some examples come from a different business era and require translation to the reader’s context.',
+    limit: 'Some examples come from a different business era and require translation to the readerâ€™s context.',
     url: 'https://www.penguinrandomhouse.com/books/72467/high-output-management-by-andrew-s-grove-former-chairman-and-ceo-of-intel/',
     linkLabel: 'View publisher information'
   },
@@ -99,4 +99,71 @@ const itemListSchema = {
       <p>One relevant book, used against a real management problem, is more useful than a long reading list left untouched.</p>
     </div>
   </section>
+
+  <section class="plainact-book-cta" aria-labelledby="plainact-book-cta-title">
+    <div class="plainact-book-cta__inner">
+      <p class="plainact-book-cta__eyebrow">A practical place to start</p>
+      <h2 id="plainact-book-cta-title">Need a day-by-day guide for your first month?</h2>
+      <p>
+        <em>The First 30 Days as a New Manager</em> turns common early-management
+        problems into focused actions, scripts, and decisions you can use when the
+        situation is happening.
+      </p>
+      <a
+        class="plainact-book-cta__link"
+        href={`${import.meta.env.BASE_URL}books/the-first-30-days-as-a-new-manager/`}
+      >
+        Read the full book overview
+      </a>
+    </div>
+  </section>
+
+  <style>
+    .plainact-book-cta {
+      margin: 4rem auto 1rem;
+      padding: 0 1rem;
+      max-width: 74rem;
+    }
+
+    .plainact-book-cta__inner {
+      padding: clamp(1.5rem, 4vw, 3rem);
+      border: 1px solid var(--border, #d8d8d8);
+      border-radius: 1rem;
+      background: var(--card, #ffffff);
+      box-shadow: var(--shadow, 0 12px 30px rgba(0, 0, 0, 0.08));
+    }
+
+    .plainact-book-cta__eyebrow {
+      margin: 0 0 0.6rem;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .plainact-book-cta h2 {
+      margin: 0 0 0.9rem;
+      max-width: 22ch;
+    }
+
+    .plainact-book-cta p {
+      max-width: 68ch;
+    }
+
+    .plainact-book-cta__link {
+      display: inline-flex;
+      margin-top: 0.75rem;
+      padding: 0.8rem 1.1rem;
+      border-radius: 0.7rem;
+      font-weight: 700;
+      text-decoration: none;
+      background: var(--accent, #111111);
+      color: #ffffff;
+    }
+
+    .plainact-book-cta__link:hover,
+    .plainact-book-cta__link:focus-visible {
+      text-decoration: underline;
+    }
+  </style>
 </BaseLayout>
