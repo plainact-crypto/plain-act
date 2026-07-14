@@ -9,5 +9,8 @@ export const site = {
   logo: '/assets/plain-act-logo.png',
   ogImage: '/assets/og-image.jpg',
   positioning: 'Plain Act publishes quiet management manuals for people carrying authority under pressure.',
-  sameAs: []
+  sameAs: [
+    'https://www.youtube.com/@Plan-Act',
+    'https://www.linkedin.com/company/136024511/'
+  ]
 };
