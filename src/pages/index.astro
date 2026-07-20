@@ -1,163 +1,43 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import AmazonButtons from '../components/AmazonButtons.astro';
-import { site } from '../data/site.js';
-import { books, futureThemes } from '../data/books.js';
-
-const primary = books[0];
-const work = books[1];
-const base = import.meta.env.BASE_URL;
-const href = (url) => `${base}${url.replace(/^\//, '')}`;
-
-const organizationSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: site.brand,
-  alternateName: site.publisher,
-  url: site.fullUrl,
-  logo: new URL(`${base}${site.logo.replace(/^\//, '')}`, site.siteUrl).toString(),
-  email: site.email,
-  ...(site.sameAs.length ? { sameAs: site.sameAs } : {})
-};
+const base = '/plain-act';
+const videos = [
+  { title: 'How New Managers Build Authority Without Acting Tough', url: 'https://youtu.be/DuvDEIQwi3g', thumb: 'https://i.ytimg.com/vi/DuvDEIQwi3g/hqdefault.jpg' },
+  { title: 'Why New Managers Overexplain', url: 'https://youtu.be/ZC7cIHJPhho', thumb: 'https://i.ytimg.com/vi/ZC7cIHJPhho/hqdefault.jpg' },
+  { title: 'How New Managers Delegate Without Taking the Work Back', url: 'https://youtu.be/oWsC7tHsI38', thumb: 'https://i.ytimg.com/vi/oWsC7tHsI38/hqdefault.jpg' }
+];
 ---
-
-<BaseLayout
-  title="Plain Act | Quiet management manuals"
-  description="Plain Act publishes quiet management manuals for people carrying authority under pressure."
-  path="/"
-  schema={[organizationSchema]}
->
-  <section class="hero">
-    <div class="container grid grid-2">
-      <div>
-        <p class="eyebrow">Plain Act</p>
-        <h1>Quiet manuals for authority under pressure.</h1>
-        <p class="lede">{site.positioning}</p>
-        <p>
-          Plain Act is built for readers who need practical judgment, restraint,
-          communication, feedback, delegation, and decision timing without hype
-          or inflated leadership language.
-        </p>
-
-        <div class="button-row">
-          <a class="button" href={href('/books/the-first-30-days-as-a-new-manager/')}>
-            View the primary book
-          </a>
-          <a class="button secondary" href={href('/books/')}>
-            Browse catalog
-          </a>
-        </div>
-      </div>
-
-      <article class="card">
-        <img
-          class="mockup"
-          src={href(primary.mockup)}
-          alt="Mockup for The First 30 Days as a New Manager"
-          width="900"
-          height="1200"
-        />
-        <h2>{primary.title}</h2>
-        <p class="small">{primary.subtitle}</p>
-        <AmazonButtons book={primary} />
-      </article>
-
-      <div class="home-video">
-        <iframe
-          src="https://www.youtube.com/embed/uG_sWEEuYEY"
-          title="Day -1: The First Mistake New Managers Make"
-          loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen>
-        </iframe>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container grid grid-2">
-      <div>
-        <h2>Management gets difficult before it feels natural.</h2>
-        <p>{primary.description.split('\\n\\n')[0]}</p>
-        <p>{primary.description.split('\\n\\n')[1]}</p>
-      </div>
-
-      <div class="card flat">
-        <h3>Plain Act method</h3>
-        <ol class="list-clean">
-          <li>Notice pressure.</li>
-          <li>Reduce reaction.</li>
-          <li>Take one useful action.</li>
-          <li>Stop.</li>
-        </ol>
-        <p><a href={href('/method/')}>Read the method</a></p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section-sm">
-    <div class="container">
-      <h2>Catalog preview</h2>
-
-      <div class="grid grid-3">
-        <article class="card book-card">
-          <img
-            class="cover"
-            src={href(primary.cover)}
-            alt="Cover for The First 30 Days as a New Manager"
-            width="600"
-            height="900"
-          />
-          <div>
-            <h3>{primary.title}</h3>
-            <p class="small">Published. A practical manual for early management pressure.</p>
-          </div>
-        </article>
-
-        <article class="card">
-          <p class="eyebrow">Metadata pending</p>
-          <h3>{work.title}</h3>
-          <p class="small">{work.description}</p>
-          <p class="small">
-            <a href={href('/books/do-the-work/')}>Read current status</a>
-          </p>
-        </article>
-
-        <article class="card development-card">
-          <h3>More Plain Act manuals are in development.</h3>
-          <p class="small">
-            Planned themes include {futureThemes.slice(0, 5).join(', ')},
-            and related practical manuals.
-          </p>
-        </article>
-      </div>
-
-      <div class="button-row">
-        <a class="button quiet" href={href('/coming-soon/')}>
-          View planned topics
-        </a>
-      </div>
-    </div>
-  </section>
-</BaseLayout>
-
-<style>
-  .home-video {
-    grid-column: 1 / -1;
-    width: 100%;
-    max-width: 900px;
-    margin: 2rem auto 0;
-    aspect-ratio: 16 / 9;
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid rgba(22, 50, 79, 0.18);
-    background: #111;
-  }
-
-  .home-video iframe {
-    width: 100%;
-    height: 100%;
-    border: 0;
-    display: block;
-  }
-</style>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <meta name="description" content="Plain Act publishes quiet management manuals for first-time managers carrying authority under pressure." />
+  <title>Plain Act | Quiet management manuals</title>
+  <style>
+    :root{--ink:#111315;--ink2:#1b1d1f;--paper:#f3f0e9;--muted:#aaa9a5;--line:#343638;--blue:#47687a;--max:1480px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--ink);color:#f7f5f0;font-family:Arial,Helvetica,sans-serif}a{color:inherit;text-decoration:none}img{display:block;max-width:100%}
+    .wrap{width:min(var(--max),calc(100% - 48px));margin:auto}
+    header{height:84px;border-bottom:1px solid #282a2c;background:#101214;display:flex;align-items:center;position:sticky;top:0;z-index:20}
+    .nav{display:grid;grid-template-columns:260px 1fr 80px;align-items:center;gap:24px}.brand{letter-spacing:.28em;font-size:22px}.brand small{display:block;font-size:9px;letter-spacing:.42em;margin-top:7px;color:#aaa}
+    nav{display:flex;justify-content:center;gap:46px;font-size:15px}nav a{padding:31px 0 25px;border-bottom:2px solid transparent}nav a:first-child{border-color:#eee}.icons{text-align:right;font-size:22px;letter-spacing:13px}
+    .hero{min-height:540px;background:radial-gradient(circle at 70% 25%,#2a2b2b 0,#17191a 38%,#111315 72%);overflow:hidden}.hero-grid{display:grid;grid-template-columns:48% 52%;min-height:540px;align-items:center}
+    h1{font-size:clamp(42px,4.1vw,70px);line-height:1.1;letter-spacing:-.035em;margin:0 0 24px;max-width:720px;font-weight:500}.rule{width:42px;height:2px;background:#c8c4bc;margin:24px 0}.lead{font-size:21px;line-height:1.55;color:#bbb;max-width:610px}
+    .buttons{display:flex;gap:18px;margin:32px 0}.btn{padding:18px 34px;border:1px solid #d6d2cb;text-transform:uppercase;letter-spacing:.08em;font-size:13px}.btn.primary{background:#f3f0e9;color:#17191a}.benefits{display:flex;gap:32px;margin-top:30px;color:#ccc;font-size:12px}.benefits span{padding-left:25px;position:relative}.benefits span:before{content:'✓';position:absolute;left:0;border:1px solid #aaa;border-radius:50%;width:18px;height:18px;text-align:center;line-height:17px}
+    .books{height:100%;position:relative;display:flex;justify-content:center;align-items:flex-end;padding-bottom:22px}.plinth{position:absolute;bottom:0;width:100%;height:78px;background:linear-gradient(180deg,#3a3937,#242526);transform:perspective(500px) rotateX(8deg);box-shadow:0 -12px 30px #0008}
+    .book{position:relative;z-index:2;filter:drop-shadow(24px 24px 22px #0009)}.book img{height:450px;width:auto}.book.dark{transform:translateX(58px) translateY(-12px);z-index:3}.book.light{transform:translateX(20px) translateY(5px);z-index:2}.book:after{content:'';position:absolute;right:-18px;top:8px;width:18px;height:calc(100% - 14px);background:repeating-linear-gradient(90deg,#b8b3a9 0 1px,#ddd8ce 1px 3px);transform:skewY(-5deg);transform-origin:left}
+    .content-strip{background:var(--paper);color:#191b1d;border-top:1px solid #aaa;padding:28px 0}.cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0}.card{padding:0 34px;border-right:1px solid #d5d1ca}.card:first-child{padding-left:0}.card:last-child{border:0}.eyebrow{font-size:12px;letter-spacing:.08em;font-weight:700;margin-bottom:18px}.card-body{display:grid;grid-template-columns:190px 1fr;gap:20px;align-items:start}.card img{height:125px;width:190px;object-fit:cover;background:#222}.card h2{font-size:18px;margin:5px 0 12px}.card p{font-size:14px;line-height:1.45;color:#555}.more{font-size:13px;margin-top:14px;display:inline-block}
+    .videos{padding:70px 0;background:#151719}.section-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:30px}.section-head h2{font-size:36px;margin:0}.section-head p{color:#aaa;margin:0}.video-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}.video-card{border:1px solid #333;background:#1d1f21}.video-card img{width:100%;aspect-ratio:16/9;object-fit:cover}.video-card h3{font-size:18px;line-height:1.35;padding:18px;margin:0}.footer-top{background:#282a2c;padding:25px 0}.principles{display:grid;grid-template-columns:repeat(4,1fr);color:#bbb}.principles div{padding:8px 30px;border-right:1px solid #494b4d}.principles div:last-child{border:0}.principles strong{display:block;color:#eee;margin-bottom:5px}.footer{padding:34px 0;color:#aaa;font-size:13px}.footer-inner{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap}.footer a{margin-left:20px}
+    @media(max-width:980px){.nav{grid-template-columns:1fr auto}.icons{display:none}nav{gap:18px;justify-content:end}.hero-grid{grid-template-columns:1fr}.hero{padding-top:55px}.books{min-height:460px}.cards,.video-grid{grid-template-columns:1fr}.card{border-right:0;border-bottom:1px solid #d5d1ca;padding:28px 0}.principles{grid-template-columns:1fr 1fr}.book img{height:390px}}
+    @media(max-width:650px){header{height:auto;padding:20px 0}.nav{display:block}.brand{margin-bottom:18px}nav{justify-content:flex-start;overflow:auto;gap:22px}nav a{padding:5px 0}.wrap{width:min(100% - 28px,var(--max))}.hero-grid{display:block}.hero-copy{padding:50px 0 20px}.buttons,.benefits{flex-direction:column}.books{min-height:390px;transform:scale(.82);transform-origin:center bottom}.book img{height:330px}.book.dark{transform:translateX(45px)}.book.light{transform:translateX(3px)}.card-body{grid-template-columns:130px 1fr}.card img{width:130px;height:100px}.principles{grid-template-columns:1fr}.principles div{border-right:0;border-bottom:1px solid #494b4d}}
+  </style>
+</head>
+<body>
+<header><div class="wrap nav"><a class="brand" href={`${base}/`}>PLAIN ACT<small>PUBLISHING</small></a><nav><a href={`${base}/`}>Home</a><a href={`${base}/books/`}>Books</a><a href={`${base}/articles/`}>Articles</a><a href={`${base}/resources/`}>Resources</a><a href={`${base}/about/`}>About</a><a href={`${base}/contact/`}>Contact</a></nav><div class="icons">⌕ 🛒</div></div></header>
+<main>
+<section class="hero"><div class="wrap hero-grid"><div class="hero-copy"><h1>Quiet management manuals for people carrying authority under pressure.</h1><div class="rule"></div><p class="lead">Practical guidance for first-time managers who want to lead with clarity, not noise.</p><div class="buttons"><a class="btn primary" href={`${base}/books/the-first-30-days-as-a-new-manager/`}>View the books →</a><a class="btn" href={`${base}/resources/`}>Explore resources</a></div><div class="benefits"><span>Practical<br><small>Real-world tools</small></span><span>For First-Time Managers<br><small>Written for where you are</small></span><span>Clear. Calm. Useful.<br><small>No jargon. No fluff.</small></span></div></div><div class="books"><div class="plinth"></div><div class="book dark"><img src={`${base}/images/hardcover-dark.png`} alt="Dark hardcover edition of The First 30 Days as a New Manager" /></div><div class="book light"><img src={`${base}/images/paperback-light.png`} alt="Light paperback edition of The First 30 Days as a New Manager" /></div></div></div></section>
+<section class="content-strip"><div class="wrap cards"><article class="card"><div class="eyebrow">▣ &nbsp; FEATURED ARTICLES ›</div><div class="card-body"><img src={`${base}/images/home-article.jpg`} alt="Notebook and pen" /><div><h2>The First 30 Days: Why They Set the Tone</h2><p>How early decisions shape trust, momentum, and your credibility.</p><a class="more" href={`${base}/articles/`}>Read Article ›</a></div></div></article><article class="card"><div class="eyebrow">▱ &nbsp; RELATED RESOURCES ›</div><div class="card-body"><img src={`${base}/images/home-resource.jpg`} alt="Manager checklist" /><div><h2>30-Day Manager Kickstart Checklist</h2><p>A practical day-by-day guide to help you start strong.</p><a class="more" href={`${base}/resources/`}>Explore Resources ›</a></div></div></article><article class="card"><div class="eyebrow">▻ &nbsp; FROM OUR YOUTUBE ›</div><div class="card-body"><img src="https://i.ytimg.com/vi/DuvDEIQwi3g/hqdefault.jpg" alt="Latest Plain Act video" /><div><h2>How New Managers Build Authority</h2><p>Build authority without acting tough or pretending to know everything.</p><a class="more" href="https://youtu.be/DuvDEIQwi3g">Watch on YouTube ›</a></div></div></article></div></section>
+<section class="videos"><div class="wrap"><div class="section-head"><div><h2>From Plain Act on YouTube</h2><p>Practical management for people doing the job for real.</p></div><a href="https://www.youtube.com/@Plan-Act">View channel →</a></div><div class="video-grid">{videos.map(v=><a class="video-card" href={v.url}><img src={v.thumb} alt={v.title}/><h3>{v.title}</h3></a>)}</div></div></section>
+<section class="footer-top"><div class="wrap principles"><div><strong>“You don’t need to be perfect.”</strong>You just need a plan.</div><div><strong>Thoughtful Books</strong>Built for real work.</div><div><strong>Human-Focused</strong>Leadership is personal.</div><div><strong>Practical by Design</strong>Use it. Share it. Keep it close.</div></div></section>
+</main>
+<footer class="footer"><div class="wrap footer-inner"><span>© 2026 PlainAct Publishing</span><span><a href={`${base}/affiliate-disclosure/`}>Affiliate Disclosure</a><a href={`${base}/privacy-policy/`}>Privacy Policy</a><a href={`${base}/sitemap/`}>Sitemap</a></span></div></footer>
+</body></html>
