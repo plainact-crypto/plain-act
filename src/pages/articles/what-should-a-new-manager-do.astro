@@ -1,0 +1,409 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { site } from '../../data/site.js';
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => {
+  if (url.startsWith('http')) return url;
+  const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  return `${cleanBase}${cleanUrl}`;
+};
+
+const title = "What Should a New Manager Do in the First 30 Days?";
+const h1 = "What Should a New Manager Do in the First 30 Days? A Practical Week-by-Week Plan";
+const description = "What should a new manager do first? Follow a practical week-by-week plan for priorities, team meetings, delegation, feedback, and decision-making.";
+const topic = "First 30 Days";
+const number = "11";
+const longEmbed = null;
+const longWatch = null;
+const shorts = [];
+const related = [
+  {
+    title: "Why New Managers Try to Fix Everything in Week One and Fail",
+    slug: "/articles/fix-everything-week-one/",
+    topic: "First Week"
+  },
+  {
+    title: "How New Managers Can Build Authority Without Being Harsh",
+    slug: "/articles/build-authority-as-new-manager/",
+    topic: "Authority"
+  }
+];
+
+const bookUrl = href('/books/the-first-30-days-as-a-new-manager/');
+const articlesUrl = href('/articles/');
+const resourcesUrl = href('/resources/new-manager-checklist/');
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: h1,
+  description,
+  author: { '@type': 'Organization', name: 'Plain Act' },
+  publisher: { '@type': 'Organization', name: 'Plain Act', url: site.siteUrl },
+  mainEntityOfPage: new URL(`${base}articles/what-should-a-new-manager-do/`, site.siteUrl).toString(),
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'What should a new manager do on the first day?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Meet the team, protect current commitments, explain how the first week will work, and schedule individual conversations. Do not begin with a major process change or a long presentation about your leadership style.' }
+    },
+    {
+      '@type': 'Question',
+      name: 'How quickly should a new manager make changes?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Immediate risks and blocked decisions may require action on the first day. Larger structural, process, or staffing changes should wait until you understand the problem, the dependencies, and the likely consequences.' }
+    },
+    {
+      '@type': 'Question',
+      name: 'How can a new manager establish authority?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Set clear expectations, define decision boundaries, respond consistently, give timely feedback, and follow through. Authority grows when people know what to expect from your judgment, not when you act tougher or speak more forcefully.' }
+    },
+    {
+      '@type': 'Question',
+      name: 'What is the biggest mistake a new manager makes?',
+      acceptedAnswer: { '@type': 'Answer', text: 'Trying to prove competence by absorbing too much work or changing too much too early. Both habits create dependency, hide the team’s real capabilities, and make the manager the center of every decision.' }
+    }
+  ]
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  path="/articles/what-should-a-new-manager-do/"
+  schema={[schema, faqSchema]}
+>
+  <main class="article-page">
+    <nav class="crumbs">
+      <a href={articlesUrl}>Articles</a>
+      <span>/</span>
+      <span>{number}</span>
+    </nav>
+
+    <header class="article-hero">
+      <p class="kicker">{topic}</p>
+      <h1>{h1}</h1>
+      <p>{description}</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>Read the book</a>
+        <a href={resourcesUrl}>Use the checklist</a>
+        {longWatch && <a href={longWatch} target="_blank" rel="noreferrer">Watch video</a>}
+      </div>
+    </header>
+
+    {longEmbed && (
+      <section class="media-block">
+        <div class="video-frame long">
+          <iframe
+            src={longEmbed}
+            title={h1}
+            loading="lazy"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen
+          ></iframe>
+        </div>
+      </section>
+    )}
+
+    <article class="article-body">
+<h1>What Should a New Manager Do in the First 30 Days? A Practical Week-by-Week Plan</h1>
+<p>A new manager should use the first 30 days to understand the work, stabilize important commitments, clarify expectations, define decision boundaries, delegate carefully, and address repeated problems before they become habits. The goal is not to prove authority through rapid change. It is to create reliable expectations, ownership, and follow-through so the team knows how work will move and how decisions will be made.</p>
+<p>In practical terms, the first month should move in this order: understand, clarify, delegate, then correct.</p>
+<p>The order matters. A manager who changes too much too early creates disruption. A manager who only observes creates uncertainty. The better approach is to learn quickly, make contained decisions, and become predictable under pressure.</p>
+<h2>Before the Weekly Plan: Clarify the Job You Inherited</h2>
+<p>Before changing the team, clarify what your own manager expects from you.</p>
+<p>Ask:</p>
+<ul>
+<li>What must remain on track during this transition?</li>
+<li>What should be measurably clearer or better by the end of 30 days?</li>
+<li>Which decisions can I make independently?</li>
+<li>Which risks or unresolved issues should I understand immediately?</li>
+</ul>
+<p>These questions matter whether you were promoted internally or hired into an unfamiliar organization.</p>
+<p>An internal promotion gives you context, but it can also create false confidence. You may know the people and the work while still misunderstanding what the role now requires. Joining a new company creates the opposite risk: you may have a clear management mandate but limited knowledge of the history, informal power structure, and hidden dependencies.</p>
+<p>In either case, identify the commitments you inherited before making new promises. Review major deadlines, stakeholder expectations, current staffing constraints, delayed decisions, and projects already at risk.</p>
+<p>Do not commit publicly to new dates or improvements until you know what the team is already carrying.</p>
+<p>A short, factual update to your own manager is more useful than a polished first-month vision. For deeper guidance on that relationship, see <a href="../manage-up-without-sounding-insecure/">how to manage up without sounding insecure</a>.</p>
+<h2>Week 1: Understand and Stabilize</h2>
+<p>Your first week should answer two questions:</p>
+<ol>
+<li>What work cannot be allowed to slip?</li>
+<li>What uncertainty is currently slowing the team down?</li>
+</ol>
+<p>Start by meeting the team, then hold individual conversations with each direct report.</p>
+<p>Do not use these conversations to perform confidence or collect approval for your leadership style. Use them to understand responsibilities, current pressure, dependencies, and recurring problems.</p>
+<p>Useful questions include:</p>
+<ul>
+<li>What are you responsible for right now?</li>
+<li>Which commitment is most at risk?</li>
+<li>Where does work regularly get stuck?</li>
+<li>What decisions are you waiting for?</li>
+<li>What do you need from your manager to do your job well?</li>
+<li>What should I understand before changing anything?</li>
+</ul>
+<p>Listen for patterns, not only complaints.</p>
+<p>One person may describe a process as broken because it is inconvenient. Another may not mention a serious problem because the team has learned to work around it. Compare what people say with what you observe in meetings, reports, handoffs, and delays.</p>
+<p>Look closely at:</p>
+<ul>
+<li>who owns the most important work</li>
+<li>where approvals accumulate</li>
+<li>which decisions keep returning to the manager</li>
+<li>who is overloaded</li>
+<li>where two people believe they own the same task</li>
+<li>which deadlines depend on another team</li>
+</ul>
+<p>Your first responsibility is to stabilize important commitments.</p>
+<p>Confirm the three to five outcomes that matter most. These are usually inherited commitments, not a new set of goals created for the sake of the transition. Name an owner for each one. Clarify the next checkpoint. Resolve any urgent decision that is blocking progress. If a deadline is genuinely at risk, communicate that early instead of waiting for a complete recovery plan.</p>
+<p>Do not confuse the loudest complaint with the most important problem.</p>
+<h3>What to Say in the First Team Meeting</h3>
+<p>Your first team meeting has four objectives:</p>
+<ul>
+<li>acknowledge the transition</li>
+<li>protect current commitments</li>
+<li>explain how the first week will work</li>
+<li>clarify how urgent issues should be raised</li>
+</ul>
+<p>A practical opening might sound like this:</p>
+<blockquote>
+<p>I am going to spend this first week understanding the work, the current commitments, and where decisions are getting stuck. I am not planning to redesign everything before I understand it. I will meet with each of you individually, and I will make immediate decisions where delay is creating a real risk. For now, keep current commitments moving and raise anything that could affect a deadline, customer, budget, or another team. I will share what I am seeing and what needs to change once I have enough evidence to make a responsible decision.</p>
+</blockquote>
+<p>For a deeper guide, see <a href="../first-team-meeting-new-manager/">how to run your first team meeting without losing control</a>.</p>
+<h2>Week 2: Clarify Expectations and Decision Boundaries</h2>
+<p>By the second week, the team should start to understand how work will be interpreted under your management.</p>
+<p>This means clarifying priorities, ownership, standards, decisions, and escalation.</p>
+<p>Begin with a small number of immediate priorities. Do not produce a long list of values, principles, and “non-negotiables.” Tell the team what matters now.</p>
+<p>For example:</p>
+<blockquote>
+<p>For the next three weeks, our priorities are the client delivery, the hiring decision, and the reporting backlog. If new work threatens one of those commitments, raise the trade-off before accepting it.</p>
+</blockquote>
+<p>Then clarify what “done” means for important assignments.</p>
+<p>A task is not clear because you used an action verb. “Handle the client update” may mean writing a draft, sending the message, scheduling a call, or resolving the problem. State the expected result, deadline, owner, and any required review.</p>
+<p>Decision boundaries should also become explicit.</p>
+<p>Use four simple levels:</p>
+<ol>
+<li><strong>Decide and act.</strong></li>
+<li><strong>Decide and inform me.</strong></li>
+<li><strong>Recommend, then I decide.</strong></li>
+<li><strong>Escalate immediately.</strong></li>
+</ol>
+<p>For example:</p>
+<blockquote>
+<p>Routine customer corrections are yours to decide within the existing policy. Inform me afterward if the issue may repeat. Bring me any exception that affects price, legal exposure, or a public commitment before you act.</p>
+</blockquote>
+<p>The team should also know what must be raised early.</p>
+<p>Tell people to escalate issues that may affect a deadline, budget, customer, legal obligation, safety matter, or another team. Make it clear that they do not need a complete solution before raising a serious risk.</p>
+<p>Set a basic operating rhythm: a weekly team meeting, regular one-on-ones, one place to record actions, and a clear route for urgent decisions. Avoid adding meetings simply to demonstrate involvement.</p>
+<p><strong>Authority is a pattern, not a personality.</strong></p>
+<p>It becomes credible when expectations are clear, decisions are consistent, feedback arrives on time, and commitments are followed through.</p>
+<p>The same pattern applies across authority, feedback, delegation, and decision timing: make expectations visible before pressure forces the decision. <a href="../../books/the-first-30-days-as-a-new-manager/">The First 30 Days as a New Manager</a> develops this approach in more detail.</p>
+<h3>Managing Former Peers</h3>
+<p>If you were promoted from within the team, acknowledge the change without becoming distant or overly formal.</p>
+<p>You can say:</p>
+<blockquote>
+<p>I want us to keep the direct working relationship we already have. Some conversations will now involve decisions or feedback that I am responsible for as the manager, and I will be clear when that is the case.</p>
+</blockquote>
+<p>Do not give former peers special access, and do not create artificial distance to prove impartiality. For more detail, see <a href="../boundaries-former-peers/">how to set boundaries with former peers after promotion</a>.</p>
+<h2>Week 3: Delegate and Test Ownership</h2>
+<p>By week three, you should begin testing whether ownership can remain with the team instead of returning to you.</p>
+<p>Choose a real assignment that matters but is recoverable if adjustments are needed. Do not delegate a crisis simply because you do not want to carry it.</p>
+<p>A useful delegation has four parts:</p>
+<ul>
+<li><strong>Outcome:</strong> What must be achieved?</li>
+<li><strong>Boundaries:</strong> What limits or requirements apply?</li>
+<li><strong>Authority:</strong> What can the employee decide?</li>
+<li><strong>Checkpoint:</strong> When will you review progress?</li>
+</ul>
+<p>For example:</p>
+<blockquote>
+<p>Please prepare the revised customer update by Thursday afternoon. It should explain the delay, the recovery action, and the decision we need from them. You can confirm dates directly with operations, but do not promise a new completion date without checking with me. Send me the first draft Wednesday.</p>
+</blockquote>
+<p>Then leave the work with the owner.</p>
+<p>Being available is not the same as hovering. A checkpoint is not an invitation to inspect every step. If you constantly ask for updates, edit the work before it is ready, or join every conversation, the assignment still belongs to you in practice.</p>
+<p>When someone returns with only a problem, ask:</p>
+<blockquote>
+<p>What have you checked, what options do you see, and what do you recommend?</p>
+</blockquote>
+<p>This does not mean withholding help. It means keeping the employee engaged in the decision.</p>
+<p>If the work needs correction, correct it without reclaiming it.</p>
+<p>You might say:</p>
+<blockquote>
+<p>The direction is right, but the recommendation needs clearer cost and timing implications. Revise those two points and bring it back tomorrow.</p>
+</blockquote>
+<p>A delegation that returns to the manager at the first sign of difficulty teaches the team that ownership is temporary.</p>
+<p>For a fuller treatment, see <a href="../delegate-without-micromanaging/">how to delegate without micromanaging as a new manager</a>.</p>
+<h2>Week 4: Address Repeated Patterns</h2>
+<p>By week four, you should have enough evidence to address selected patterns.</p>
+<p>Do not label every mistake a performance problem. First ask:</p>
+<ul>
+<li>Has this happened more than once?</li>
+<li>Was the expectation clear?</li>
+<li>Did the person have the required authority and resources?</li>
+<li>Is this mainly a skill, capacity, judgment, conduct, or ownership issue?</li>
+</ul>
+<p>Then address one issue narrowly.</p>
+<p>Use a simple structure:</p>
+<ol>
+<li>What happened.</li>
+<li>Why it matters.</li>
+<li>What must happen next.</li>
+</ol>
+<p>For example:</p>
+<blockquote>
+<p>The last two weekly reports were submitted after the agreed deadline. That leaves operations without the figures they need for Monday planning. Starting this week, send the completed report by 3:00 p.m. Friday, and tell me before noon if something may prevent that.</p>
+</blockquote>
+<p>Keep the conversation factual. Do not collect several minor frustrations and release them in one broad discussion about attitude, commitment, or professionalism.</p>
+<p>Week four is also the right time to make one contained operational improvement.</p>
+<p>Choose a problem that is clearly recurring and does not require a major reorganization. You might remove a duplicate approval, assign one owner to a recurring report, cancel an unnecessary status meeting, or establish an earlier escalation point.</p>
+<p>The purpose is not to prove that you are changing things. It is to show that you can observe, decide, and improve the work without creating wider disruption.</p>
+<p>For more detailed guidance, see <a href="../feedback-without-killing-morale/">how first-time managers can give feedback earlier and more clearly</a>.</p>
+<h2>What Not to Change in the First 30 Days</h2>
+<p>Some changes require more evidence than one month can provide.</p>
+<p>Be cautious about changing:</p>
+<ul>
+<li>team structure</li>
+<li>titles and role definitions</li>
+<li>established workflows with downstream dependencies</li>
+<li>performance judgments</li>
+<li>reporting systems used by other departments</li>
+<li>work schedules or flexibility arrangements</li>
+<li>tools simply because you prefer another platform</li>
+</ul>
+<p>Before changing something, ask:</p>
+<ol>
+<li>What problem am I solving?</li>
+<li>What evidence shows that it is recurring?</li>
+<li>What else depends on the current arrangement?</li>
+</ol>
+<p>This is not an argument for passivity.</p>
+<p>Immediate action may be necessary where there is a safety risk, legal or ethical exposure, harassment or discrimination, serious customer harm, material financial loss, or critical work with no owner.</p>
+<p>The distinction is between urgent risk and managerial impatience.</p>
+<p>A new manager should not preserve a harmful situation to appear thoughtful. But neither should they redesign the team because the current system looks unfamiliar or inefficient from a distance.</p>
+<h2>When the First Month Is Not Going Well</h2>
+<p>The first month may be becoming unstable if:</p>
+<ul>
+<li>every decision returns to you</li>
+<li>you are completing work that belongs to the team</li>
+<li>priorities keep changing</li>
+<li>employees do not know what requires approval</li>
+<li>feedback is repeatedly postponed</li>
+<li>meetings are increasing without producing clearer decisions</li>
+</ul>
+<p>The recovery does not require a new leadership philosophy.</p>
+<p>Take four actions:</p>
+<ol>
+<li>Stop adding new changes.</li>
+<li>Reconfirm the three most important outcomes.</li>
+<li>Return work to the correct owners with clearer boundaries.</li>
+<li>Address one delayed conversation or decision immediately.</li>
+</ol>
+<p>You may also need to reset expectations with your own manager.</p>
+<p>A concise update could be:</p>
+<blockquote>
+<p>Here is what is moving, where the main risk currently sits, what I am doing next, and the decision I need from you.</p>
+</blockquote>
+<p>Do not wait until everything is solved before communicating upward. A reliable manager makes the current position visible, especially when progress is incomplete.</p>
+<p>For more detail, see <a href="../manage-up-without-sounding-insecure/">how to manage up without sounding insecure as a new manager</a>.</p>
+<h2>What Good Progress Looks Like by Day 30</h2>
+<p>By day 30, the team should understand which work matters most, who owns it, what requires approval, and how serious risks should be raised.</p>
+<p>You should have a clearer view of the team’s workload, dependencies, strengths, and repeated problems. At least one meaningful assignment should have been delegated without being taken back, and at least one recurring issue should have been addressed directly.</p>
+<p>Your own manager should be receiving clearer updates about progress, risk, and decisions.</p>
+<p>The expected result is not a transformed team. It is a more reliable operating environment in which fewer people are guessing how work will move.</p>
+<h2>New Manager First 30 Days Checklist</h2>
+<h3>Understand</h3>
+<ul>
+<li>Clarify your manager’s expectations.</li>
+<li>Identify the most important current commitments.</li>
+<li>Meet every direct report.</li>
+<li>Observe where work and decisions repeatedly stall.</li>
+</ul>
+<h3>Clarify</h3>
+<ul>
+<li>State the team’s immediate priorities.</li>
+<li>Name owners for critical work.</li>
+<li>Define what important assignments must produce.</li>
+<li>Clarify decision and escalation boundaries.</li>
+</ul>
+<h3>Transfer Ownership</h3>
+<ul>
+<li>Delegate one meaningful, recoverable assignment.</li>
+<li>Define the outcome, boundaries, authority, and checkpoint.</li>
+<li>Ask for recommendations, not only problems.</li>
+<li>Avoid taking work back too quickly.</li>
+</ul>
+<h3>Correct</h3>
+<ul>
+<li>Address one repeated pattern with specific feedback.</li>
+<li>Make one contained operational improvement.</li>
+<li>Reconfirm what should improve in the next 30 days.</li>
+</ul>
+<p>Use the <a href="../../resources/new-manager-checklist/">first 30 days checklist</a> as a supporting reference when you need a shorter working version.</p>
+<h2>Frequently Asked Questions</h2>
+<h3>What should a new manager do on the first day?</h3>
+<p>Meet the team, protect current commitments, explain how the first week will work, and schedule individual conversations. Do not begin with a major process change or a long presentation about your leadership style.</p>
+<h3>How quickly should a new manager make changes?</h3>
+<p>Immediate risks and blocked decisions may require action on the first day. Larger structural, process, or staffing changes should wait until you understand the problem, the dependencies, and the likely consequences.</p>
+<h3>How can a new manager establish authority?</h3>
+<p>Set clear expectations, define decision boundaries, respond consistently, give timely feedback, and follow through. Authority grows when people know what to expect from your judgment, not when you act tougher or speak more forcefully.</p>
+<h3>What is the biggest mistake a new manager makes?</h3>
+<p>Trying to prove competence by absorbing too much work or changing too much too early. Both habits create dependency, hide the team’s real capabilities, and make the manager the center of every decision.</p>
+    </article>
+
+    <section class="cta-box">
+      <p class="kicker">Continue with the practical field manual</p>
+      <h2>The First 30 Days as a New Manager</h2>
+      <p>A week-by-week plan can tell you what to focus on. The harder part is handling the moments inside that plan: giving feedback before frustration builds, delegating without hovering, responding to pushback, setting boundaries, managing upward, and deciding when to act or wait.</p>
+      <p><em>The First 30 Days as a New Manager</em> is a practical field manual for those situations. It is designed for capable professionals who need clear actions, useful wording, and better judgment under pressure.</p>
+      <div class="hero-actions">
+        <a href={bookUrl}>See the 30-Day Management Manual</a>
+        <a href={articlesUrl}>Back to articles</a>
+      </div>
+    </section>
+
+    <section class="related">
+      <p class="kicker">Related</p>
+      <div class="related-grid">
+        {related.map((item) => (
+          <a class="related-card" href={href(item.slug)}>
+            <span>{item.topic}</span>
+            <strong>{item.title}</strong>
+          </a>
+        ))}
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .article-page { max-width: 920px; margin: 0 auto; padding: 2.6rem 1.2rem 4rem; }
+  .crumbs { display: flex; gap: 0.45rem; align-items: center; margin-bottom: 1.4rem; color: var(--muted); font-size: 0.9rem; }
+  .crumbs a { color: var(--accent); text-decoration: none; }
+  .article-hero { max-width: 780px; }
+  .article-hero h1 { margin: 0; font-size: clamp(2.15rem, 5vw, 4.2rem); line-height: 1; letter-spacing: -0.055em; }
+  .article-hero > p:last-of-type { color: var(--muted); line-height: 1.65; font-size: 1.04rem; }
+  .kicker { margin: 0 0 0.6rem; color: var(--accent); font-size: 0.78rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 700; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.15rem; }
+  .hero-actions a { color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 0.58rem 0.85rem; background: rgba(255,255,255,.035); }
+  .article-body { margin-top: 2rem; padding: 1.2rem 0; color: var(--text); }
+  .article-body :global(h1) { display: none; }
+  .article-body :global(h2) { margin-top: 2.1rem; margin-bottom: 0.7rem; font-size: clamp(1.35rem, 2.5vw, 2rem); letter-spacing: -0.035em; }
+  .article-body :global(h3) { margin-top: 1.6rem; }
+  .article-body :global(p), .article-body :global(li) { color: var(--muted); line-height: 1.78; font-size: 1rem; }
+  .article-body :global(strong) { color: var(--text); }
+  .article-body :global(a) { color: var(--accent); text-underline-offset: 0.18em; }
+  .article-body :global(blockquote) { margin: 1.2rem 0; padding: 1rem 1.1rem; border-left: 3px solid var(--accent); background: rgba(255,255,255,.035); color: var(--text); border-radius: .75rem; }
+  .article-body :global(blockquote p) { margin: 0; color: var(--text); }
+  .cta-box, .related { margin-top: 2.2rem; }
+  .cta-box { border: 1px solid var(--border); border-radius: 1.2rem; background: rgba(255,255,255,.035); padding: 1.2rem; }
+  .cta-box h2 { margin: 0; font-size: clamp(1.45rem, 3vw, 2.4rem); letter-spacing: -0.04em; }
+  .cta-box p { color: var(--muted); line-height: 1.6; }
+  .related-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+  .related-card { display: flex; flex-direction: column; gap: .45rem; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; background: rgba(255,255,255,.035); }
+  .related-card span { color: var(--accent); font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; }
+  @media (max-width: 760px) { .related-grid { grid-template-columns: 1fr; } }
+</style>
