@@ -1,0 +1,44 @@
+<section class="video-section" aria-labelledby="video-placeholder-title">
+  <div class="video-copy">
+    <p class="video-kicker">Watch the video</p>
+    <h2 id="video-placeholder-title">A Practical Walkthrough of the First 30 Days</h2>
+    <p>The video version is currently in production and will cover the weekly plan, manager scripts, and common first-month mistakes.</p>
+  </div>
+  <div class="video-frame" role="img" aria-label="Video placeholder: video in production">
+    <span>Video in production</span>
+  </div>
+</section>
+
+<style>
+  .video-section {
+    width: min(100%, 980px);
+    margin: 4.5rem auto 0;
+  }
+  .video-copy { max-width: 700px; margin-bottom: 1.4rem; }
+  .video-kicker {
+    margin: 0 0 .55rem;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    color: var(--accent);
+    font-size: .76rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  h2 { margin: 0 0 .75rem; font-size: clamp(1.8rem, 3.5vw, 2.7rem); }
+  p { color: var(--muted); font-size: 1.05rem; line-height: 1.65; }
+  .video-frame {
+    aspect-ratio: 16 / 9;
+    display: grid;
+    place-items: center;
+    background: #262626;
+    border: 1px solid #1f1f1f;
+    color: #eee8dc;
+  }
+  .video-frame span {
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: .78rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+const { href, coverSrc } = Astro.props;
+---
+<section class="book-cta" aria-labelledby="book-cta-title">
+  <div class="cover-wrap">
+    <img
+      src={coverSrc}
+      alt="Cover of The First 30 Days as a New Manager by Plain Act"
+      width="800"
+      height="1200"
+      loading="lazy"
+    />
+  </div>
+  <div class="book-copy">
+    <p class="book-kicker">Practical field manual</p>
+    <h2 id="book-cta-title">The First 30 Days as a New Manager</h2>
+    <p>The article gives you the sequence. The book goes deeper into delegation, feedback, boundaries, pushback, managing up, and decision timing under pressure.</p>
+    <a class="book-button" href={href}>See the 30-Day Management Manual</a>
+  </div>
+</section>
+
+<style>
+  .book-cta {
+    width: min(100%, 980px);
+    margin: 6rem auto 0;
+    display: grid;
+    grid-template-columns: minmax(180px, 250px) 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 2.6rem;
+    border: 1px solid var(--border);
+    background: #f0eadf;
+  }
+  .cover-wrap { max-width: 230px; }
+  img {
+    display: block;
+    width: 100%;
+    border: 1px solid #cfc5b5;
+    background: var(--paper);
+  }
+  .book-kicker {
+    margin: 0 0 .65rem;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    color: var(--accent);
+    font-size: .76rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  h2 { margin: 0 0 1rem; font-size: clamp(2rem, 4vw, 3.2rem); max-width: 15ch; }
+  .book-copy > p:not(.book-kicker) { color: var(--muted); font-size: 1.08rem; line-height: 1.7; max-width: 58ch; }
+  .book-button {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    margin-top: .9rem;
+    padding: .78rem 1.05rem;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: white;
+    text-decoration: none;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-weight: 700;
+  }
+  @media (max-width: 700px) {
+    .book-cta { grid-template-columns: 1fr; gap: 1.8rem; padding: 1.5rem; margin-top: 4.5rem; }
+    .cover-wrap { width: min(62vw, 230px); }
+    .book-button { width: 100%; }
+  }
+</style>
