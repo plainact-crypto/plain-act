@@ -27,17 +27,42 @@ jobs:
         with:
           node-version: 22
 
-      - name: Clean npm state
-        run: |
-          rm -f package-lock.json
-          rm -rf node_modules
-          npm cache clean --force
-
-      - name: Install dependencies
+      - name: Install main site dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Build with Astro
+      - name: Build Plain Act site
         run: npm run build
+
+      - name: Restore chess trainer source
+        run: |
+          unzip -o chess-opening-trainer/source.zip -d chess-opening-trainer
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('chess-opening-trainer/src/main.js')
+          s=p.read_text()
+          if 'const APP_BASE =' not in s:
+              s=s.replace('const app = document.querySelector("#app");','const app = document.querySelector("#app");\nconst APP_BASE = import.meta.env.BASE_URL || "/";')
+          s=s.replace('assetsUrl:"/cm-chessboard/"','assetsUrl:`${APP_BASE}cm-chessboard/`')
+          s=s.replace('assetsUrl:"/cm-chessboard/assets/"','assetsUrl:`${APP_BASE}cm-chessboard/`')
+          p.write_text(s)
+          p=Path('chess-opening-trainer/src/core/engine.js')
+          s=p.read_text().replace('constructor(workerUrl="/stockfish/stockfish-18-lite-single.js"){','constructor(workerUrl=`${import.meta.env.BASE_URL || "/"}stockfish/stockfish-18-lite-single.js`){')
+          p.write_text(s)
+          PY
+
+      - name: Install chess trainer dependencies
+        working-directory: chess-opening-trainer
+        run: npm install --no-audit --no-fund
+
+      - name: Build chess trainer
+        working-directory: chess-opening-trainer
+        run: npm run build
+
+      - name: Add chess trainer to Pages artifact
+        run: |
+          rm -rf dist/chess-opening-trainer
+          mkdir -p dist/chess-opening-trainer
+          cp -R chess-opening-trainer/dist/. dist/chess-opening-trainer/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
