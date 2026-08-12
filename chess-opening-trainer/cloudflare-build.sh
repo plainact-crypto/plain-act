@@ -38,6 +38,54 @@ if 'Current opening focus' not in s:
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
 
+# Report #8: candidate-branch evaluations are used while generating lines, but
+# they must never overwrite the evaluation shown for the board the user is
+# actually looking at. Only an evaluate() call whose FEN still equals the
+# current board FEN may update the display-facing evaluation state.
+if '__CURRENT_POSITION_EVAL_GUARD__' not in s:
+    s += r'''
+
+// --- Current-position evaluation guard (Report #8) ---
+try{
+  if(!globalThis.__CURRENT_POSITION_EVAL_GUARD__){
+    globalThis.__CURRENT_POSITION_EVAL_GUARD__=true;
+    let allowCurrentEvalWrite=false;
+    const guarded={
+      evalCp:Number(state.evalCp||0),
+      evalMate:state.evalMate??null,
+      evalDepth:Number(state.evalDepth||0),
+      evalPv:String(state.evalPv||"")
+    };
+    const resetValue=(key,value)=>
+      (key==="evalCp" && Number(value)===0) ||
+      (key==="evalMate" && value==null) ||
+      (key==="evalDepth" && Number(value)===0) ||
+      (key==="evalPv" && String(value||"")==="");
+    for(const key of Object.keys(guarded)){
+      Object.defineProperty(state,key,{
+        configurable:true,
+        enumerable:true,
+        get(){return guarded[key]},
+        set(value){
+          if(allowCurrentEvalWrite || resetValue(key,value)) guarded[key]=value;
+        }
+      });
+    }
+    const originalEvaluateForCurrentPosition=engineService.evaluate.bind(engineService);
+    engineService.evaluate=async(fen,...args)=>{
+      const result=await originalEvaluateForCurrentPosition(fen,...args);
+      let currentFen="";
+      try{currentFen=state.chess?.fen?.()||state.game?.fen?.()||""}catch{}
+      if(fen && currentFen && fen===currentFen){
+        allowCurrentEvalWrite=true;
+        setTimeout(()=>{allowCurrentEvalWrite=false},0);
+      }
+      return result;
+    };
+  }
+}catch(err){console.warn("Current-position evaluation guard could not attach",err)}
+'''
+
 p.write_text(s)
 
 p=Path('src/core/engine.js')
