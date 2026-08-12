@@ -42,17 +42,18 @@ mobile_patch = Path('mobile-test-ux-patch.js').read_text()
 if '__MOBILE_TEST_UX_PATCH__' not in s:
     s += '\n' + mobile_patch + '\n'
 
-# Force the cloud-auth overlay to start regardless of the legacy local-profile startup code.
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
 
-# Reports #8/#9: evaluation UI must be derived only from the current board FEN.
-# Candidate-line analysis remains available for generation, but cannot leak into
-# display state. Stale values are also neutralized whenever the board FEN changes.
+# Reports #8/#9/#12: display evaluation must come from the actual current game position.
+# The earlier guard looked for state.chess/state.game, but the trainer's live board is
+# exposed through the module-level `game` object. That made the guard see an empty FEN
+# and intentionally return neutral 0 forever. Use every known live-game handle and let
+# normal eval setters write only when their request FEN still matches the board.
 if '__CURRENT_POSITION_EVAL_GUARD__' not in s:
     s += r'''
 
-// --- Current-position evaluation guard (Reports #8/#9) ---
+// --- Current-position evaluation guard (Reports #8/#9/#12) ---
 try{
   if(!globalThis.__CURRENT_POSITION_EVAL_GUARD__){
     globalThis.__CURRENT_POSITION_EVAL_GUARD__=true;
@@ -60,7 +61,10 @@ try{
     let guardedFen="";
     const neutral={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
     const currentBoardFen=()=>{
-      try{return state.chess?.fen?.()||state.game?.fen?.()||""}catch{return ""}
+      try{
+        const g=(typeof game!=="undefined"&&game?.fen)?game:(state?.game?.fen?state.game:(state?.chess?.fen?state.chess:(globalThis.game?.fen?globalThis.game:(globalThis.chess?.fen?globalThis.chess:null))));
+        return g?.fen?.()||"";
+      }catch{return ""}
     };
     const isReset=(key,value)=>
       (key==="evalCp" && Number(value)===0) ||
@@ -79,7 +83,12 @@ try{
           if(isReset(key,value)){
             guarded[key]=neutral[key];
             guardedFen="";
+            return;
           }
+          const fen=currentBoardFen();
+          if(!fen) return;
+          guarded[key]=value;
+          guardedFen=fen;
         }
       });
     }
