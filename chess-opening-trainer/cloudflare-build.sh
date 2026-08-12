@@ -30,6 +30,10 @@ auth_patch = Path('cloud-auth-patch.js').read_text()
 if 'const SB_URL=' not in s:
     s += '\n' + auth_patch + '\n'
 
+session_navigation_patch = Path('session-navigation-patch.js').read_text()
+if '__ISSUE_SESSION_RETRY__' not in s:
+    s += '\n' + session_navigation_patch + '\n'
+
 hero_patch = Path('hero-focus-patch.js').read_text()
 if 'Current opening focus' not in s:
     s += '\n' + hero_patch + '\n'
