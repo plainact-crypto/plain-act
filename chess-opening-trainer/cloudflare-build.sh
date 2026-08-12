@@ -16,6 +16,67 @@ if 'const APP_BASE =' not in s:
 s=s.replace('assetsUrl:"/cm-chessboard/"','assetsUrl:`${APP_BASE}cm-chessboard/`')
 s=s.replace('assetsUrl:"/cm-chessboard/assets/"','assetsUrl:`${APP_BASE}cm-chessboard/`')
 
+# Reports #6/#14: repertoire-first guidance must never choose a materially worse move
+# just to stay inside the scripted move pool. Compare the strongest repertoire candidate
+# with the unrestricted engine best move from the same position; if the repertoire move
+# concedes more than 1.20 pawns, use the safe engine move for that tactical position.
+if 'REPERTOIRE_SAFETY_MARGIN_CP' not in s:
+    pattern=r'''async function bestRepertoireMove\(\)\{.*?\n\}\n\nasync function prepareUserTurn'''
+    replacement='''const REPERTOIRE_SAFETY_MARGIN_CP=120;
+async function bestRepertoireMove(){
+  const candidates=repertoireCandidates();
+  if(!candidates.length){
+    const best=await bestMove();
+    return best?{from:best.slice(0,2),to:best.slice(2,4),promotion:best[4]||null}:null;
+  }
+
+  let best=null;
+  for(const candidate of candidates){
+    const result=await evaluateCandidate(candidate);
+    if(!best || result.score>best.score) best=result;
+  }
+
+  // Safety valve: repertoire identity is preferred, but not at the cost of a clear blunder.
+  // evaluateCandidate() returns score from the user's perspective, so a higher score is safer.
+  const unrestricted=await bestMove();
+  if(unrestricted){
+    const fallback={from:unrestricted.slice(0,2),to:unrestricted.slice(2,4),promotion:unrestricted[4]||null};
+    const fallbackResult=await evaluateCandidate(fallback);
+    if(!best || fallbackResult.score>best.score+REPERTOIRE_SAFETY_MARGIN_CP){
+      return fallback;
+    }
+  }
+  return best?.candidate||null;
+}
+
+async function prepareUserTurn'''
+    s,count=re.subn(pattern,replacement,s,count=1,flags=re.S)
+    if count!=1:
+        raise SystemExit('Could not patch repertoire safety valve in main.js')
+
+# Report #7: the user explicitly requested tolerance for Black's first two moves.
+# Remove the old hard-force 1...c6 / 2...d5 gate; the normal repertoire ranking now
+# keeps Caro-Kann identity while accepting a near-best transposition when appropriate.
+old_black_force='''  // Black: always begin ...c6, then ...d5.
+  if(state.side==="black" && hist.length===0){
+    return {from:"c7",to:"c6",label:"Caro-Kann repertoire: c6"};
+  }
+
+  if(state.side==="black" && hist.length===1){
+    const pawn = state.chess.get("d7");
+    if(pawn?.type==="p" && pawn.color==="b"){
+      const legal = state.chess.moves({square:"d7",verbose:true}).some(m=>m.to==="d5");
+      if(legal) return {from:"d7",to:"d5",label:"Caro-Kann repertoire: d5"};
+    }
+  }
+'''
+if old_black_force in s:
+    s=s.replace(old_black_force,'''  // Black opening moves are selected by the repertoire evaluator instead of hard-forced.
+  // This allows near-best Caro-Kann transpositions while preserving repertoire guidance.
+''',1)
+elif 'Black opening moves are selected by the repertoire evaluator' not in s:
+    raise SystemExit('Could not patch Black first-two-move tolerance in main.js')
+
 if 'function openIssueReportLegacy()' not in s:
     patched, count = re.subn(r'function\s+openIssueReport\s*\(\s*\)\s*\{', 'function openIssueReportLegacy(){', s, count=1)
     if count != 1:
