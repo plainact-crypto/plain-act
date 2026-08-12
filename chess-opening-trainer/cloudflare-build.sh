@@ -30,6 +30,10 @@ auth_patch = Path('cloud-auth-patch.js').read_text()
 if 'const SB_URL=' not in s:
     s += '\n' + auth_patch + '\n'
 
+hero_patch = Path('hero-focus-patch.js').read_text()
+if 'Current opening focus' not in s:
+    s += '\n' + hero_patch + '\n'
+
 # Force the cloud-auth overlay to start regardless of the legacy local-profile startup code.
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
