@@ -23,13 +23,11 @@ export function repertoireAnchorForFen(chess,side){
       return null;
     }
 
-    if(side==="black" && turn==="b"){
-      if(fullmove===1) return "c7c6";
-      if(fullmove===2){
-        const legal=chess.moves({verbose:true});
-        if(legal.some(m=>m.from==="d7" && m.to==="d5")) return "d7d5";
-      }
-    }
+    // Black remains a Caro-Kann-focused repertoire, but the opening trainer must
+    // not hard-force 1...c6 or 2...d5. The first two Black moves are deliberately
+    // flexible so sensible alternatives/transpositions can be accepted and then
+    // guided back toward the selected repertoire by the normal move ranking logic.
+    if(side==="black" && turn==="b" && fullmove<=2) return null;
   }catch{}
   return null;
 }
