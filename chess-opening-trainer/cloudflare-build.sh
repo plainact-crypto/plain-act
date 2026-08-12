@@ -30,18 +30,10 @@ auth_patch = Path('cloud-auth-patch.js').read_text()
 if 'const SB_URL=' not in s:
     s += '\n' + auth_patch + '\n'
 
-startup_patterns = [
-    'state.profileEmail="";\nstate.profileLoaded=false;\nrender();',
-    'state.profileEmail = "";\nstate.profileLoaded = false;\nrender();'
-]
-replaced=False
-for pattern in startup_patterns:
-    if pattern in s:
-        s=s.replace(pattern,'queueMicrotask(()=>initCloudAuth());',1)
-        replaced=True
-        break
-if not replaced and 'queueMicrotask(()=>initCloudAuth());' not in s:
-    raise SystemExit('Could not locate startup email gate for cloud auth patch')
+# Force the cloud-auth overlay to start regardless of the legacy local-profile startup code.
+if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
+    s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
+
 p.write_text(s)
 
 p=Path('src/core/engine.js')
