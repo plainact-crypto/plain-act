@@ -35,7 +35,9 @@ jobs:
 
       - name: Restore chess trainer source
         run: |
-          unzip -o chess-opening-trainer/source.zip -d chess-opening-trainer
+          cat chess-opening-trainer/source.b64.* > /tmp/chess-source.b64
+          base64 -d /tmp/chess-source.b64 > /tmp/chess-source.zip
+          unzip -o /tmp/chess-source.zip -d chess-opening-trainer
           python - <<'PY'
           from pathlib import Path
           p=Path('chess-opening-trainer/src/main.js')
