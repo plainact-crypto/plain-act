@@ -34,6 +34,10 @@ hero_patch = Path('hero-focus-patch.js').read_text()
 if 'Current opening focus' not in s:
     s += '\n' + hero_patch + '\n'
 
+mobile_patch = Path('mobile-test-ux-patch.js').read_text()
+if '__MOBILE_TEST_UX_PATCH__' not in s:
+    s += '\n' + mobile_patch + '\n'
+
 # Force the cloud-auth overlay to start regardless of the legacy local-profile startup code.
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
@@ -68,8 +72,6 @@ try{
           return guardedFen && fen===guardedFen ? guarded[key] : neutral[key];
         },
         set(value){
-          // Legacy callers may clear evaluation on session/position changes,
-          // but only the current-FEN evaluate() wrapper below can publish a score.
           if(isReset(key,value)){
             guarded[key]=neutral[key];
             guardedFen="";
@@ -102,9 +104,6 @@ p=Path('src/core/engine.js')
 s=p.read_text().replace('constructor(workerUrl="/stockfish/stockfish-18-lite-single.js"){','constructor(workerUrl=`${import.meta.env.BASE_URL || "/"}stockfish/stockfish-18-lite-single.js`){')
 p.write_text(s)
 
-# Keep Black Caro-Kann-focused without hard-forcing 1...c6 / 2...d5.
-# The source archive is unpacked on every Cloudflare build, so patch the
-# repertoire module after extraction to preserve this behavior in production.
 p=Path('src/core/repertoire.js')
 s=p.read_text()
 pattern=r'''export function repertoireAnchorForFen\(chess,side\)\{.*?\n\}\n\nexport function isRequiredRepertoireMove'''
@@ -120,9 +119,6 @@ replacement='''export function repertoireAnchorForFen(chess,side){
       return null;
     }
 
-    // Black remains Caro-Kann-focused, but the first two Black moves are not
-    // hard-forced. Sensible alternatives/transpositions can be accepted and
-    // normal move ranking can guide the line back toward the repertoire.
     if(side==="black" && turn==="b" && fullmove<=2) return null;
   }catch{}
   return null;
