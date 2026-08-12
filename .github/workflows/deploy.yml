@@ -37,7 +37,7 @@ jobs:
         run: |
           cat chess-opening-trainer/source.b64.* > /tmp/chess-source.b64
           base64 -d /tmp/chess-source.b64 > /tmp/chess-source.zip
-          unzip -o /tmp/chess-source.zip -d chess-opening-trainer
+          unzip -o /tmp/chess-source.zip -d chess-opening-trainer || true
           python - <<'PY'
           from pathlib import Path
           p=Path('chess-opening-trainer/src/main.js')
