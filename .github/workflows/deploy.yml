@@ -82,13 +82,6 @@ jobs:
           p.write_text(s)
           PY
 
-      - name: Upload restored trainer source for diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: chess-restored-source
-          path: chess-opening-trainer/src/main.js
-          retention-days: 1
-
       - name: Install chess trainer dependencies
         working-directory: chess-opening-trainer
         run: npm install --no-audit --no-fund
