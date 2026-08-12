@@ -45,21 +45,22 @@ if '__MOBILE_TEST_UX_PATCH__' not in s:
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
 
-# Reports #8/#9/#12: display evaluation must come from the actual current game position.
-# The earlier guard looked for state.chess/state.game, but the trainer's live board is
-# exposed through the module-level `game` object. That made the guard see an empty FEN
-# and intentionally return neutral 0 forever. Use every known live-game handle and let
-# normal eval setters write only when their request FEN still matches the board.
+# Reports #8/#9/#12/#13: the display evaluation is owned by a dedicated current-FEN evaluator.
+# Candidate-line evaluations are still allowed for training generation, but their results
+# never publish into state.eval*. Whenever the live board FEN changes, evaluate that exact
+# position once and publish only if the board is still on the same FEN when the result returns.
 if '__CURRENT_POSITION_EVAL_GUARD__' not in s:
     s += r'''
 
-// --- Current-position evaluation guard (Reports #8/#9/#12) ---
+// --- Current-position evaluation guard (Reports #8/#9/#12/#13) ---
 try{
   if(!globalThis.__CURRENT_POSITION_EVAL_GUARD__){
     globalThis.__CURRENT_POSITION_EVAL_GUARD__=true;
     const guarded={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
-    let guardedFen="";
     const neutral={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
+    let guardedFen="";
+    let pendingFen="";
+    let evalSeq=0;
     const currentBoardFen=()=>{
       try{
         const g=(typeof game!=="undefined"&&game?.fen)?game:(state?.game?.fen?state.game:(state?.chess?.fen?state.chess:(globalThis.game?.fen?globalThis.game:(globalThis.chess?.fen?globalThis.chess:null))));
@@ -80,33 +81,49 @@ try{
           return guardedFen && fen===guardedFen ? guarded[key] : neutral[key];
         },
         set(value){
+          // Ignore all legacy non-current evaluation writes. They may belong to
+          // candidate branches. Explicit clears remain allowed on session reset.
           if(isReset(key,value)){
             guarded[key]=neutral[key];
             guardedFen="";
-            return;
           }
-          const fen=currentBoardFen();
-          if(!fen) return;
-          guarded[key]=value;
-          guardedFen=fen;
         }
       });
     }
-    const originalEvaluateForCurrentPosition=engineService.evaluate.bind(engineService);
-    engineService.evaluate=async(fen,...args)=>{
-      const result=await originalEvaluateForCurrentPosition(fen,...args);
-      const currentFen=currentBoardFen();
-      if(fen && currentFen && fen===currentFen && result){
+    const rawEvaluate=engineService.evaluate.bind(engineService);
+    async function publishCurrentFen(fen){
+      if(!fen || fen===guardedFen || fen===pendingFen) return;
+      const seq=++evalSeq;
+      pendingFen=fen;
+      try{
+        const result=await rawEvaluate(fen);
+        const now=currentBoardFen();
+        if(seq!==evalSeq || now!==fen || !result) return;
         const turn=String(fen).split(/\s+/)[1]||"w";
         const perspective=turn==="w"?1:-1;
         guarded.evalCp=result.cp==null?0:perspective*Number(result.cp||0);
         guarded.evalMate=result.mate==null?null:perspective*Number(result.mate||0);
         guarded.evalDepth=Number(result.depth||0);
         guarded.evalPv=String(result.pv||"");
-        guardedFen=currentFen;
+        guardedFen=fen;
+        try{render()}catch{}
+      }catch(err){
+        console.warn("Current-position evaluation failed",err);
+      }finally{
+        if(pendingFen===fen) pendingFen="";
       }
-      return result;
-    };
+    }
+    // Keep the engine API available unchanged for repertoire/candidate analysis.
+    // A lightweight watcher notices actual board changes and evaluates only the live FEN.
+    setInterval(()=>{
+      const fen=currentBoardFen();
+      if(!fen){
+        guardedFen="";
+        pendingFen="";
+        return;
+      }
+      if(fen!==guardedFen && fen!==pendingFen) publishCurrentFen(fen);
+    },350);
   }
 }catch(err){console.warn("Current-position evaluation guard could not attach",err)}
 '''
