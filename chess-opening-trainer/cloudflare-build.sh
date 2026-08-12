@@ -38,25 +38,23 @@ if 'Current opening focus' not in s:
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
 
-# Report #8: candidate-branch evaluations are used while generating lines, but
-# they must never overwrite the evaluation shown for the board the user is
-# actually looking at. Only an evaluate() call whose FEN still equals the
-# current board FEN may update the display-facing evaluation state.
+# Reports #8/#9: evaluation UI must be derived only from the current board FEN.
+# Candidate-line analysis remains available for generation, but cannot leak into
+# display state. Stale values are also neutralized whenever the board FEN changes.
 if '__CURRENT_POSITION_EVAL_GUARD__' not in s:
     s += r'''
 
-// --- Current-position evaluation guard (Report #8) ---
+// --- Current-position evaluation guard (Reports #8/#9) ---
 try{
   if(!globalThis.__CURRENT_POSITION_EVAL_GUARD__){
     globalThis.__CURRENT_POSITION_EVAL_GUARD__=true;
-    let allowCurrentEvalWrite=false;
-    const guarded={
-      evalCp:Number(state.evalCp||0),
-      evalMate:state.evalMate??null,
-      evalDepth:Number(state.evalDepth||0),
-      evalPv:String(state.evalPv||"")
+    const guarded={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
+    let guardedFen="";
+    const neutral={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
+    const currentBoardFen=()=>{
+      try{return state.chess?.fen?.()||state.game?.fen?.()||""}catch{return ""}
     };
-    const resetValue=(key,value)=>
+    const isReset=(key,value)=>
       (key==="evalCp" && Number(value)===0) ||
       (key==="evalMate" && value==null) ||
       (key==="evalDepth" && Number(value)===0) ||
@@ -65,20 +63,32 @@ try{
       Object.defineProperty(state,key,{
         configurable:true,
         enumerable:true,
-        get(){return guarded[key]},
+        get(){
+          const fen=currentBoardFen();
+          return guardedFen && fen===guardedFen ? guarded[key] : neutral[key];
+        },
         set(value){
-          if(allowCurrentEvalWrite || resetValue(key,value)) guarded[key]=value;
+          // Legacy callers may clear evaluation on session/position changes,
+          // but only the current-FEN evaluate() wrapper below can publish a score.
+          if(isReset(key,value)){
+            guarded[key]=neutral[key];
+            guardedFen="";
+          }
         }
       });
     }
     const originalEvaluateForCurrentPosition=engineService.evaluate.bind(engineService);
     engineService.evaluate=async(fen,...args)=>{
       const result=await originalEvaluateForCurrentPosition(fen,...args);
-      let currentFen="";
-      try{currentFen=state.chess?.fen?.()||state.game?.fen?.()||""}catch{}
-      if(fen && currentFen && fen===currentFen){
-        allowCurrentEvalWrite=true;
-        setTimeout(()=>{allowCurrentEvalWrite=false},0);
+      const currentFen=currentBoardFen();
+      if(fen && currentFen && fen===currentFen && result){
+        const turn=String(fen).split(/\s+/)[1]||"w";
+        const perspective=turn==="w"?1:-1;
+        guarded.evalCp=result.cp==null?0:perspective*Number(result.cp||0);
+        guarded.evalMate=result.mate==null?null:perspective*Number(result.mate||0);
+        guarded.evalDepth=Number(result.depth||0);
+        guarded.evalPv=String(result.pv||"");
+        guardedFen=currentFen;
       }
       return result;
     };
