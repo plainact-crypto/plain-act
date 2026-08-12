@@ -43,6 +43,38 @@ p.write_text(s)
 p=Path('src/core/engine.js')
 s=p.read_text().replace('constructor(workerUrl="/stockfish/stockfish-18-lite-single.js"){','constructor(workerUrl=`${import.meta.env.BASE_URL || "/"}stockfish/stockfish-18-lite-single.js`){')
 p.write_text(s)
+
+# Keep Black Caro-Kann-focused without hard-forcing 1...c6 / 2...d5.
+# The source archive is unpacked on every Cloudflare build, so patch the
+# repertoire module after extraction to preserve this behavior in production.
+p=Path('src/core/repertoire.js')
+s=p.read_text()
+pattern=r'''export function repertoireAnchorForFen\(chess,side\)\{.*?\n\}\n\nexport function isRequiredRepertoireMove'''
+replacement='''export function repertoireAnchorForFen(chess,side){
+  try{
+    const fen=chess.fen();
+    const parts=fen.split(" ");
+    const turn=parts[1];
+    const fullmove=Number(parts[5]||1);
+
+    if(side==="white"){
+      if(turn==="w" && fullmove===1) return "d2d4";
+      return null;
+    }
+
+    // Black remains Caro-Kann-focused, but the first two Black moves are not
+    // hard-forced. Sensible alternatives/transpositions can be accepted and
+    // normal move ranking can guide the line back toward the repertoire.
+    if(side==="black" && turn==="b" && fullmove<=2) return null;
+  }catch{}
+  return null;
+}
+
+export function isRequiredRepertoireMove'''
+s,count=re.subn(pattern,replacement,s,count=1,flags=re.S)
+if count!=1:
+    raise SystemExit('Could not patch Black opening tolerance in repertoire.js')
+p.write_text(s)
 PY
 
 npm install --no-audit --no-fund
