@@ -238,3 +238,41 @@
     };
   }catch(err){console.warn('Practice/Rank board rebuild mask could not attach',err)}
 })();
+
+// Guided cleanup: everything rendered below the Restart/Exit control row is raw session
+// output (duplicate status, move history, diagnostics). It is not part of the training UI
+// and its growing height causes visible vertical jitter. Remove it from layout completely.
+(function removeGuidedTrailingRawOutput(){
+  try{
+    if(globalThis.__COT_REMOVE_GUIDED_TRAILING_RAW_OUTPUT__) return;
+    globalThis.__COT_REMOVE_GUIDED_TRAILING_RAW_OUTPUT__=true;
+    const apply=()=>{
+      if(state?.screen!=='training'||state?.mode!=='guided') return;
+      const panels=[...document.querySelectorAll('.side-panel,aside')];
+      for(const panel of panels){
+        const restart=[...panel.querySelectorAll('button')].find(b=>/^Restart$/i.test(String(b.textContent||'').trim()));
+        const exit=[...panel.querySelectorAll('button')].find(b=>/^Exit$/i.test(String(b.textContent||'').trim()));
+        if(!restart||!exit) continue;
+        let row=restart;
+        while(row.parentElement&&row.parentElement!==panel&&!row.contains(exit)) row=row.parentElement;
+        if(!row.contains(exit)){
+          row=restart.parentElement;
+          while(row?.parentElement&&row.parentElement!==panel){
+            if(row.contains(exit)) break;
+            row=row.parentElement;
+          }
+        }
+        if(!row||row.parentElement!==panel) continue;
+        let node=row.nextElementSibling;
+        while(node){
+          node.style.setProperty('display','none','important');
+          node.setAttribute('aria-hidden','true');
+          node=node.nextElementSibling;
+        }
+      }
+    };
+    const observer=new MutationObserver(()=>queueMicrotask(apply));
+    observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    apply();
+  }catch(err){console.warn('Guided trailing raw output cleanup could not attach',err)}
+})();
