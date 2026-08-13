@@ -28,14 +28,11 @@
   document.head.appendChild(style);
 })();
 
-// Hide internal engine diagnostics from every Training mode. They are implementation
-// details, not user-facing coaching information, and their changing PV/move-list height
-// was causing the right panel and page to reflow after every move.
+// Hide internal engine diagnostics from every Training mode.
 (function hideTrainingEngineDiagnostics(){
   try{
     if(globalThis.__COT_HIDE_ENGINE_DIAGNOSTICS__) return;
     globalThis.__COT_HIDE_ENGINE_DIAGNOSTICS__=true;
-
     const hide=()=>{
       if(state?.screen!=='training') return;
       const panels=[...document.querySelectorAll('.side-panel, aside')];
@@ -43,54 +40,36 @@
         const all=[...panel.querySelectorAll('*')];
         const marker=all.find(el=>/Engine\s+depth\s*:/i.test(String(el.textContent||'')));
         if(!marker) continue;
-
         let branch=marker;
         while(branch.parentElement && branch.parentElement!==panel) branch=branch.parentElement;
         if(branch.parentElement===panel){
           let node=branch;
-          while(node){
-            node.style.setProperty('display','none','important');
-            node=node.nextElementSibling;
-          }
+          while(node){node.style.setProperty('display','none','important');node=node.nextElementSibling}
           continue;
         }
-
         for(const el of all){
           const t=String(el.textContent||'').trim();
           if(/^Engine\s+depth\s*:|^PV\s*:/i.test(t)) el.style.setProperty('display','none','important');
         }
       }
     };
-
     const observer=new MutationObserver(hide);
     observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
     hide();
   }catch(err){console.warn('Training engine diagnostics hide could not attach',err)}
 })();
 
-// Keep Live Position Coach at a fixed visual height. Coaching copy changes every move;
-// scrolling happens inside the coach card instead of changing the page/board position.
+// Keep Live Position Coach at a fixed visual height.
 (function makeLiveCoachScrollable(){
   try{
     if(globalThis.__COT_SCROLLABLE_LIVE_COACH__) return;
     globalThis.__COT_SCROLLABLE_LIVE_COACH__=true;
-
     const style=document.createElement('style');
     style.textContent=`
-      .cot-live-coach-scroll{
-        height:420px!important;
-        max-height:420px!important;
-        overflow-y:auto!important;
-        overflow-x:hidden!important;
-        scrollbar-gutter:stable;
-        overscroll-behavior:contain;
-      }
-      @media (max-width:700px){
-        .cot-live-coach-scroll{height:360px!important;max-height:360px!important}
-      }
+      .cot-live-coach-scroll{height:420px!important;max-height:420px!important;overflow-y:auto!important;overflow-x:hidden!important;scrollbar-gutter:stable;overscroll-behavior:contain}
+      @media (max-width:700px){.cot-live-coach-scroll{height:360px!important;max-height:360px!important}}
     `;
     document.head.appendChild(style);
-
     const apply=()=>{
       if(state?.screen!=='training') return;
       const candidates=[...document.querySelectorAll('div,section,article')];
@@ -106,9 +85,53 @@
       }
       if(card) card.classList.add('cot-live-coach-scroll');
     };
-
     const observer=new MutationObserver(apply);
     observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
     apply();
   }catch(err){console.warn('Scrollable Live Position Coach could not attach',err)}
+})();
+
+// Keep the changing training status/message area at a fixed height too. Text such as
+// engine/loading states and "Your move" may vary in length, but it should scroll inside
+// the status box instead of changing the whole side-panel height.
+(function makeTrainingStatusScrollable(){
+  try{
+    if(globalThis.__COT_SCROLLABLE_TRAINING_STATUS__) return;
+    globalThis.__COT_SCROLLABLE_TRAINING_STATUS__=true;
+    const style=document.createElement('style');
+    style.textContent=`
+      .cot-training-status-scroll{
+        height:52px!important;
+        min-height:52px!important;
+        max-height:52px!important;
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+        scrollbar-gutter:stable;
+        overscroll-behavior:contain;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const apply=()=>{
+      if(state?.screen!=='training') return;
+      const panels=[...document.querySelectorAll('.side-panel, aside')];
+      for(const panel of panels){
+        const nodes=[...panel.querySelectorAll('div,section,p')];
+        for(const el of nodes){
+          const t=String(el.textContent||'').trim();
+          if(!t) continue;
+          if(!(/Your move/i.test(t)||/engine/i.test(t)||/thinking/i.test(t)||/loading/i.test(t))) continue;
+          if(/Live Position Coach/i.test(t)||/Restart/i.test(t)||/Exit/i.test(t)||/OPPONENT['’]S IDEA/i.test(t)) continue;
+          const r=el.getBoundingClientRect();
+          if(r.width>180 && r.height>25 && r.height<140){
+            el.classList.add('cot-training-status-scroll');
+            break;
+          }
+        }
+      }
+    };
+    const observer=new MutationObserver(apply);
+    observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    apply();
+  }catch(err){console.warn('Scrollable training status could not attach',err)}
 })();
