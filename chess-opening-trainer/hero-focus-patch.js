@@ -44,8 +44,6 @@
         const marker=all.find(el=>/Engine\s+depth\s*:/i.test(String(el.textContent||'')));
         if(!marker) continue;
 
-        // Find the marker's top-level branch inside this panel, then hide that branch
-        // and every following sibling (PV and raw move list live below it).
         let branch=marker;
         while(branch.parentElement && branch.parentElement!==panel) branch=branch.parentElement;
         if(branch.parentElement===panel){
@@ -57,8 +55,6 @@
           continue;
         }
 
-        // Fallback for unexpected markup: hide the smallest blocks containing the
-        // diagnostic labels without touching the coaching/status controls above them.
         for(const el of all){
           const t=String(el.textContent||'').trim();
           if(/^Engine\s+depth\s*:|^PV\s*:/i.test(t)) el.style.setProperty('display','none','important');
@@ -70,4 +66,49 @@
     observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
     hide();
   }catch(err){console.warn('Training engine diagnostics hide could not attach',err)}
+})();
+
+// Keep Live Position Coach at a fixed visual height. Coaching copy changes every move;
+// scrolling happens inside the coach card instead of changing the page/board position.
+(function makeLiveCoachScrollable(){
+  try{
+    if(globalThis.__COT_SCROLLABLE_LIVE_COACH__) return;
+    globalThis.__COT_SCROLLABLE_LIVE_COACH__=true;
+
+    const style=document.createElement('style');
+    style.textContent=`
+      .cot-live-coach-scroll{
+        height:420px!important;
+        max-height:420px!important;
+        overflow-y:auto!important;
+        overflow-x:hidden!important;
+        scrollbar-gutter:stable;
+        overscroll-behavior:contain;
+      }
+      @media (max-width:700px){
+        .cot-live-coach-scroll{height:360px!important;max-height:360px!important}
+      }
+    `;
+    document.head.appendChild(style);
+
+    const apply=()=>{
+      if(state?.screen!=='training') return;
+      const candidates=[...document.querySelectorAll('div,section,article')];
+      let card=null;
+      for(const el of candidates){
+        const t=String(el.textContent||'');
+        if(!/Live Position Coach/i.test(t) || !/OPPONENT['’]S IDEA/i.test(t) || !/WHY THIS MOVE/i.test(t)) continue;
+        const nested=[...el.children].some(child=>{
+          const ct=String(child.textContent||'');
+          return /Live Position Coach/i.test(ct) && /OPPONENT['’]S IDEA/i.test(ct) && /WHY THIS MOVE/i.test(ct);
+        });
+        if(!nested){card=el;break}
+      }
+      if(card) card.classList.add('cot-live-coach-scroll');
+    };
+
+    const observer=new MutationObserver(apply);
+    observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    apply();
+  }catch(err){console.warn('Scrollable Live Position Coach could not attach',err)}
 })();
