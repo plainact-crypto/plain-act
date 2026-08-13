@@ -2,11 +2,12 @@
 // Its old move-quality analyzer duplicated engine work and painted text badges.
 globalThis.__COT_GUIDED_POLISH_30__=true;
 
-// Three-engine training architecture (Report #29 follow-up)
+// Four-engine training architecture.
 // Engine A: user's training side / repertoire recommendations.
 // Engine B: opponent move generation.
-// Engine C: evaluation bar + independent post-move grading only.
-(function installTripleEngineArchitecture(){
+// Engine C: evaluation bar only.
+// Engine D: move-quality classification only.
+(function installFourEngineArchitecture(){
   try{
     if(globalThis.__COT_TRIPLE_ENGINE_ARCHITECTURE__) return;
     globalThis.__COT_TRIPLE_ENGINE_ARCHITECTURE__=true;
@@ -15,10 +16,12 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     const userEngine=engineService;
     const opponentEngine=new engineService.constructor();
     const evaluationEngine=new engineService.constructor();
+    const qualityEngine=new engineService.constructor();
 
     globalThis.__COT_USER_ENGINE_SERVICE__=userEngine;
     globalThis.__COT_OPPONENT_ENGINE_SERVICE__=opponentEngine;
     globalThis.__COT_EVAL_ENGINE_SERVICE__=evaluationEngine;
+    globalThis.__COT_MOVE_QUALITY_ENGINE_SERVICE__=qualityEngine;
 
     const sideCode=()=>state?.side==='black'?'b':'w';
     const fenFromArgs=(args)=>{
@@ -35,22 +38,18 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       return turn && turn!==sideCode()?opponentEngine:userEngine;
     };
     const trace=(role,name,fen,result)=>{
-      try{
-        if(typeof issueTracePush==='function') issueTracePush({type:name,engineRole:role,fen,result});
-      }catch{}
+      try{if(typeof issueTracePush==='function') issueTracePush({type:name,engineRole:role,fen,result})}catch{}
     };
 
     for(const name of ['bestMove','topMoves','evaluate']){
-      if(typeof userEngine[name]!=='function' || typeof opponentEngine[name]!=='function') continue;
+      if(typeof userEngine[name]!=='function'||typeof opponentEngine[name]!=='function') continue;
       const userCall=userEngine[name].bind(userEngine);
       const opponentCall=opponentEngine[name].bind(opponentEngine);
       userEngine[name]=async(...args)=>{
         const fen=fenFromArgs(args);
         const selected=engineForFen(fen);
         if(selected===opponentEngine){
-          const result=await opponentCall(...args);
-          trace('opponent',name,fen,result);
-          return result;
+          const result=await opponentCall(...args);trace('opponent',name,fen,result);return result;
         }
         return userCall(...args);
       };
@@ -62,17 +61,27 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
         const raw=evaluationEngine[name].bind(evaluationEngine);
         evaluationEngine[name]=async(...args)=>{
           const fen=fenFromArgs(args);
-          if(name==='evaluate' && state?.screen==='training' && state?.mode!=='guided'){
-            trace('evaluation-suppressed',name,fen,null);
-            return null;
+          if(name==='evaluate'&&state?.screen==='training'&&state?.mode!=='guided'){
+            trace('evaluation-suppressed',name,fen,null);return null;
           }
-          const result=await raw(...args);
-          trace('evaluation',name,fen,result);
-          return result;
+          const result=await raw(...args);trace('evaluation',name,fen,result);return result;
+        };
+      }
+      for(const name of ['bestMove','topMoves','evaluate']){
+        if(typeof qualityEngine[name]!=='function') continue;
+        const raw=qualityEngine[name].bind(qualityEngine);
+        qualityEngine[name]=async(...args)=>{
+          const fen=fenFromArgs(args);
+          const result=await raw(...args);trace('move-quality',name,fen,result);return result;
         };
       }
     }catch{}
 
-    globalThis.__COT_ENGINE_ROLES__={user:'training-side',opponent:'opponent-side',evaluation:'evaluation-and-quality'};
-  }catch(err){console.warn('Triple engine architecture could not attach',err)}
+    globalThis.__COT_ENGINE_ROLES__={
+      user:'training-side',
+      opponent:'opponent-side',
+      evaluation:'evaluation-bar-only',
+      quality:'move-quality-only'
+    };
+  }catch(err){console.warn('Four-engine architecture could not attach',err)}
 })();
