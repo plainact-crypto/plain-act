@@ -79,6 +79,7 @@ if 'function openIssueReportLegacy()' not in s:
 
 for patch_file, marker in [
     ('issue-report-patch.js','const ISSUE_ENGINE_TRACE=[];'),
+    ('triple-engine-patch.js','__COT_TRIPLE_ENGINE_ARCHITECTURE__'),
     ('cloud-auth-patch.js','const SB_URL='),
     ('auth-confirmation-patch.js','__AUTH_CONFIRMATION_RECOVERY_PATCH__'),
     ('session-navigation-patch.js','__ISSUE_SESSION_RETRY__'),
@@ -133,7 +134,8 @@ try{
         }
       });
     }
-    const rawEvaluate=engineService.evaluate.bind(engineService);
+    const evalEngine=globalThis.__COT_EVAL_ENGINE_SERVICE__||engineService;
+    const rawEvaluate=evalEngine.evaluate.bind(evalEngine);
     async function publishCurrentFen(fen){
       if(!fen || fen===guardedFen || fen===pendingFen) return;
       const seq=++evalSeq;
