@@ -22,9 +22,11 @@ s=s.replace('assetsUrl:"/cm-chessboard/assets/"','assetsUrl:`${APP_BASE}cm-chess
 progression_import='''import {
   PRACTICE_PASSES_PER_VARIATION, MASTERY_VARIATION_CAP,
   variationCompleted, completedVariationsForLevel, openingProgress,
-  rankUnlockProgress, progressionLabel
+  rankUnlockProgress, progressionLabel, prestigeProgressText
 } from "./core/progression.js";'''
-if progression_import not in s:
+if 'from "./core/progression.js";' in s and progression_import not in s:
+    s=re.sub(r'import \{[^}]*\} from "\./core/progression\.js";',progression_import,s,count=1,flags=re.S)
+elif progression_import not in s:
     anchor='} from "./core/rank.js";'
     if anchor not in s:
         raise SystemExit('Could not add progression imports to main.js')
@@ -66,7 +68,9 @@ new='''        <div class="profile-elo">
         <div class="profile-elo progression-status">
           <span>${progressionLabel(mastery)}</span>
           <strong>${mastery.capped}/${MASTERY_VARIATION_CAP}</strong>
-          <small>${mastery.mastered?"Opening mastered":`${mastery.remaining} to next level`}</small>
+          <small>${prestigeProgressText(mastery)}</small>
+          ${mastery.mastered?`<small>${mastery.prestige.metrics.practiceSuccesses} verified Practice wins · ${Math.round(mastery.prestige.metrics.consistency)}% consistency · ${mastery.prestige.metrics.rankTests} Rank Tests · ${Math.round(mastery.prestige.metrics.rankPerformance)}% Rank performance</small>`:""}
+          ${mastery.prestige?.title?.startsWith("Opening ")?`<small>Product training title · not a FIDE title</small>`:""}
         </div>'''
 if old in s:
     s=s.replace(old,new,1)
@@ -113,6 +117,45 @@ s=s.replace('lesson.passes=Math.min(5,lesson.passes+1);','lesson.passes=Math.min
 s=s.replace('lp.rankUnlocked=lp.lessons.every(x=>x.passes>=5);','lp.rankUnlocked=rankUnlockProgress(lp).unlocked;')
 s=s.replace('${lesson?.passes||0}/5 valid passes','${lesson?.passes||0}/${PRACTICE_PASSES_PER_VARIATION} valid passes')
 s=s.replace('(lesson?.passes||0)>=5?"Back to Level":"Try Again"','variationCompleted(lesson)?"Back to Level":"Try Again"')
+
+# Keep 5/5 as variation completion while recording every later verified success.
+old='''    }else{
+      lesson.passes=Math.min(PRACTICE_PASSES_PER_VARIATION,lesson.passes+1);
+    }
+    lp.rankUnlocked=rankUnlockProgress(lp).unlocked;'''
+new='''    }else{
+      lesson.passes=Math.min(PRACTICE_PASSES_PER_VARIATION,lesson.passes+1);
+      lesson.validPracticeSuccesses=Math.max(Number(lesson.validPracticeSuccesses||0),lesson.passes-1)+1;
+    }
+    lp.rankUnlocked=rankUnlockProgress(lp).unlocked;'''
+if old in s:
+    s=s.replace(old,new,1)
+elif new not in s:
+    raise SystemExit('Could not add lifetime verified Practice success tracking')
+
+old='''function renderTraining(){
+  layout(`'''
+new='''function renderTraining(){
+  const trainingProgress=openingProgress(loadProfile(),state.side);
+  layout(`'''
+if old in s:
+    s=s.replace(old,new,1)
+elif new not in s:
+    raise SystemExit('Could not add shared progression to Training surfaces')
+s=s.replace('''${state.mode!=="rank"?` · Variation ${state.variationIndex+1}/20`:` · Rank round ${state.rankRound+1}/${state.rankRounds.length}`}</div>''','''${state.mode!=="rank"?` · Variation ${state.variationIndex+1}/20`:` · Rank round ${state.rankRound+1}/${state.rankRounds.length}`} · ${progressionLabel(trainingProgress)}</div>''')
+if 'progressionLabel(trainingProgress)' not in s:
+    raise SystemExit('Could not render prestige in Practice/Rank metadata')
+
+s=s.replace('''function completeHTML(){
+  if(state.mode==="rank") return "";
+  const lesson=currentLesson();''','''function completeHTML(){
+  if(state.mode==="rank") return "";
+  const lesson=currentLesson();
+  const completionProgress=openingProgress(loadProfile(),state.side);''')
+s=s.replace('''<p class="sub">${state.userMovesDone} moves · ${state.mistakes} mistakes${state.mode==="test"?` · ${lesson?.passes||0}/${PRACTICE_PASSES_PER_VARIATION} valid passes`:""}</p>''','''<p class="sub">${state.userMovesDone} moves · ${state.mistakes} mistakes${state.mode==="test"?` · ${lesson?.passes||0}/${PRACTICE_PASSES_PER_VARIATION} valid passes`:""}</p>
+  <p class="sub">${progressionLabel(completionProgress)} · ${prestigeProgressText(completionProgress)}</p>''')
+if 'progressionLabel(completionProgress)' not in s:
+    raise SystemExit('Could not render prestige in Practice completion')
 
 # Reports #6/#14: repertoire-first guidance must never choose a materially worse move
 # just to stay inside the scripted move pool. Compare the strongest repertoire candidate
@@ -270,6 +313,12 @@ p.write_text(s)
 
 p=Path('src/core/storage.js')
 s=p.read_text()
+s=s.replace('''    passes:Number(lesson.passes||0),
+    attempts:Number(lesson.attempts||0),''','''    passes:Number(lesson.passes||0),
+    validPracticeSuccesses:Math.max(Number(lesson.validPracticeSuccesses||0),Number(lesson.passes||0)),
+    attempts:Number(lesson.attempts||0),''')
+if 'validPracticeSuccesses:Math.max' not in s:
+    raise SystemExit('Could not normalize lifetime verified Practice successes')
 s=s.replace('lp.rankUnlocked=lp.lessons.every(x=>x.passes>=5);','lp.rankUnlocked=lp.lessons.filter(x=>Number(x.passes||0)>=5).length>=5;')
 if 'lp.lessons.filter(x=>Number(x.passes||0)>=5).length>=5;' not in s:
     raise SystemExit('Could not patch persisted Rank unlock threshold')

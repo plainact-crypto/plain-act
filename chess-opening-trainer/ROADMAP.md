@@ -62,6 +62,15 @@ Updated: 2026-08-13
   - Existing Supabase progress remains compatible and is reinterpreted from saved valid-pass counts without destructive data rewriting.
   - Unit tests and production build passed.
 
+- [x] **Prestige progression beyond Mastered**
+  - Thresholds and product semantics are specified in `PROGRESSION.md` before implementation.
+  - Added product-only titles: Opening CM, Opening FM, Opening IM, and Opening GM; UI explicitly states that they are not FIDE titles.
+  - Added Opening GM Stars from ★1 through ★20.
+  - Prestige requires Mastered 30/30 plus lifetime verified Practice successes, Practice consistency, completed Rank Tests, and average Rank performance.
+  - Raw plays, Guided repetitions, invalid/hinted attempts, and move count do not advance prestige.
+  - Dashboard/profile, depth/course navigation, Practice, Rank Test, completion summaries, Opening Elo presentation, badges, labels, and next-target copy use the shared progression module.
+  - Opening Elo scoring and chess move logic remain unchanged.
+
 ## Next phase
 
 - [ ] **Rank Test — current gate phase; Beta Readiness remains blocked**
