@@ -1,5 +1,5 @@
 // Guided Training move-quality symbols for BOTH sides.
-// Dedicated quality engine + transparent Expected-Points classification.
+// Dedicated quality engine + measurable Expected-Points classification.
 (function installExpectedPointsMoveQuality(){
   try{
     if(globalThis.__COT_MOVE_QUALITY_EXPECTED_POINTS__) return;
@@ -26,8 +26,7 @@
       blunder:{symbol:'??',cls:'cot-q-blunder'}
     };
 
-    // Transparent CP -> expected-points curve. Output is 0..1 from mover POV.
-    // Classification cutoffs then follow Chess.com's published Expected Points bands.
+    // CP -> expected-points approximation, then Chess.com published EP-loss bands.
     const expectedPoints=cp=>{
       const x=Math.max(-1000,Math.min(1000,Number(cp)||0));
       return 1/(1+Math.exp(-0.00368208*x));
@@ -44,16 +43,8 @@
       const white=turn==='w'?cp:-cp;
       return mover==='w'?white:-white;
     };
-    const lineMove=x=>{
-      if(!x) return '';
-      if(typeof x==='string') return x.trim().split(/\s+/)[0]||'';
-      return String(x.move||x.uci||x.bestMove||x.pv||'').trim().split(/\s+/)[0]||'';
-    };
-    const lineCp=(fen,x,mover)=>{
-      if(!x||typeof x==='string') return null;
-      return cpForMover(fen,{cp:x.cp,mate:x.mate},mover);
-    };
     const moveUci=m=>m?`${m.from||''}${m.to||''}${m.promotion||''}`:'';
+    const pieceValues={p:1,n:3,b:3,r:5,q:9,k:0};
 
     const squarePosition=square=>{
       const board=document.querySelector('#board');if(!board||!square)return null;
@@ -81,17 +72,6 @@
       timerByColor[color]=setTimeout(()=>clearColor(color),4000);
     };
 
-    const pieceValues={p:1,n:3,b:3,r:5,q:9,k:0};
-    const isGoodSacrifice=item=>{
-      try{
-        const piece=String(item.move?.piece||'');
-        if((pieceValues[piece]||0)<3||typeof Chess!=='function') return false;
-        const g=new Chess(item.afterFen);
-        const replies=g.moves({verbose:true})||[];
-        return replies.some(m=>m.to===item.move.to&&m.captured&&pieceValues[piece]>=3);
-      }catch{return false}
-    };
-
     const cache=new Map();
     const engine=()=>globalThis.__COT_MOVE_QUALITY_ENGINE_SERVICE__;
     function prime(fen){
@@ -108,6 +88,45 @@
       return promise;
     }
 
+    const firstPvMove=result=>String(result?.pv||'').trim().split(/\s+/)[0]||'';
+
+    // A Brilliant sacrifice must be a REAL net material offer, not merely a capture.
+    // Example Report #30: Nxf5 captures a bishop (3) and the knight (3) is recaptured => net offer 0 => never Brilliant.
+    const measurableSacrifice=(item,afterResult)=>{
+      try{
+        const movedValue=pieceValues[String(item.move?.piece||'')]||0;
+        const capturedValue=pieceValues[String(item.move?.captured||'')]||0;
+        if(movedValue<3) return {isSac:false,net:0};
+        const reply=firstPvMove(afterResult);
+        if(!reply||reply.slice(2,4)!==item.move.to) return {isSac:false,net:0};
+        const net=Math.max(0,movedValue-capturedValue);
+        return {isSac:net>=1.5,net};
+      }catch{return {isSac:false,net:0}}
+    };
+
+    const fenAfterUci=(fen,uci)=>{
+      try{
+        if(typeof Chess!=='function'||!fen||!uci||uci.length<4)return '';
+        const g=new Chess(fen);
+        const m=g.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci[4]||'q'});
+        return m?g.fen():'';
+      }catch{return ''}
+    };
+
+    async function criticalBestMoveGap(item,beforePack,bestAfterEP){
+      try{
+        if(!Array.isArray(beforePack.top)||beforePack.top.length<2)return false;
+        const played=moveUci(item.move);
+        const alternatives=beforePack.top.map(x=>String(typeof x==='string'?x:(x?.move||x?.uci||x?.bestMove||'')).trim().split(/\s+/)[0]).filter(Boolean).filter(x=>x!==played);
+        const second=alternatives[0];if(!second)return false;
+        const altFen=fenAfterUci(item.beforeFen,second);if(!altFen)return false;
+        const altResult=await engine().evaluate(altFen);
+        const altCp=cpForMover(altFen,altResult,item.move.color);if(altCp==null)return false;
+        const altEP=expectedPoints(altCp);
+        return (bestAfterEP-altEP>=0.10)||(bestAfterEP>=0.50&&altEP<0.50);
+      }catch{return false}
+    };
+
     async function classify(item){
       const e=engine();if(!e?.evaluate)return null;
       const beforePack=await (prime(item.beforeFen)||Promise.resolve(null));
@@ -122,21 +141,12 @@
       const played=moveUci(item.move);
       const isBest=!!beforePack.best&&played===beforePack.best;
 
-      // Brilliant: best/nearly-best, genuine non-pawn material offer, position remains viable,
-      // and the player was not already completely winning.
-      if((isBest||epLoss<=0.02)&&isGoodSacrifice(item)&&afterEP>=0.40&&beforeEP<=0.90) return 'brilliant';
+      const sacrifice=measurableSacrifice(item,afterResult);
+      // Brilliant: best/nearly best + measurable net sacrifice + still viable + not already trivially winning.
+      if((isBest||epLoss<=0.02)&&sacrifice.isSac&&afterEP>=0.40&&beforeEP<=0.90) return 'brilliant';
 
-      // Great: exact best move and clearly critical/unique. Compare against the next engine line.
-      if(isBest&&Array.isArray(beforePack.top)&&beforePack.top.length>1){
-        const lines=beforePack.top;
-        const bestLine=lines.find(x=>lineMove(x)===played)||lines[0];
-        const second=lines.find(x=>lineMove(x)!==played);
-        const bestCp=lineCp(item.beforeFen,bestLine,mover),secondCp=lineCp(item.beforeFen,second,mover);
-        if(bestCp!=null&&secondCp!=null){
-          const bestEP=expectedPoints(bestCp),secondEP=expectedPoints(secondCp);
-          if(bestEP-secondEP>=0.10||(bestEP>=0.50&&secondEP<0.50)) return 'great';
-        }
-      }
+      // Great: exact best move that is genuinely critical versus the next engine alternative.
+      if(isBest&&await criticalBestMoveGap(item,beforePack,afterEP)) return 'great';
 
       if(isBest) return 'best';
       if(epLoss<=0.02) return 'excellent';
@@ -168,7 +178,7 @@
         }
         const fen=state?.chess?.fen?.()||'';
         const hist=state?.chess?.history?.({verbose:true})||[];
-        prime(fen); // pre-analyze the current position before the next move is played.
+        prime(fen);
         if(lastLen<0){lastLen=hist.length;lastFen=fen;return}
         if(hist.length===lastLen+1&&lastFen){
           queue.push({beforeFen:lastFen,afterFen:fen,move:{...hist[hist.length-1]}});
