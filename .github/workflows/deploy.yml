@@ -37,27 +37,6 @@ jobs:
         working-directory: chess-opening-trainer
         run: bash cloudflare-build.sh
 
-      - name: Audit Rank review board
-        working-directory: chess-opening-trainer
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          s=Path('src/main.js').read_text()
-          def notice(title,text):
-              text=(text or 'NOT FOUND').replace('%','%25').replace('\r',' ').replace('\n','%0A')
-              print(f'::notice title={title}::{text[:16000]}')
-          for label,pat in [
-              ('render-review-decl',r'(?:async\s+)?function\s+renderRankReview\s*\([^)]*\)\s*\{'),
-              ('render-review-assign',r'renderRankReview\s*=\s*(?:async\s*)?function\s*\([^)]*\)\s*\{'),
-              ('review-index',r'rankReviewIndex'),
-              ('best-uci',r'bestUci'),
-              ('review-board',r'rank-review|rankReviewBoard|reviewBoard')]:
-              m=re.search(pat,s,re.I)
-              if not m: notice('RankBoard '+label,None); continue
-              notice('RankBoard '+label,s[max(0,m.start()-1200):min(len(s),m.start()+12000)])
-          PY
-
       - name: Add chess trainer to Pages artifact
         run: |
           rm -rf dist/chess-opening-trainer
