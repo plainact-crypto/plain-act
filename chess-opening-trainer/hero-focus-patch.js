@@ -24,8 +24,21 @@
 // Report #23: prevent the Practice/Rank board from collapsing to an unusably small desktop size.
 (function keepTrainingBoardUsable(){
   const style=document.createElement('style');
-  style.textContent='@media (min-width:900px){.board-shell{min-width:min(58vh,620px)}#board{width:100%!important;max-width:720px}}';
+  style.textContent='@media (min-width:900px){.board-shell{min-width:min(58vh,620px)}#board{width:100%!important;max-width:720px}.cot-test-board-large{width:min(72vh,720px)!important;min-width:min(72vh,720px)!important;max-width:720px!important}.cot-test-board-large #board{width:100%!important;max-width:720px!important}}';
   document.head.appendChild(style);
+
+  const apply=()=>{
+    try{
+      if(state?.screen!=='training') return;
+      const shell=document.querySelector('.board-shell');
+      if(!shell) return;
+      const isTest=state?.mode==='test'||state?.mode==='rank';
+      shell.classList.toggle('cot-test-board-large',isTest);
+    }catch{}
+  };
+  const observer=new MutationObserver(apply);
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+  apply();
 })();
 
 // Hide internal engine diagnostics from every Training mode.
