@@ -37,32 +37,33 @@ jobs:
         working-directory: chess-opening-trainer
         run: bash cloudflare-build.sh
 
-      - name: Deep audit Rank Test source
+      - name: Audit Rank results and retraining
         working-directory: chess-opening-trainer
         run: |
           python - <<'PY'
           from pathlib import Path
           import re
           s=Path('src/main.js').read_text()
-          targets=['reset','onBoardInput','startRankTest','startRankRound','prepareRankUserTurn','scoreRankMoveAndContinue','finishRankRound','finishRankTest','completeHTML','renderTraining','renderRankReview','renderRankMistakeReview']
-          def function_chunk(name):
+          def notice(title,text):
+              text=(text or 'NOT FOUND').replace('%','%25').replace('\r',' ').replace('\n','%0A')
+              print(f'::notice title={title}::{text[:12000]}')
+          def func(name):
               m=re.search(r'(?m)^(?:async\s+)?function\s+'+re.escape(name)+r'\s*\(',s)
-              if not m: return None
+              if not m:return None
               nxt=re.search(r'(?m)^\s*(?:async\s+)?function\s+[A-Za-z_$][\w$]*\s*\(',s[m.end():])
-              end=m.end()+nxt.start() if nxt else min(len(s),m.start()+10000)
+              end=m.end()+nxt.start() if nxt else min(len(s),m.start()+12000)
               return s[m.start():min(end,m.start()+12000)]
-          for name in targets:
-              chunk=function_chunk(name)
-              if chunk is None:
-                  msg='NOT FOUND'
-              else:
-                  msg=chunk.replace('%','%25').replace('\r',' ').replace('\n','%0A')
-              print(f'::notice title=RankDeep {name}::{msg}')
-          # Also expose rank-mode assignment and click wiring around startRankTest.
-          for label,pat in [('mode-assignment',r'.{0,900}state\.mode\s*=\s*[\"\']rank[\"\'].{0,1600}'),('rank-click',r'.{0,1200}startRankTest\s*\(.{0,1800}')]:
-              m=re.search(pat,s,re.S|re.I)
-              msg=(m.group(0) if m else 'NOT FOUND').replace('%','%25').replace('\r',' ').replace('\n','%0A')
-              print(f'::notice title=RankDeep {label}::{msg}')
+          for name in ['setupRankRound','render','renderRankSummary','rankSummaryHTML','startSavedTraining','openLevel']:
+              notice('RankFinal '+name,func(name))
+          for label,needle in [
+              ('review-copy','Review Mistakes'),('retrain-copy','Train This'),
+              ('review-index','rankReviewIndex'),('review-items','reviewItems'),
+              ('rank-summary-screen','rankSummary')]:
+              hits=[m.start() for m in re.finditer(re.escape(needle),s,re.I)]
+              if not hits: notice('RankFinal '+label,None);continue
+              chunks=[]
+              for pos in hits[:6]: chunks.append(s[max(0,pos-1200):min(len(s),pos+3500)])
+              notice('RankFinal '+label,'\n---HIT---\n'.join(chunks))
           PY
 
       - name: Add chess trainer to Pages artifact
