@@ -66,11 +66,10 @@ old_black_force='''  // Black: always begin ...c6, then ...d5.
   }
 '''
 if old_black_force in s:
-    s=s.replace(old_black_force,'''  // Black opening moves are selected by the repertoire evaluator instead of hard-forced.
-  // This allows near-best Caro-Kann transpositions while preserving repertoire guidance.
+    s=s.replace(old_black_force,'''  // Black opening family is selected positionally by repertoireAnchorForFen().
 ''',1)
-elif 'Black opening moves are selected by the repertoire evaluator' not in s:
-    raise SystemExit('Could not patch Black first-two-move tolerance in main.js')
+elif 'Black opening family is selected positionally' not in s and 'Black opening moves are selected by the repertoire evaluator' not in s:
+    raise SystemExit('Could not patch old Black opening force in main.js')
 
 if 'function openIssueReportLegacy()' not in s:
     patched, count = re.subn(r'function\s+openIssueReport\s*\(\s*\)\s*\{', 'function openIssueReportLegacy(){', s, count=1)
@@ -185,7 +184,24 @@ replacement='''export function repertoireAnchorForFen(chess,side){
       return null;
     }
 
-    if(side==="black" && turn==="b" && fullmove<=2) return null;
+    if(side==="black" && turn==="b"){
+      const history=chess.history({verbose:true})||[];
+      const blackMoves=history.filter(m=>m.color==="b");
+      const whiteMoves=history.filter(m=>m.color==="w");
+      const firstWhite=whiteMoves[0];
+      const whitePlayedE4=whiteMoves.some(m=>m.from==="e2"&&m.to==="e4");
+      const blackPlayedC6=blackMoves.some(m=>m.from==="c7"&&m.to==="c6");
+      const blackPlayedD5=blackMoves.some(m=>m.from==="d7"&&m.to==="d5");
+
+      if(blackMoves.length===0){
+        if(firstWhite?.from==="e2"&&firstWhite?.to==="e4") return "c7c6";
+        return "d7d5";
+      }
+      if(blackMoves.length===1){
+        if(blackPlayedC6 && !blackPlayedD5) return "d7d5";
+        if(blackPlayedD5 && !blackPlayedC6 && !whitePlayedE4) return "c7c6";
+      }
+    }
   }catch{}
   return null;
 }
@@ -193,7 +209,7 @@ replacement='''export function repertoireAnchorForFen(chess,side){
 export function isRequiredRepertoireMove'''
 s,count=re.subn(pattern,replacement,s,count=1,flags=re.S)
 if count!=1:
-    raise SystemExit('Could not patch Black opening tolerance in repertoire.js')
+    raise SystemExit('Could not patch Black opening family lock in repertoire.js')
 p.write_text(s)
 PY
 
