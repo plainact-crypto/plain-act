@@ -20,3 +20,10 @@
   obs.observe(document.documentElement,{childList:true,subtree:true});
   setTimeout(()=>obs.disconnect(),10000);
 })();
+
+// Report #23: prevent the Practice/Rank board from collapsing to an unusably small desktop size.
+(function keepTrainingBoardUsable(){
+  const style=document.createElement('style');
+  style.textContent='@media (min-width:900px){.board-shell{min-width:min(58vh,620px)}#board{width:100%!important;max-width:720px}}';
+  document.head.appendChild(style);
+})();
