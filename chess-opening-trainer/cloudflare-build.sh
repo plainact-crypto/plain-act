@@ -84,6 +84,7 @@ for patch_file, marker in [
     ('auth-confirmation-patch.js','__AUTH_CONFIRMATION_RECOVERY_PATCH__'),
     ('session-navigation-patch.js','__ISSUE_SESSION_RETRY__'),
     ('hero-focus-patch.js','Current opening focus'),
+    ('move-quality-symbol-patch.js','__COT_SYMBOL_ONLY_MOVE_QUALITY__'),
     ('mobile-test-ux-patch.js','__MOBILE_TEST_UX_PATCH__'),
     ('rank-test-p0-patch.js','__RANK_TEST_P0_PATCH__'),
     ('wood-piece-sound-patch.js','__WOOD_PIECE_SOUND_PATCH__')
