@@ -2,7 +2,7 @@
 try{
   if(!globalThis.__WOOD_PIECE_SOUND_PATCH__){
     globalThis.__WOOD_PIECE_SOUND_PATCH__=true;
-    let ctx=null,lastFen="",lastHistory=0,lastPlayedAt=0,primed=false,setupPlayedFor="",wasBoardVisible=false;
+    let ctx=null,lastFen="",lastHistory=0,lastPlayedAt=0,primed=false,setupPlayedFor="",visibleSince=0,lastVisibleKey="";
     const audioCtx=()=>ctx||(ctx=new (window.AudioContext||window.webkitAudioContext)());
     function woodTap(strength=1,delay=0,tone=620,duration=.065){
       try{
@@ -42,15 +42,29 @@ try{
       woodTap(1.08,0,620,.065);
     }
     const liveGame=()=>{try{return (typeof game!=='undefined'&&game?.history)?game:(state?.game?.history?state.game:(state?.chess?.history?state.chess:(globalThis.game?.history?globalThis.game:(globalThis.chess?.history?globalThis.chess:null))))}catch{return null}};
-    const boardIsVisible=()=>{try{if(state?.screen!=="training") return false;const candidates=[...document.querySelectorAll('.cm-chessboard, chess-board, .board, #board, svg')];return candidates.some(el=>{const r=el.getBoundingClientRect?.();return r&&r.width>240&&r.height>240&&r.bottom>0&&r.top<innerHeight;});}catch{return false}};
+    const visibleBoard=()=>{
+      try{
+        if(state?.screen!=="training" || document.visibilityState!=="visible") return null;
+        const candidates=[...document.querySelectorAll('.cm-chessboard, chess-board, .board, #board')];
+        for(const el of candidates){
+          const r=el.getBoundingClientRect?.();
+          const style=getComputedStyle(el);
+          if(r&&r.width>240&&r.height>240&&style.visibility!=="hidden"&&style.display!=="none"&&Number(style.opacity||1)>.8&&r.top>=0&&r.bottom<=innerHeight+2) return el;
+        }
+      }catch{}
+      return null;
+    };
     const prime=()=>{try{const c=audioCtx();if(c.state==='suspended')c.resume().catch(()=>{});primed=true}catch{}};
     addEventListener('pointerdown',prime,{passive:true});addEventListener('keydown',prime,{passive:true});
     setInterval(()=>{
       try{
-        const g=liveGame();const visible=boardIsVisible();
-        if(primed&&visible&&!wasBoardVisible){const fen=g?.fen?.()||'';const sessionKey=`${state?.mode||''}|${state?.side||''}|${state?.level||''}|${state?.variationIndex??''}|${fen}`;if(sessionKey!==setupPlayedFor){setupPlayedFor=sessionKey;setTimeout(setupRattle,90);}}
-        wasBoardVisible=visible;if(!g)return;
-        const fen=g.fen?.()||'';const hist=g.history?.({verbose:true})||[];
+        const g=liveGame();const board=visibleBoard();const fen=g?.fen?.()||'';const hist=g?.history?.({verbose:true})||[];
+        const sessionKey=`${state?.mode||''}|${state?.side||''}|${state?.level||''}|${state?.variationIndex??''}|${fen}`;
+        if(primed&&board&&hist.length===0&&fen){
+          if(lastVisibleKey!==sessionKey){lastVisibleKey=sessionKey;visibleSince=performance.now();}
+          if(sessionKey!==setupPlayedFor && performance.now()-visibleSince>=450){setupPlayedFor=sessionKey;setupRattle();}
+        }else{visibleSince=0;lastVisibleKey="";}
+        if(!g)return;
         if(!lastFen){lastFen=fen;lastHistory=hist.length;return;}
         if(fen!==lastFen){if(hist.length>lastHistory) playPhysicalMove(hist[hist.length-1],g);lastFen=fen;lastHistory=hist.length;}
       }catch{}
@@ -58,7 +72,7 @@ try{
   }
 }catch(err){console.warn('Wood piece audio could not attach',err)}
 
-// --- Black opening anchor lock (Reports #15-#19) ---
+// --- Black opening anchor lock (Reports #15-#20) ---
 try{
   if(!globalThis.__BLACK_OPENING_FAMILY_LOCK__ && typeof bestRepertoireMove==='function'){
     globalThis.__BLACK_OPENING_FAMILY_LOCK__=true;
@@ -74,7 +88,11 @@ try{
           let uci=null;
           if(black.length===0) uci='c7c6';
           else if(black.length===1&&playedC6&&!playedD5) uci='d7d5';
-          if(uci){const from=uci.slice(0,2),to=uci.slice(2,4);const legal=g.moves({square:from,verbose:true}).some(m=>m.to===to);if(legal) return {from,to,promotion:null};}
+          if(uci){
+            const from=uci.slice(0,2),to=uci.slice(2,4);
+            const legal=g.moves({square:from,verbose:true}).some(m=>m.to===to);
+            if(legal) return {from,to,promotion:null};
+          }
         }
       }catch{}
       return unlockedBestRepertoireMove(...args);
