@@ -145,3 +145,16 @@ try{
     document.head.appendChild(stableStyle);
   }
 }catch(err){console.warn('Training viewport stability patch could not attach',err)}
+
+// --- Report #28: keep board shell measurable while preserving the board instance ---
+try{
+  if(!globalThis.__BOARD_VISIBILITY_28__){
+    globalThis.__BOARD_VISIBILITY_28__=true;
+    const visibilityStyle=document.createElement('style');
+    visibilityStyle.textContent=`
+      .board-shell{contain:none!important;min-width:0}
+      #board,.cm-chessboard{visibility:visible!important}
+    `;
+    document.head.appendChild(visibilityStyle);
+  }
+}catch(err){console.warn('Board visibility fix could not attach',err)}
