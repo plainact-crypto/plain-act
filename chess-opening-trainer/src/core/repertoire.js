@@ -23,11 +23,29 @@ export function repertoireAnchorForFen(chess,side){
       return null;
     }
 
-    // Black remains a Caro-Kann-focused repertoire, but the opening trainer must
-    // not hard-force 1...c6 or 2...d5. The first two Black moves are deliberately
-    // flexible so sensible alternatives/transpositions can be accepted and then
-    // guided back toward the selected repertoire by the normal move ranking logic.
-    if(side==="black" && turn==="b" && fullmove<=2) return null;
+    if(side==="black" && turn==="b"){
+      const history=chess.history({verbose:true})||[];
+      const blackMoves=history.filter(m=>m.color==="b");
+      const whiteMoves=history.filter(m=>m.color==="w");
+      const firstWhite=whiteMoves[0];
+      const whitePlayedE4=whiteMoves.some(m=>m.from==="e2"&&m.to==="e4");
+      const blackPlayedC6=blackMoves.some(m=>m.from==="c7"&&m.to==="c6");
+      const blackPlayedD5=blackMoves.some(m=>m.from==="d7"&&m.to==="d5");
+
+      // Opening-family lock (Reports #15/#16/#17):
+      // 1.e4 enters Caro-Kann with ...c6. Queen-pawn / flank starts enter
+      // a Slav shell with ...d5. The complementary pawn move follows next.
+      // This is position-aware rather than blindly forcing the same move against
+      // every White first move, and it keeps the requested repertoire identity stable.
+      if(blackMoves.length===0){
+        if(firstWhite?.from==="e2"&&firstWhite?.to==="e4") return "c7c6";
+        return "d7d5";
+      }
+      if(blackMoves.length===1){
+        if(blackPlayedC6 && !blackPlayedD5) return "d7d5";
+        if(blackPlayedD5 && !blackPlayedC6 && !whitePlayedE4) return "c7c6";
+      }
+    }
   }catch{}
   return null;
 }
