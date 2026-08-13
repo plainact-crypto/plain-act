@@ -1,7 +1,11 @@
+// Disable the legacy Guided polish block before auth-confirmation-patch loads.
+// Its old move-quality analyzer duplicated engine work and painted text badges.
+globalThis.__COT_GUIDED_POLISH_30__=true;
+
 // Three-engine training architecture (Report #29 follow-up)
 // Engine A: user's training side / repertoire recommendations.
 // Engine B: opponent move generation.
-// Engine C: evaluation bar only.
+// Engine C: evaluation bar + independent post-move grading only.
 (function installTripleEngineArchitecture(){
   try{
     if(globalThis.__COT_TRIPLE_ENGINE_ARCHITECTURE__) return;
@@ -38,7 +42,7 @@
 
     for(const name of ['bestMove','topMoves','evaluate']){
       if(typeof userEngine[name]!=='function' || typeof opponentEngine[name]!=='function') continue;
-      const userCall=userEngine[name].bind(userEngine); // preserves existing issue-report wrapper
+      const userCall=userEngine[name].bind(userEngine);
       const opponentCall=opponentEngine[name].bind(opponentEngine);
       userEngine[name]=async(...args)=>{
         const fen=fenFromArgs(args);
@@ -52,10 +56,6 @@
       };
     }
 
-    // Evaluation engine remains completely outside move-selection routing.
-    // Practice and Rank intentionally have no evaluation bar, so evaluation work is
-    // suppressed there entirely. This also prevents hidden eval completion from
-    // triggering an unnecessary full render/board flash after every move.
     try{
       for(const name of ['bestMove','topMoves','evaluate']){
         if(typeof evaluationEngine[name]!=='function') continue;
@@ -73,12 +73,6 @@
       }
     }catch{}
 
-    globalThis.__COT_ENGINE_ROLES__={
-      user:'training-side',
-      opponent:'opponent-side',
-      evaluation:'evaluation-bar-only'
-    };
-  }catch(err){
-    console.warn('Triple engine architecture could not attach',err);
-  }
+    globalThis.__COT_ENGINE_ROLES__={user:'training-side',opponent:'opponent-side',evaluation:'evaluation-and-quality'};
+  }catch(err){console.warn('Triple engine architecture could not attach',err)}
 })();
