@@ -80,6 +80,7 @@ if 'function openIssueReportLegacy()' not in s:
 for patch_file, marker in [
     ('issue-report-patch.js','const ISSUE_ENGINE_TRACE=[];'),
     ('cloud-auth-patch.js','const SB_URL='),
+    ('auth-confirmation-patch.js','__AUTH_CONFIRMATION_RECOVERY_PATCH__'),
     ('session-navigation-patch.js','__ISSUE_SESSION_RETRY__'),
     ('hero-focus-patch.js','Current opening focus'),
     ('mobile-test-ux-patch.js','__MOBILE_TEST_UX_PATCH__'),
