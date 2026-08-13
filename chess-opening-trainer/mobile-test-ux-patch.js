@@ -164,7 +164,6 @@ try{
         const from=event.squareFrom,to=event.squareTo;
         const legal=state.chess.moves({square:from,verbose:true}).find(m=>m.to===to);
 
-        // Illegal gestures/touch slips are input errors, not chess mistakes.
         if(!legal){
           state.practiceTapSelected=null;
           p0Status('Illegal move — try again. This does not count as a mistake.',false);
@@ -189,8 +188,8 @@ try{
       return p0OriginalBoardInput(event);
     };
 
-    // Show opponent replay moves long enough to register visually, then ask for the user move.
     continueRecordedTest=async function(){
+      if(state.screen!=='training'||state.mode!=='test') return;
       while(state.testCursor < state.trainingLine.length){
         const step=state.trainingLine[state.testCursor];
         if(step.actor==='engine'){
@@ -204,6 +203,7 @@ try{
             state.statusError=false;
             render();
             await p0Sleep(620);
+            if(state.screen!=='training'||state.mode!=='test') return;
             continue;
           }catch(e){
             console.error('Recorded engine move failed',step,e);
@@ -298,7 +298,6 @@ try{
       if(state.practiceReviewActive){renderPracticeMistakeReview();return;}
       p0OriginalRenderTraining();
       if(state.mode==='test'){
-        // Practice recall must not leak engine information or the expected move.
         document.querySelector('.eval-column')?.remove();
         const stats=document.querySelector('.side-panel .stats');
         if(stats) stats.remove();
