@@ -27,3 +27,29 @@
   style.textContent='@media (min-width:900px){.board-shell{min-width:min(58vh,620px)}#board{width:100%!important;max-width:720px}}';
   document.head.appendChild(style);
 })();
+
+// Report #28 follow-up: the Report #27 persistent-board wrapper creates a temporary
+// Chessboard and then removes its DOM. Calling destroy() on that temporary instance can
+// tear down shared SVG resources used by the preserved board, leaving only the empty
+// board shell/guide overlay visible. Ignore destroy() only for that discarded temporary
+// instance; normal board destruction still works when navigating away.
+(function preserveLiveBoardSvgResources(){
+  try{
+    if(globalThis.__COT_TEMP_BOARD_DESTROY_GUARD__) return;
+    globalThis.__COT_TEMP_BOARD_DESTROY_GUARD__=true;
+    if(typeof Chessboard!=='undefined' && Chessboard?.prototype?.destroy){
+      const originalDestroy=Chessboard.prototype.destroy;
+      Chessboard.prototype.destroy=function(...args){
+        try{
+          if(state?.screen==='training' && state?.board && this!==state.board){
+            return;
+          }
+        }catch{}
+        return originalDestroy.apply(this,args);
+      };
+    }
+    const style=document.createElement('style');
+    style.textContent='.board-shell{contain:none!important}';
+    document.head.appendChild(style);
+  }catch(err){console.warn('Temporary board destroy guard could not attach',err)}
+})();
