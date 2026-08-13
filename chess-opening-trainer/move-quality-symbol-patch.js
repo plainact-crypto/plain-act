@@ -120,3 +120,41 @@
     detect();
   }catch(err){console.warn('Queued move-quality markers could not attach',err)}
 })();
+
+// Final Guided status sizing: one visible line only. Any unexpected long status stays inside
+// the same fixed box and scrolls instead of wrapping or changing the panel height.
+(function lockGuidedStatusToOneLine(){
+  try{
+    if(globalThis.__COT_GUIDED_STATUS_ONE_LINE__) return;
+    globalThis.__COT_GUIDED_STATUS_ONE_LINE__=true;
+    const style=document.createElement('style');
+    style.textContent=`
+      .cot-guided-status-fixed,.cot-training-status-scroll{
+        height:40px!important;min-height:40px!important;max-height:40px!important;
+        box-sizing:border-box!important;white-space:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;
+        display:flex!important;align-items:center!important;scrollbar-width:thin!important;
+      }
+    `;
+    document.head.appendChild(style);
+    const apply=()=>{
+      if(state?.screen!=='training'||state?.mode!=='guided') return;
+      const panels=[...document.querySelectorAll('.side-panel,aside')];
+      for(const panel of panels){
+        const candidates=[...panel.querySelectorAll('div,section,p')];
+        for(const el of candidates){
+          const t=String(el.textContent||'').trim();
+          if(!/^(Your move|Opponent move|Engine|Thinking|Loading|Choosing)/i.test(t)) continue;
+          if(/Live Position Coach/i.test(t)||/Restart|Exit/i.test(t)) continue;
+          const r=el.getBoundingClientRect();
+          if(r.width>180&&r.height>24&&r.height<120){
+            el.classList.add('cot-guided-status-fixed');
+            break;
+          }
+        }
+      }
+    };
+    const obs=new MutationObserver(()=>queueMicrotask(apply));
+    obs.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    apply();
+  }catch(err){console.warn('Guided one-line status lock could not attach',err)}
+})();
