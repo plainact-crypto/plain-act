@@ -1,3 +1,6 @@
+// Disable the broken Report #27 DOM/instance preservation experiment before session-navigation-patch loads.
+globalThis.__PERSISTENT_TRAINING_BOARD_27__=true;
+
 // --- Email confirmation recovery flow (Report #21/#22) ---
 try{
   if(!globalThis.__AUTH_CONFIRMATION_RECOVERY_PATCH__){
