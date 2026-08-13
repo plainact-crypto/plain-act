@@ -36,8 +36,6 @@ async function bestRepertoireMove(){
     if(!best || result.score>best.score) best=result;
   }
 
-  // Safety valve: repertoire identity is preferred, but not at the cost of a clear blunder.
-  // evaluateCandidate() returns score from the user's perspective, so a higher score is safer.
   const unrestricted=await bestMove();
   if(unrestricted){
     const fallback={from:unrestricted.slice(0,2),to:unrestricted.slice(2,4),promotion:unrestricted[4]||null};
@@ -54,9 +52,6 @@ async function prepareUserTurn'''
     if count!=1:
         raise SystemExit('Could not patch repertoire safety valve in main.js')
 
-# Report #7: the user explicitly requested tolerance for Black's first two moves.
-# Remove the old hard-force 1...c6 / 2...d5 gate; the normal repertoire ranking now
-# keeps Caro-Kann identity while accepting a near-best transposition when appropriate.
 old_black_force='''  // Black: always begin ...c6, then ...d5.
   if(state.side==="black" && hist.length===0){
     return {from:"c7",to:"c6",label:"Caro-Kann repertoire: c6"};
@@ -83,33 +78,21 @@ if 'function openIssueReportLegacy()' not in s:
         raise SystemExit('Could not locate openIssueReport() for telemetry patch')
     s = patched
 
-issue_patch = Path('issue-report-patch.js').read_text()
-if 'const ISSUE_ENGINE_TRACE=[];' not in s:
-    s += '\n' + issue_patch + '\n'
-
-auth_patch = Path('cloud-auth-patch.js').read_text()
-if 'const SB_URL=' not in s:
-    s += '\n' + auth_patch + '\n'
-
-session_navigation_patch = Path('session-navigation-patch.js').read_text()
-if '__ISSUE_SESSION_RETRY__' not in s:
-    s += '\n' + session_navigation_patch + '\n'
-
-hero_patch = Path('hero-focus-patch.js').read_text()
-if 'Current opening focus' not in s:
-    s += '\n' + hero_patch + '\n'
-
-mobile_patch = Path('mobile-test-ux-patch.js').read_text()
-if '__MOBILE_TEST_UX_PATCH__' not in s:
-    s += '\n' + mobile_patch + '\n'
+for patch_file, marker in [
+    ('issue-report-patch.js','const ISSUE_ENGINE_TRACE=[];'),
+    ('cloud-auth-patch.js','const SB_URL='),
+    ('session-navigation-patch.js','__ISSUE_SESSION_RETRY__'),
+    ('hero-focus-patch.js','Current opening focus'),
+    ('mobile-test-ux-patch.js','__MOBILE_TEST_UX_PATCH__'),
+    ('wood-piece-sound-patch.js','__WOOD_PIECE_SOUND_PATCH__')
+]:
+    patch=Path(patch_file).read_text()
+    if marker not in s:
+        s += '\n' + patch + '\n'
 
 if 'window.__CLOUD_AUTH_BOOTSTRAP__=true;' not in s:
     s += '\nwindow.__CLOUD_AUTH_BOOTSTRAP__=true; queueMicrotask(()=>initCloudAuth());\n'
 
-# Reports #8/#9/#12/#13: the display evaluation is owned by a dedicated current-FEN evaluator.
-# Candidate-line evaluations are still allowed for training generation, but their results
-# never publish into state.eval*. Whenever the live board FEN changes, evaluate that exact
-# position once and publish only if the board is still on the same FEN when the result returns.
 if '__CURRENT_POSITION_EVAL_GUARD__' not in s:
     s += r'''
 
@@ -142,8 +125,6 @@ try{
           return guardedFen && fen===guardedFen ? guarded[key] : neutral[key];
         },
         set(value){
-          // Ignore all legacy non-current evaluation writes. They may belong to
-          // candidate branches. Explicit clears remain allowed on session reset.
           if(isReset(key,value)){
             guarded[key]=neutral[key];
             guardedFen="";
@@ -174,15 +155,9 @@ try{
         if(pendingFen===fen) pendingFen="";
       }
     }
-    // Keep the engine API available unchanged for repertoire/candidate analysis.
-    // A lightweight watcher notices actual board changes and evaluates only the live FEN.
     setInterval(()=>{
       const fen=currentBoardFen();
-      if(!fen){
-        guardedFen="";
-        pendingFen="";
-        return;
-      }
+      if(!fen){guardedFen="";pendingFen="";return;}
       if(fen!==guardedFen && fen!==pendingFen) publishCurrentFen(fen);
     },350);
   }
