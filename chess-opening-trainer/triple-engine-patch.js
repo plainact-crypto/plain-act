@@ -53,13 +53,19 @@
     }
 
     // Evaluation engine remains completely outside move-selection routing.
-    // The current-position evaluation guard calls this instance directly.
+    // Practice and Rank intentionally have no evaluation bar, so evaluation work is
+    // suppressed there entirely. This also prevents hidden eval completion from
+    // triggering an unnecessary full render/board flash after every move.
     try{
       for(const name of ['bestMove','topMoves','evaluate']){
         if(typeof evaluationEngine[name]!=='function') continue;
         const raw=evaluationEngine[name].bind(evaluationEngine);
         evaluationEngine[name]=async(...args)=>{
           const fen=fenFromArgs(args);
+          if(name==='evaluate' && state?.screen==='training' && state?.mode!=='guided'){
+            trace('evaluation-suppressed',name,fen,null);
+            return null;
+          }
           const result=await raw(...args);
           trace('evaluation',name,fen,result);
           return result;
