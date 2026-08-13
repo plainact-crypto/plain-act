@@ -1,9 +1,12 @@
 // Guided Training move-quality symbols for BOTH sides.
-// Dedicated quality engine + measurable Expected-Points classification.
+// Dedicated quality engine + best-reply continuation review.
 (function installExpectedPointsMoveQuality(){
   try{
     if(globalThis.__COT_MOVE_QUALITY_EXPECTED_POINTS__) return;
     globalThis.__COT_MOVE_QUALITY_EXPECTED_POINTS__=true;
+
+    const QUALITY_DEPTH=16;
+    const CONTINUATION_DEPTH=14;
 
     const style=document.createElement('style');
     style.textContent=`
@@ -26,7 +29,6 @@
       blunder:{symbol:'??',cls:'cot-q-blunder'}
     };
 
-    // CP -> expected-points approximation, then Chess.com published EP-loss bands.
     const expectedPoints=cp=>{
       const x=Math.max(-1000,Math.min(1000,Number(cp)||0));
       return 1/(1+Math.exp(-0.00368208*x));
@@ -74,36 +76,6 @@
 
     const cache=new Map();
     const engine=()=>globalThis.__COT_MOVE_QUALITY_ENGINE_SERVICE__;
-    function prime(fen){
-      if(!fen||cache.has(fen)) return cache.get(fen)||null;
-      const e=engine();if(!e?.evaluate)return null;
-      const promise=(async()=>{
-        const evaluation=await e.evaluate(fen);
-        let best='';try{best=String(await e.bestMove(fen)||'').trim().split(/\s+/)[0]}catch{}
-        let top=[];try{if(typeof e.topMoves==='function')top=await e.topMoves(fen,3)||[]}catch{}
-        return {evaluation,best,top};
-      })().catch(()=>null);
-      cache.set(fen,promise);
-      if(cache.size>18){const first=cache.keys().next().value;cache.delete(first)}
-      return promise;
-    }
-
-    const firstPvMove=result=>String(result?.pv||'').trim().split(/\s+/)[0]||'';
-
-    // A Brilliant sacrifice must be a REAL net material offer, not merely a capture.
-    // Example Report #30: Nxf5 captures a bishop (3) and the knight (3) is recaptured => net offer 0 => never Brilliant.
-    const measurableSacrifice=(item,afterResult)=>{
-      try{
-        const movedValue=pieceValues[String(item.move?.piece||'')]||0;
-        const capturedValue=pieceValues[String(item.move?.captured||'')]||0;
-        if(movedValue<3) return {isSac:false,net:0};
-        const reply=firstPvMove(afterResult);
-        if(!reply||reply.slice(2,4)!==item.move.to) return {isSac:false,net:0};
-        const net=Math.max(0,movedValue-capturedValue);
-        return {isSac:net>=1.5,net};
-      }catch{return {isSac:false,net:0}}
-    };
-
     const fenAfterUci=(fen,uci)=>{
       try{
         if(typeof Chess!=='function'||!fen||!uci||uci.length<4)return '';
@@ -112,42 +84,94 @@
         return m?g.fen():'';
       }catch{return ''}
     };
+    const median=values=>{
+      const a=values.filter(Number.isFinite).sort((x,y)=>x-y);
+      if(!a.length)return null;
+      const m=Math.floor(a.length/2);
+      return a.length%2?a[m]:(a[m-1]+a[m])/2;
+    };
 
-    async function criticalBestMoveGap(item,beforePack,bestAfterEP){
+    function prime(fen){
+      if(!fen||cache.has(fen)) return cache.get(fen)||null;
+      const e=engine();if(!e?.evaluate)return null;
+      const promise=(async()=>{
+        const evaluation=await e.evaluate(fen,QUALITY_DEPTH);
+        let best='';try{best=String(await e.bestMove(fen,QUALITY_DEPTH)||'').trim().split(/\s+/)[0]}catch{}
+        let top=[];try{if(typeof e.topMoves==='function')top=await e.topMoves(fen,3,CONTINUATION_DEPTH)||[]}catch{}
+        return {evaluation,best,top};
+      })().catch(()=>null);
+      cache.set(fen,promise);
+      if(cache.size>18){const first=cache.keys().next().value;cache.delete(first)}
+      return promise;
+    }
+
+    async function reviewedOutcome(fen,mover){
+      const e=engine();if(!e?.evaluate)return null;
+      const directResult=await e.evaluate(fen,QUALITY_DEPTH);
+      const directCp=cpForMover(fen,directResult,mover);
+      let bestReply='';
+      try{bestReply=String(await e.bestMove(fen,QUALITY_DEPTH)||'').trim().split(/\s+/)[0]}catch{}
+      const replyFen=fenAfterUci(fen,bestReply);
+      let replyResult=null,replyCp=null,continuation='',continuationFen='',continuationResult=null,continuationCp=null;
+      if(replyFen){
+        replyResult=await e.evaluate(replyFen,QUALITY_DEPTH);
+        replyCp=cpForMover(replyFen,replyResult,mover);
+        try{continuation=String(await e.bestMove(replyFen,CONTINUATION_DEPTH)||'').trim().split(/\s+/)[0]}catch{}
+        continuationFen=fenAfterUci(replyFen,continuation);
+        if(continuationFen){
+          continuationResult=await e.evaluate(continuationFen,CONTINUATION_DEPTH);
+          continuationCp=cpForMover(continuationFen,continuationResult,mover);
+        }
+      }
+      const stableCp=median([directCp,replyCp,continuationCp]);
+      return {stableCp,directCp,replyCp,continuationCp,bestReply,replyFen,continuation,continuationFen,directResult,replyResult,continuationResult};
+    }
+
+    const measurableSacrifice=(item,review)=>{
+      try{
+        const movedValue=pieceValues[String(item.move?.piece||'')]||0;
+        const capturedValue=pieceValues[String(item.move?.captured||'')]||0;
+        if(movedValue<3) return {isSac:false,net:0};
+        const reply=String(review?.bestReply||'');
+        if(!reply||reply.slice(2,4)!==item.move.to) return {isSac:false,net:0};
+        const net=Math.max(0,movedValue-capturedValue);
+        return {isSac:net>=1.5,net};
+      }catch{return {isSac:false,net:0}}
+    };
+
+    async function criticalBestMoveGap(item,beforePack,playedAfterEP){
       try{
         if(!Array.isArray(beforePack.top)||beforePack.top.length<2)return false;
         const played=moveUci(item.move);
         const alternatives=beforePack.top.map(x=>String(typeof x==='string'?x:(x?.move||x?.uci||x?.bestMove||'')).trim().split(/\s+/)[0]).filter(Boolean).filter(x=>x!==played);
         const second=alternatives[0];if(!second)return false;
         const altFen=fenAfterUci(item.beforeFen,second);if(!altFen)return false;
-        const altResult=await engine().evaluate(altFen);
-        const altCp=cpForMover(altFen,altResult,item.move.color);if(altCp==null)return false;
-        const altEP=expectedPoints(altCp);
-        return (bestAfterEP-altEP>=0.10)||(bestAfterEP>=0.50&&altEP<0.50);
+        const altReview=await reviewedOutcome(altFen,item.move.color);if(altReview?.stableCp==null)return false;
+        const altEP=expectedPoints(altReview.stableCp);
+        return (playedAfterEP-altEP>=0.10)||(playedAfterEP>=0.50&&altEP<0.50);
       }catch{return false}
-    };
+    }
 
     async function classify(item){
       const e=engine();if(!e?.evaluate)return null;
       const beforePack=await (prime(item.beforeFen)||Promise.resolve(null));
       if(!beforePack)return null;
-      const afterResult=await e.evaluate(item.afterFen);
       const mover=item.move.color;
       const beforeCp=cpForMover(item.beforeFen,beforePack.evaluation,mover);
-      const afterCp=cpForMover(item.afterFen,afterResult,mover);
-      if(beforeCp==null||afterCp==null)return null;
-      const beforeEP=expectedPoints(beforeCp),afterEP=expectedPoints(afterCp);
+      if(beforeCp==null)return null;
+
+      // Review the played move through the opponent's best reply and one continuation ply.
+      // This avoids grading from a shallow snapshot immediately after the move.
+      const review=await reviewedOutcome(item.afterFen,mover);
+      if(review?.stableCp==null)return null;
+      const beforeEP=expectedPoints(beforeCp),afterEP=expectedPoints(review.stableCp);
       const epLoss=Math.max(0,beforeEP-afterEP);
       const played=moveUci(item.move);
       const isBest=!!beforePack.best&&played===beforePack.best;
 
-      const sacrifice=measurableSacrifice(item,afterResult);
-      // Brilliant: best/nearly best + measurable net sacrifice + still viable + not already trivially winning.
+      const sacrifice=measurableSacrifice(item,review);
       if((isBest||epLoss<=0.02)&&sacrifice.isSac&&afterEP>=0.40&&beforeEP<=0.90) return 'brilliant';
-
-      // Great: exact best move that is genuinely critical versus the next engine alternative.
       if(isBest&&await criticalBestMoveGap(item,beforePack,afterEP)) return 'great';
-
       if(isBest) return 'best';
       if(epLoss<=0.02) return 'excellent';
       if(epLoss<=0.05) return 'good';
