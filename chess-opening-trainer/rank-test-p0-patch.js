@@ -1,4 +1,4 @@
-// --- Rank Test P0 audit fixes: legal input, mobile tap, leakage, completion races ---
+// --- Rank Test P0 audit fixes: legal input, mobile tap, scoring integrity, navigation races ---
 try{
   if(!globalThis.__RANK_TEST_P0_PATCH__){
     globalThis.__RANK_TEST_P0_PATCH__=true;
@@ -6,6 +6,8 @@ try{
     const rankP0OriginalBoardInput=onBoardInput;
     const rankP0OriginalRenderTraining=renderTraining;
     const rankP0OriginalFinishSession=finishSession;
+    const rankP0OriginalStartRankTest=startRankTest;
+    const rankP0OriginalFinishRankTest=finishRankTest;
     const rankP0IsRank=()=>state?.mode==='rank';
     const rankP0UserColor=()=>state?.side==='white'?'w':'b';
     const rankP0Fen=()=>{try{return state?.chess?.fen?.()||''}catch{return ''}};
@@ -15,6 +17,13 @@ try{
     let rankP0TouchStart=null;
     let rankP0SuppressClickUntil=0;
     let rankP0FinishKey='';
+    let rankP0Epoch=0;
+    let rankP0Committed=false;
+
+    const rankP0Invalidate=()=>{rankP0Epoch++;rankP0TapSelected=null;rankP0FinishKey='';rankP0LastInputKey=''};
+    const rankP0Active=(epoch,round=null)=>
+      epoch===rankP0Epoch && rankP0IsRank() && state.screen==='training' &&
+      (round===null||Number(state.rankRound)===Number(round));
 
     function rankP0Status(text,isError=false){
       state.status=text;
@@ -25,6 +34,20 @@ try{
 
     function rankP0Legal(from,to){
       try{return state.chess.moves({square:from,verbose:true}).find(m=>m.to===to)||null}catch{return null}
+    }
+
+    async function rankP0EvaluateFen(fen){
+      const result=await engineService.evaluate(fen);
+      if(!result) throw new Error('No engine evaluation');
+      const cp=result.cp===null||result.cp===undefined?null:Number(result.cp);
+      const mate=result.mate===null||result.mate===undefined?null:Number(result.mate);
+      if((cp===null||!Number.isFinite(cp))&&(mate===null||!Number.isFinite(mate))) throw new Error('Invalid engine evaluation');
+      const turn=String(fen||'').split(/\s+/)[1]||'w';
+      const whiteFactor=turn==='w'?1:-1;
+      let whiteScore;
+      if(mate!==null&&Number.isFinite(mate)) whiteScore=whiteFactor*(mate>0?100000:-100000);
+      else whiteScore=whiteFactor*cp;
+      return state.side==='white'?whiteScore:-whiteScore;
     }
 
     // Rank Test must never classify a touch slip or illegal move as an accuracy loss.
@@ -49,23 +72,189 @@ try{
       return rankP0OriginalBoardInput(event);
     };
 
-    // Hide engine/evaluation information while a Rank attempt is live.
+    // Start a fresh epoch for every Rank attempt. Old async engine callbacks become inert.
+    startRankTest=async function(...args){
+      rankP0Invalidate();
+      rankP0Committed=false;
+      return rankP0OriginalStartRankTest(...args);
+    };
+
+    // The UI evaluation guard is intentionally asynchronous and must not be used as
+    // the Rank benchmark. Evaluate the exact FEN directly and only then enable input.
+    prepareRankUserTurn=async function(){
+      const epoch=rankP0Epoch,round=Number(state.rankRound);
+      if(!rankP0Active(epoch,round)) return;
+      if(state.chess.isGameOver()){await finishRankRound();return}
+      state.engineBusy=true;
+      state.status='Engine is setting the benchmark…';
+      state.statusError=false;
+      render();
+      try{
+        const fen=rankP0Fen();
+        const best=await bestMove();
+        if(!rankP0Active(epoch,round)||fen!==rankP0Fen()) return;
+        const before=await rankP0EvaluateFen(fen);
+        if(!rankP0Active(epoch,round)||fen!==rankP0Fen()) return;
+        state.rankBestMove=best;
+        state.rankBeforeScore=before;
+        state.engineBusy=false;
+        state.status='Your move — play normally';
+        state.statusError=false;
+        render();
+      }catch(err){
+        if(!rankP0Active(epoch,round)) return;
+        console.error('Rank benchmark failed',err);
+        state.engineBusy=true;
+        state.status='Rank evaluation failed — restart this Rank Test. No score was saved.';
+        state.statusError=true;
+        render();
+      }
+    };
+
+    startRankRound=async function(){
+      const epoch=rankP0Epoch,roundNo=Number(state.rankRound);
+      const round=state.rankRounds[roundNo];
+      if(!round){finishRankTest();return}
+      setupRankRound(round);
+      state.status=`Rank round ${roundNo+1}/${state.rankRounds.length}`;
+      state.statusError=false;
+      render();
+      try{await ensureEngine()}catch(err){
+        if(rankP0Active(epoch,roundNo)){
+          state.engineBusy=true;state.status='Rank engine failed to start — restart the Rank Test.';state.statusError=true;render();
+        }
+        return;
+      }
+      if(!rankP0Active(epoch,roundNo)) return;
+      await prepareRankUserTurn();
+    };
+
+    async function rankP0EngineTurn(epoch,round){
+      if(!rankP0Active(epoch,round)||state.chess.isGameOver()||state.chess.turn()===rankP0UserColor()) return true;
+      state.engineBusy=true;
+      state.status='Opponent is thinking…';
+      state.statusError=false;
+      render();
+      try{
+        let uci=null;
+        if(state.rankFreshBranchPending){
+          uci=await getAlternativeEngineMove();
+          if(!rankP0Active(epoch,round)) return false;
+          state.rankFreshBranchPending=false;
+        }
+        if(!uci) uci=await bestMove();
+        if(!rankP0Active(epoch,round)) return false;
+        if(!uci){
+          state.engineBusy=true;state.status='Rank opponent move failed — restart this Rank Test. No score was saved.';state.statusError=true;render();
+          return false;
+        }
+        const m=state.chess.move({from:uci.slice(0,2),to:uci.slice(2,4),promotion:uci[4]||'q'});
+        state.history.push(m.san);
+        state.engineBusy=false;
+        state.status=`Opponent played ${m.san}`;
+        render();
+        await new Promise(resolve=>setTimeout(resolve,420));
+        return rankP0Active(epoch,round);
+      }catch(err){
+        if(rankP0Active(epoch,round)){
+          console.error('Rank opponent move failed',err);
+          state.engineBusy=true;state.status='Rank opponent move failed — restart this Rank Test. No score was saved.';state.statusError=true;render();
+        }
+        return false;
+      }
+    }
+
+    scoreRankMoveAndContinue=async function(){
+      const epoch=rankP0Epoch,round=Number(state.rankRound);
+      if(!rankP0Active(epoch,round)) return;
+      const review=state.rankPendingReview||{};
+      const fenAfter=rankP0Fen();
+      try{
+        const after=await rankP0EvaluateFen(fenAfter);
+        if(!rankP0Active(epoch,round)||fenAfter!==rankP0Fen()) return;
+        const before=Number(state.rankBeforeScore);
+        if(!Number.isFinite(before)||!Number.isFinite(after)) throw new Error('Invalid Rank benchmark');
+        const rawLoss=Math.max(0,before-after);
+        const loss=review.requiredRepertoire?0:rawLoss;
+        const item={
+          lossCp:loss,
+          rawLossCp:rawLoss,
+          accuracy:moveAccuracyFromLoss(loss),
+          round:state.rankRound,
+          fresh:state.rankFresh,
+          fenBefore:review.fenBefore||'',
+          playedUci:review.playedUci||'',
+          playedSan:review.playedSan||'',
+          bestUci:review.bestUci||state.rankBestMove||'',
+          bestSan:review.bestSan||'',
+          requiredRepertoire:!!review.requiredRepertoire,
+          gameSanMoves:[...(review.historyBefore||[]),review.playedSan].filter(Boolean),
+          issue:review.requiredRepertoire?'Repertoire Move':rankIssueLabel(loss)
+        };
+        state.rankLosses.push(item);
+        if(state.rankFresh) state.rankFreshLosses.push(item); else state.rankSavedLosses.push(item);
+        if(!item.requiredRepertoire&&loss>=35&&item.fenBefore) state.rankReviewItems.push({...item});
+        state.rankPendingReview=null;
+        state.engineBusy=false;
+
+        if(state.userMovesDone>=state.sessionLength||state.chess.isGameOver()){
+          await finishRankRound();return;
+        }
+        const opponentOk=await rankP0EngineTurn(epoch,round);
+        if(!opponentOk||!rankP0Active(epoch,round)) return;
+        if(state.chess.isGameOver()){await finishRankRound();return}
+        await prepareRankUserTurn();
+      }catch(err){
+        if(!rankP0Active(epoch,round)) return;
+        console.error('Rank move scoring failed',err);
+        state.rankPendingReview=null;
+        state.engineBusy=true;
+        state.status='Rank scoring failed — restart this Rank Test. No Elo was saved.';
+        state.statusError=true;
+        render();
+      }
+    };
+
+    finishRankRound=async function(){
+      const epoch=rankP0Epoch;
+      if(!rankP0Active(epoch)) return;
+      state.rankRound++;
+      if(state.rankRound>=state.rankRounds.length){finishRankTest();return}
+      if(!rankP0Active(epoch)) return;
+      await startRankRound();
+    };
+
+    // Result persistence is idempotent: Elo/history can be written only once per attempt.
+    finishRankTest=function(){
+      if(rankP0Committed||!rankP0IsRank()||state.screen!=='training') return;
+      rankP0Committed=true;
+      return rankP0OriginalFinishRankTest();
+    };
+
+    // Hide engine/evaluation information while a Rank attempt is live and wire Rank
+    // restart/exit so delayed callbacks are invalidated before navigation happens.
     renderTraining=function(){
       rankP0OriginalRenderTraining();
-      if(rankP0IsRank() && !state.complete){
+      if(rankP0IsRank()&&!state.complete){
         document.querySelector('.eval-column')?.remove();
         document.querySelectorAll('.stats').forEach(el=>{
           if(/eval|depth|pv|engine/i.test(el.textContent||'')) el.remove();
         });
         document.querySelector('#hint')?.remove();
+        const restart=document.querySelector('#restart');
+        if(restart){
+          restart.onclick=()=>{rankP0Invalidate();startRankTest()};
+        }
+        const exit=document.querySelector('#exit');
+        exit?.addEventListener('click',rankP0Invalidate,{capture:true,once:true});
       }
     };
 
-    // A delayed callback must not finalize the same Rank attempt twice and write Elo/history twice.
+    // Keep generic emergency completion idempotent too; normal Rank flow uses finishRankTest.
     finishSession=function(...args){
       if(!rankP0IsRank()) return rankP0OriginalFinishSession(...args);
       const key=`${state.side}|${state.sessionLength}|${state.rankRound}|${rankP0Fen()}|${state.userMovesDone}`;
-      if(state.complete || rankP0FinishKey===key) return;
+      if(state.complete||rankP0FinishKey===key) return;
       rankP0FinishKey=key;
       return rankP0OriginalFinishSession(...args);
     };
@@ -139,14 +328,13 @@ try{
         e.preventDefault();e.stopImmediatePropagation();
       }
     },true);
+    window.addEventListener('popstate',rankP0Invalidate,true);
+    window.addEventListener('pagehide',rankP0Invalidate,true);
 
-    // Clear transient attempt-only guards whenever Rank is no longer actively playing.
     setInterval(()=>{
       if(!rankP0IsRank()||state.screen!=='training'){
         rankP0TapSelected=null;rankP0Highlight(null);rankP0FinishKey='';rankP0LastInputKey='';
-      }else if(!state.complete && Number(state.userMovesDone||0)===0){
-        rankP0FinishKey='';
-      }
+      }else if(!state.complete&&Number(state.userMovesDone||0)===0){rankP0FinishKey=''}
     },300);
 
     const rankP0Style=document.createElement('style');
