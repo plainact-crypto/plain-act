@@ -1,5 +1,4 @@
 // Disable the legacy Guided polish block before auth-confirmation-patch loads.
-// Its old move-quality analyzer duplicated engine work and painted text badges.
 globalThis.__COT_GUIDED_POLISH_30__=true;
 
 // Four-engine training architecture.
@@ -55,33 +54,62 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       };
     }
 
-    try{
-      for(const name of ['bestMove','topMoves','evaluate']){
-        if(typeof evaluationEngine[name]!=='function') continue;
-        const raw=evaluationEngine[name].bind(evaluationEngine);
-        evaluationEngine[name]=async(...args)=>{
-          const fen=fenFromArgs(args);
-          if(name==='evaluate'&&state?.screen==='training'&&state?.mode!=='guided'){
-            trace('evaluation-suppressed',name,fen,null);return null;
-          }
-          const result=await raw(...args);trace('evaluation',name,fen,result);return result;
-        };
+    for(const name of ['bestMove','topMoves','evaluate']){
+      if(typeof evaluationEngine[name]!=='function') continue;
+      const raw=evaluationEngine[name].bind(evaluationEngine);
+      evaluationEngine[name]=async(...args)=>{
+        const fen=fenFromArgs(args);
+        if(name==='evaluate'&&state?.screen==='training'&&state?.mode!=='guided'){
+          trace('evaluation-suppressed',name,fen,null);return null;
+        }
+        const result=await raw(...args);trace('evaluation',name,fen,result);return result;
+      };
+    }
+
+    // Live move-quality searches are cached by FEN. The old grader asks evaluate/bestMove/topMoves
+    // repeatedly for the same position; this layer makes those calls reuse one Stockfish search
+    // instead of building a backlog several moves long.
+    const qualityCache=new Map();
+    const rawSearch=qualityEngine.search.bind(qualityEngine);
+    const getPack=async(fen,depth=12,multiPv=3)=>{
+      const safeDepth=Math.min(12,Math.max(8,Number(depth)||12));
+      const count=Math.max(3,Number(multiPv)||1);
+      const key=fen;
+      if(!qualityCache.has(key)){
+        const promise=rawSearch({fen,depth:safeDepth,multiPv:count}).then(result=>{
+          trace('move-quality-search','search',fen,result);
+          return result;
+        });
+        qualityCache.set(key,promise);
+        if(qualityCache.size>24) qualityCache.delete(qualityCache.keys().next().value);
       }
-      for(const name of ['bestMove','topMoves','evaluate']){
-        if(typeof qualityEngine[name]!=='function') continue;
-        const raw=qualityEngine[name].bind(qualityEngine);
-        qualityEngine[name]=async(...args)=>{
-          const fen=fenFromArgs(args);
-          const result=await raw(...args);trace('move-quality',name,fen,result);return result;
-        };
-      }
-    }catch{}
+      return qualityCache.get(key);
+    };
+
+    qualityEngine.evaluate=async(fen,depth=12)=>{
+      const pack=await getPack(fen,depth,3);
+      const result=pack?.lines?.[0]||null;
+      trace('move-quality','evaluate',fen,result);
+      return result;
+    };
+    qualityEngine.bestMove=async(fen,depth=12)=>{
+      const pack=await getPack(fen,depth,3);
+      const result=pack?.bestmove||pack?.lines?.[0]?.uci||null;
+      trace('move-quality','bestMove',fen,result);
+      return result;
+    };
+    qualityEngine.topMoves=async(fen,count=3,depth=12)=>{
+      const pack=await getPack(fen,depth,Math.max(3,count));
+      const result=(pack?.lines||[]).map(x=>x.uci).filter(Boolean).slice(0,count);
+      trace('move-quality','topMoves',fen,result);
+      return result;
+    };
 
     globalThis.__COT_ENGINE_ROLES__={
       user:'training-side',
       opponent:'opponent-side',
       evaluation:'evaluation-bar-only',
-      quality:'move-quality-only'
+      quality:'move-quality-only-cached'
     };
   }catch(err){console.warn('Four-engine architecture could not attach',err)}
 })();
