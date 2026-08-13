@@ -28,28 +28,46 @@
   document.head.appendChild(style);
 })();
 
-// Report #28 follow-up: the Report #27 persistent-board wrapper creates a temporary
-// Chessboard and then removes its DOM. Calling destroy() on that temporary instance can
-// tear down shared SVG resources used by the preserved board, leaving only the empty
-// board shell/guide overlay visible. Ignore destroy() only for that discarded temporary
-// instance; normal board destruction still works when navigating away.
-(function preserveLiveBoardSvgResources(){
+// Hide internal engine diagnostics from every Training mode. They are implementation
+// details, not user-facing coaching information, and their changing PV/move-list height
+// was causing the right panel and page to reflow after every move.
+(function hideTrainingEngineDiagnostics(){
   try{
-    if(globalThis.__COT_TEMP_BOARD_DESTROY_GUARD__) return;
-    globalThis.__COT_TEMP_BOARD_DESTROY_GUARD__=true;
-    if(typeof Chessboard!=='undefined' && Chessboard?.prototype?.destroy){
-      const originalDestroy=Chessboard.prototype.destroy;
-      Chessboard.prototype.destroy=function(...args){
-        try{
-          if(state?.screen==='training' && state?.board && this!==state.board){
-            return;
+    if(globalThis.__COT_HIDE_ENGINE_DIAGNOSTICS__) return;
+    globalThis.__COT_HIDE_ENGINE_DIAGNOSTICS__=true;
+
+    const hide=()=>{
+      if(state?.screen!=='training') return;
+      const panels=[...document.querySelectorAll('.side-panel, aside')];
+      for(const panel of panels){
+        const all=[...panel.querySelectorAll('*')];
+        const marker=all.find(el=>/Engine\s+depth\s*:/i.test(String(el.textContent||'')));
+        if(!marker) continue;
+
+        // Find the marker's top-level branch inside this panel, then hide that branch
+        // and every following sibling (PV and raw move list live below it).
+        let branch=marker;
+        while(branch.parentElement && branch.parentElement!==panel) branch=branch.parentElement;
+        if(branch.parentElement===panel){
+          let node=branch;
+          while(node){
+            node.style.setProperty('display','none','important');
+            node=node.nextElementSibling;
           }
-        }catch{}
-        return originalDestroy.apply(this,args);
-      };
-    }
-    const style=document.createElement('style');
-    style.textContent='.board-shell{contain:none!important}';
-    document.head.appendChild(style);
-  }catch(err){console.warn('Temporary board destroy guard could not attach',err)}
+          continue;
+        }
+
+        // Fallback for unexpected markup: hide the smallest blocks containing the
+        // diagnostic labels without touching the coaching/status controls above them.
+        for(const el of all){
+          const t=String(el.textContent||'').trim();
+          if(/^Engine\s+depth\s*:|^PV\s*:/i.test(t)) el.style.setProperty('display','none','important');
+        }
+      }
+    };
+
+    const observer=new MutationObserver(hide);
+    observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
+    hide();
+  }catch(err){console.warn('Training engine diagnostics hide could not attach',err)}
 })();
