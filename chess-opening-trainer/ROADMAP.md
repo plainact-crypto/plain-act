@@ -4,8 +4,8 @@ Updated: 2026-08-13
 
 ## Current P0 sequence
 
-- [x] **Guided Training — P0 Closed**
-  - Required Core release-gate phase completed before Practice/Rank closure.
+- [ ] **Guided Training — P0 Reopened / Blocked**
+  - Reports #30–#32 reopened this gate because move-quality classification must be verified.
 
 - [x] **Practice Test — P0 Audit & Fixes**
   - Legal move validation separated from scoring mistakes.
@@ -45,14 +45,29 @@ Updated: 2026-08-13
 
 ## Core P0 release gate
 
-- [x] Guided Training P0 closed.
+- [ ] Guided Training P0 reopened pending verification of Reports #30–#32 move-quality classification.
 - [x] Practice Test P0 closed.
 - [x] Rank Test P0 closed.
-- [x] **Core P0 gate satisfied.**
+- [ ] **Core P0 gate blocked.**
+
+## Progression & Mastery Logic
+
+- [x] **Report #33 — progressive variation mastery**
+  - One correct attempt never marks a move, variation, or opening as Mastered.
+  - A variation is **Completed** only after 5 valid Practice passes.
+  - Opening progression counts distinct completed variations across depth courses, capped at 30.
+  - Progress levels advance every 5 completed variations; **Mastered** is reserved for 30/30.
+  - Dashboard/profile summary, depth cards, course cards, progress labels, Practice completion, Rank unlock, mastered-variation count, and Opening Elo presentation use the shared progression source.
+  - Rank Test unlocks after 5 distinct completed variations at the selected depth; Rank scoring and chess move logic are unchanged.
+  - Existing Supabase progress remains compatible and is reinterpreted from saved valid-pass counts without destructive data rewriting.
+  - Unit tests and production build passed.
 
 ## Next phase
 
-- [ ] **Beta Readiness — Full Product QA & Release Gate** — CURRENT
+- [ ] **Rank Test — current gate phase; Beta Readiness remains blocked**
+  - Rank Test P0 implementation is closed, but the official current gate remains Rank Test while Guided Training classification verification is outstanding.
+
+- [ ] **Beta Readiness — Full Product QA & Release Gate** — BLOCKED
   - Full-product desktop/mobile regression QA across Core flows.
   - Authentication/profile/cloud-sync and persistence checks.
   - Cross-mode navigation and state-transition regression.

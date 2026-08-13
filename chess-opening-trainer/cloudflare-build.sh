@@ -16,6 +16,104 @@ if 'const APP_BASE =' not in s:
 s=s.replace('assetsUrl:"/cm-chessboard/"','assetsUrl:`${APP_BASE}cm-chessboard/`')
 s=s.replace('assetsUrl:"/cm-chessboard/assets/"','assetsUrl:`${APP_BASE}cm-chessboard/`')
 
+# Report #33: completion belongs to one variation; mastery belongs to breadth
+# across distinct completed variations. The shared progression module is the
+# sole source of thresholds for Dashboard, course cards, Practice and Rank.
+progression_import='''import {
+  PRACTICE_PASSES_PER_VARIATION, MASTERY_VARIATION_CAP,
+  variationCompleted, completedVariationsForLevel, openingProgress,
+  rankUnlockProgress, progressionLabel
+} from "./core/progression.js";'''
+if progression_import not in s:
+    anchor='} from "./core/rank.js";'
+    if anchor not in s:
+        raise SystemExit('Could not add progression imports to main.js')
+    s=s.replace(anchor,anchor+'\n'+progression_import,1)
+
+old='''function masteredCount(profile,side,level){
+  const lp=ensureLevelProgress(profile,side,level);
+  return lp.lessons.filter(x=>x.passes>=5).length;
+}'''
+new='''function completedVariationCount(profile,side,level){
+  return completedVariationsForLevel(ensureLevelProgress(profile,side,level));
+}'''
+if old in s:
+    s=s.replace(old,new,1)
+elif new not in s:
+    raise SystemExit('Could not replace legacy masteredCount()')
+
+s=s.replace('const done=masteredCount(p,side,n);','const done=completedVariationCount(p,side,n);')
+s=s.replace('<div class="level-count-sub">${done===20?"mastered":"variations mastered"}</div>','<div class="level-count-sub">completed variations</div>')
+
+old='''  const elo=Math.round(p.openingElo?.[side]||800);
+  return `'''
+new='''  const elo=Math.round(p.openingElo?.[side]||800);
+  const mastery=openingProgress(p,side);
+  return `'''
+if old in s:
+    s=s.replace(old,new,1)
+elif new not in s:
+    raise SystemExit('Could not add opening progression summary')
+
+old='''        <div class="profile-elo">
+          <span>Opening Elo</span>
+          <strong>${elo}</strong>
+        </div>'''
+new='''        <div class="profile-elo">
+          <span>Opening Elo</span>
+          <strong>${elo}</strong>
+        </div>
+        <div class="profile-elo progression-status">
+          <span>${progressionLabel(mastery)}</span>
+          <strong>${mastery.capped}/${MASTERY_VARIATION_CAP}</strong>
+          <small>${mastery.mastered?"Opening mastered":`${mastery.remaining} to next level`}</small>
+        </div>'''
+if old in s:
+    s=s.replace(old,new,1)
+elif new not in s:
+    raise SystemExit('Could not render opening progression summary')
+
+s=s.replace('const done=lp.lessons.filter(x=>x.passes>=5).length;','const done=completedVariationsForLevel(lp);')
+s=s.replace('<strong>Level ${n}</strong><span>${done}/20 mastered</span>','<strong>Depth ${n}</strong><span>${done}/20 completed</span>')
+s=s.replace('Open Level ${state.sessionLength}','Open Depth ${state.sessionLength}')
+s=s.replace('Practice progress</span><strong>${lesson.passes}/5','Practice progress</span><strong>${lesson.passes}/${PRACTICE_PASSES_PER_VARIATION}')
+s=s.replace('required 5/5 valid passes','required ${PRACTICE_PASSES_PER_VARIATION}/${PRACTICE_PASSES_PER_VARIATION} valid passes')
+s=s.replace('const mastered=lp.lessons.filter(x=>x.passes>=5).length;','const completed=completedVariationsForLevel(lp);')
+s=s.replace('<div class="course-score"><strong>${mastered}/20</strong><span>mastered</span></div>','<div class="course-score"><strong>${completed}/20</strong><span>completed</span></div>')
+s=s.replace('const mastered=lesson.passes>=5;','const completed=variationCompleted(lesson);')
+s=s.replace('<article class="variation-card ${mastered?"mastered":""}">','<article class="variation-card ${completed?"mastered":""}">')
+s=s.replace('<div class="variation-top"><span>Variation ${i+1}</span><strong>${lesson.passes}/5</strong></div>','<div class="variation-top"><span>Variation ${i+1}</span><strong>${lesson.passes}/${PRACTICE_PASSES_PER_VARIATION}</strong></div>')
+s=s.replace('${mastered?"Mastered ✓":lines.length?"Saved lines ready for practice":"Create the first training line"}','${completed?"Completed ✓":lesson.passes>0?`Learning · ${lesson.passes}/${PRACTICE_PASSES_PER_VARIATION} valid passes`:lines.length?"Saved lines ready for practice":"Create the first training line"}')
+if '${mastered?"Mastered' in s:
+    raise SystemExit('Legacy single-variation Mastered label remains in main.js')
+s=s.replace('const mastered=lp.lessons.filter(x=>x.passes>=5).length;','const completed=completedVariationsForLevel(lp);')
+
+old='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
+  const mastered=lp.lessons.filter(x=>x.passes>=5).length;
+  layout(`'''
+new='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
+  const completed=completedVariationsForLevel(lp);
+  const rankProgress=rankUnlockProgress(lp);
+  lp.rankUnlocked=rankProgress.unlocked;
+  layout(`'''
+if old in s:
+    s=s.replace(old,new,1)
+elif 'const rankProgress=rankUnlockProgress(lp);' not in s:
+    # The completed-count replacement above may already have changed the middle line.
+    old2='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
+  const completed=completedVariationsForLevel(lp);
+
+  layout(`'''
+    if old2 not in s:
+        raise SystemExit('Could not add course Rank progression')
+    s=s.replace(old2,new,1)
+
+s=s.replace('Master all 20 first variations at 5/5 valid Practice passes to unlock it.','Complete ${rankProgress.required} different variations at ${PRACTICE_PASSES_PER_VARIATION}/${PRACTICE_PASSES_PER_VARIATION} valid Practice passes to unlock it. (${rankProgress.completed}/${rankProgress.required})')
+s=s.replace('lesson.passes=Math.min(5,lesson.passes+1);','lesson.passes=Math.min(PRACTICE_PASSES_PER_VARIATION,lesson.passes+1);')
+s=s.replace('lp.rankUnlocked=lp.lessons.every(x=>x.passes>=5);','lp.rankUnlocked=rankUnlockProgress(lp).unlocked;')
+s=s.replace('${lesson?.passes||0}/5 valid passes','${lesson?.passes||0}/${PRACTICE_PASSES_PER_VARIATION} valid passes')
+s=s.replace('(lesson?.passes||0)>=5?"Back to Level":"Try Again"','variationCompleted(lesson)?"Back to Level":"Try Again"')
+
 # Reports #6/#14: repertoire-first guidance must never choose a materially worse move
 # just to stay inside the scripted move pool. Compare the strongest repertoire candidate
 # with the unrestricted engine best move from the same position; if the repertoire move
@@ -170,6 +268,13 @@ try{
 
 p.write_text(s)
 
+p=Path('src/core/storage.js')
+s=p.read_text()
+s=s.replace('lp.rankUnlocked=lp.lessons.every(x=>x.passes>=5);','lp.rankUnlocked=lp.lessons.filter(x=>Number(x.passes||0)>=5).length>=5;')
+if 'lp.lessons.filter(x=>Number(x.passes||0)>=5).length>=5;' not in s:
+    raise SystemExit('Could not patch persisted Rank unlock threshold')
+p.write_text(s)
+
 p=Path('src/core/engine.js')
 s=p.read_text().replace('constructor(workerUrl="/stockfish/stockfish-18-lite-single.js"){','constructor(workerUrl=`${import.meta.env.BASE_URL || "/"}stockfish/stockfish-18-lite-single.js`){')
 p.write_text(s)
@@ -294,4 +399,5 @@ export function fisherYates(items){
 EOF
 
 npm install --no-audit --no-fund
+npm test
 npm run build

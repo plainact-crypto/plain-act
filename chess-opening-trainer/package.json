@@ -7,6 +7,7 @@
     "copy-assets": "node scripts/copy-assets.mjs",
     "dev": "npm run copy-assets && vite",
     "build": "npm run copy-assets && vite build",
+    "test": "node --test tests/*.test.js",
     "preview": "vite preview"
   },
   "dependencies": {
