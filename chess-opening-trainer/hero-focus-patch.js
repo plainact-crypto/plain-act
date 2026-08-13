@@ -197,3 +197,44 @@
     };
   }catch(err){console.warn('Duplicate Practice/Rank render suppression could not attach',err)}
 })();
+
+// Practice/Rank visual continuity: a legitimate position change still rebuilds the board.
+// Keep a frozen visual copy of the old board over the exact board rectangle until the
+// replacement board has painted. This removes the one-frame black/empty flash without
+// reusing or swapping the live cm-chessboard instance.
+(function maskTestBoardRebuildFlash(){
+  try{
+    if(globalThis.__COT_TEST_BOARD_REBUILD_MASK__) return;
+    globalThis.__COT_TEST_BOARD_REBUILD_MASK__=true;
+    const originalRender=render;
+    let mask=null;
+    const clearMask=()=>{try{mask?.remove()}catch{};mask=null};
+    render=function(...args){
+      const isTest=state?.screen==='training'&&(state?.mode==='test'||state?.mode==='rank');
+      const oldShell=isTest?document.querySelector('.board-shell'):null;
+      if(isTest&&oldShell&&!mask){
+        try{
+          const rect=oldShell.getBoundingClientRect();
+          if(rect.width>50&&rect.height>50){
+            mask=oldShell.cloneNode(true);
+            mask.id='cotBoardRebuildMask';
+            mask.setAttribute('aria-hidden','true');
+            mask.style.cssText=`position:fixed!important;left:${rect.left}px!important;top:${rect.top}px!important;width:${rect.width}px!important;height:${rect.height}px!important;z-index:15000!important;margin:0!important;pointer-events:none!important;overflow:hidden!important;contain:paint!important;background:#0b1015!important;`;
+            document.body.appendChild(mask);
+          }
+        }catch{clearMask()}
+      }
+      const out=originalRender(...args);
+      if(mask){
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+          try{
+            const newBoard=document.querySelector('#board');
+            if(newBoard&&newBoard.getBoundingClientRect().width>50) clearMask();
+            else setTimeout(clearMask,120);
+          }catch{clearMask()}
+        }));
+      }
+      return out;
+    };
+  }catch(err){console.warn('Practice/Rank board rebuild mask could not attach',err)}
+})();
