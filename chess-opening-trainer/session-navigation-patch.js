@@ -50,20 +50,14 @@
     return refreshPromise;
   }
   window.CHESS_AUTH_REFRESH=refreshChessSession;
-  // Always expose the newest locally-persisted session to report/progress code.
   window.CHESS_AUTH_SESSION=readSession;
 
-  // Refresh while the app is active and whenever mobile Chrome resumes it.
   document.addEventListener('visibilitychange',()=>{
     if(document.visibilityState==='visible') refreshChessSession(false).catch(()=>{});
   });
   window.addEventListener('focus',()=>refreshChessSession(false).catch(()=>{}));
   setInterval(()=>refreshChessSession(false).catch(()=>{}),4*60*1000);
 
-  // Make reports survive an expired/rotated JWT. First refresh normally. If the
-  // access token is rejected anyway, force-refresh and retry once. If the refresh
-  // token itself is no longer usable, preserve the report by submitting as a guest
-  // with the signed-in email instead of exposing a raw "JWT expired" error.
   try{
     if(typeof submitIssueReport==='function' && !globalThis.__ISSUE_SESSION_RETRY__){
       globalThis.__ISSUE_SESSION_RETRY__=true;
@@ -81,8 +75,6 @@
             await refreshChessSession(true);
             return await originalSubmitIssueReport(description,fallbackEmail);
           }catch(refreshErr){
-            // Guest reports are supported by the report endpoint. Temporarily hide
-            // the stale auth session so the same report can still be delivered.
             const savedAccessor=window.CHESS_AUTH_SESSION;
             window.CHESS_AUTH_SESSION=()=>null;
             try{return await originalSubmitIssueReport(description,fallbackEmail)}
@@ -93,9 +85,6 @@
     }
   }catch(err){console.warn('Issue session retry could not attach',err)}
 
-  // Signed-in users must still be able to see the public Hero/Landing page.
-  // Reuse the existing landing page, but replace the auth form with an account
-  // state and a Continue Training action rather than asking them to sign in again.
   try{
     if(typeof authScreen==='function' && !globalThis.__SIGNED_IN_HERO__){
       globalThis.__SIGNED_IN_HERO__=true;
@@ -159,8 +148,6 @@
     }
   }catch(err){console.warn('Signed-in hero navigation could not attach',err)}
 
-  // Give Report Issue its own history entry. Android/browser Back closes the
-  // report and returns to the exact trainer screen instead of leaving the site.
   try{
     if(typeof openIssueReport==='function' && !globalThis.__ISSUE_HISTORY_FIX__){
       globalThis.__ISSUE_HISTORY_FIX__=true;
@@ -216,3 +203,153 @@
     }
   }catch(err){console.warn('Issue history navigation could not attach',err)}
 })();
+
+// --- Guided recommendation safety (Report #25) ---
+try{
+  if(!globalThis.__GUIDED_RECOMMENDATION_SAFETY_25__){
+    globalThis.__GUIDED_RECOMMENDATION_SAFETY_25__=true;
+    const MAX_REPERTOIRE_LOSS_CP=35;
+    bestRepertoireMove=async function(){
+      try{
+        if(typeof repertoireAnchorForFen==='function'){
+          const anchor=repertoireAnchorForFen(state.chess,state.side);
+          if(anchor){
+            const from=anchor.slice(0,2),to=anchor.slice(2,4),promotion=anchor[4]||null;
+            const legal=state.chess.moves({square:from,verbose:true}).some(m=>m.to===to);
+            if(legal) return {from,to,promotion};
+          }
+        }
+      }catch{}
+      const candidates=repertoireCandidates();
+      if(!candidates.length){
+        const best=await bestMove();
+        return best?{from:best.slice(0,2),to:best.slice(2,4),promotion:best[4]||null}:null;
+      }
+      let repertoireBest=null;
+      for(const candidate of candidates){
+        const scored=await evaluateCandidate(candidate);
+        if(!repertoireBest||scored.score>repertoireBest.score) repertoireBest=scored;
+      }
+      const unrestricted=await bestMove();
+      if(unrestricted){
+        const fallback={from:unrestricted.slice(0,2),to:unrestricted.slice(2,4),promotion:unrestricted[4]||null};
+        const fallbackResult=await evaluateCandidate(fallback);
+        if(!repertoireBest||fallbackResult.score>repertoireBest.score+MAX_REPERTOIRE_LOSS_CP) return fallback;
+      }
+      return repertoireBest?.candidate||null;
+    };
+  }
+}catch(err){console.warn('Guided recommendation safety patch could not attach',err)}
+
+// --- Resume exact in-progress training on browser reload (Report #26) ---
+try{
+  if(!globalThis.__TRAINING_RELOAD_RESUME_26__){
+    globalThis.__TRAINING_RELOAD_RESUME_26__=true;
+    const SNAPSHOT_KEY='cotTrainerReloadSnapshot:v1';
+    const AUTH_KEY='chessTrainerCloudSession';
+    const navType=performance.getEntriesByType?.('navigation')?.[0]?.type||'';
+    const readAuth=()=>{try{return JSON.parse(localStorage.getItem(AUTH_KEY)||'null')}catch{return null}};
+    const readSnap=()=>{try{return JSON.parse(sessionStorage.getItem(SNAPSHOT_KEY)||'null')}catch{return null}};
+    const userTurn=()=>{try{return state.chess.turn()===(state.side==='white'?'w':'b')}catch{return false}};
+
+    function saveTrainerSnapshot(){
+      try{
+        const auth=readAuth();
+        if(!auth?.user?.id||state?.screen!=='training'||state?.complete||state?.engineBusy||!userTurn()){
+          if(state?.complete) sessionStorage.removeItem(SNAPSHOT_KEY);
+          return;
+        }
+        const fen=state.chess?.fen?.();
+        if(!fen) return;
+        const snap={
+          v:1,ts:Date.now(),userId:auth.user.id,fen,
+          mode:state.mode,side:state.side,sessionLength:state.sessionLength,
+          variationIndex:state.variationIndex,history:Array.isArray(state.history)?state.history:[],
+          userMovesDone:Number(state.userMovesDone||0),mistakes:Number(state.mistakes||0),
+          testCursor:Number(state.testCursor||0),trainingLine:Array.isArray(state.trainingLine)?state.trainingLine:[],
+          guideMove:state.guideMove?{...state.guideMove}:null,hintVisible:!!state.hintVisible,
+          practiceInvalid:!!state.practiceInvalid,practiceHintUsed:!!state.practiceHintUsed,
+          status:String(state.status||'Your move'),statusError:!!state.statusError
+        };
+        sessionStorage.setItem(SNAPSHOT_KEY,JSON.stringify(snap));
+      }catch(err){console.warn('Training snapshot save failed',err)}
+    }
+
+    const resumeOriginalRender=render;
+    render=function(...args){
+      const out=resumeOriginalRender(...args);
+      queueMicrotask(saveTrainerSnapshot);
+      return out;
+    };
+
+    if(navType==='reload'){
+      setTimeout(()=>{
+        try{
+          const auth=readAuth();
+          const snap=readSnap();
+          if(!auth?.user?.id||!snap||snap.v!==1||snap.userId!==auth.user.id||Date.now()-Number(snap.ts||0)>6*60*60*1000){
+            sessionStorage.removeItem(SNAPSHOT_KEY);return;
+          }
+          if(!snap.fen||!snap.mode||!snap.side){sessionStorage.removeItem(SNAPSHOT_KEY);return}
+          if(!state?.chess?.load?.(snap.fen)){sessionStorage.removeItem(SNAPSHOT_KEY);return}
+          state.screen='training';state.complete=false;state.engineBusy=false;state.board=null;
+          state.mode=snap.mode;state.side=snap.side;state.sessionLength=snap.sessionLength;
+          state.variationIndex=Number(snap.variationIndex||0);state.history=Array.isArray(snap.history)?snap.history:[];
+          state.userMovesDone=Number(snap.userMovesDone||0);state.mistakes=Number(snap.mistakes||0);
+          state.testCursor=Number(snap.testCursor||0);state.trainingLine=Array.isArray(snap.trainingLine)?snap.trainingLine:[];
+          state.guideMove=snap.guideMove||null;state.hintVisible=!!snap.hintVisible;
+          state.practiceInvalid=!!snap.practiceInvalid;state.practiceHintUsed=!!snap.practiceHintUsed;
+          state.status=snap.status||'Your move';state.statusError=!!snap.statusError;
+          document.querySelector('#cloudAuthGate')?.remove();
+          render();
+          try{drawGuide?.()}catch{}
+        }catch(err){
+          console.warn('Training reload resume failed',err);
+          sessionStorage.removeItem(SNAPSHOT_KEY);
+        }
+      },650);
+    }
+  }
+}catch(err){console.warn('Training reload resume patch could not attach',err)}
+
+// --- Keep the actual board DOM/instance stable during rerenders (Report #27) ---
+try{
+  if(!globalThis.__PERSISTENT_TRAINING_BOARD_27__){
+    globalThis.__PERSISTENT_TRAINING_BOARD_27__=true;
+    const stableBoardOriginalRender=render;
+    const specialReview=()=>!!(state?.practiceReviewActive||state?.rankReviewActive);
+    render=function(...args){
+      const preserve=state?.screen==='training'&&!state?.complete&&!specialReview();
+      const oldShell=preserve?document.querySelector('.board-shell'):null;
+      const oldBoard=preserve?state?.board:null;
+      const oldTop=oldShell?.getBoundingClientRect?.().top;
+      const oldY=window.scrollY;
+      const out=stableBoardOriginalRender(...args);
+      if(preserve&&state?.screen==='training'&&!state?.complete&&!specialReview()&&oldShell&&oldBoard){
+        const freshShell=document.querySelector('.board-shell');
+        if(freshShell&&freshShell!==oldShell){
+          const throwaway=state.board;
+          freshShell.replaceWith(oldShell);
+          state.board=oldBoard;
+          try{throwaway?.destroy?.()}catch{}
+          try{oldBoard.setPosition?.(state.chess.fen(),true)}catch{}
+          try{drawGuide?.()}catch{}
+          if(Number.isFinite(oldTop)) requestAnimationFrame(()=>{
+            if(state?.screen!=='training') return;
+            const delta=oldShell.getBoundingClientRect().top-oldTop;
+            if(Math.abs(delta)>0.5) window.scrollTo(0,Math.max(0,oldY+delta));
+          });
+        }
+      }
+      return out;
+    };
+    const style=document.createElement('style');
+    style.textContent=`
+      .board-shell,#board,.cm-chessboard{overflow-anchor:none}
+      .board-shell{contain:layout paint}
+      body{overflow-anchor:none}
+      .training .status,.training .status-line,.training .training-status{min-height:1.5em}
+    `;
+    document.head.appendChild(style);
+  }
+}catch(err){console.warn('Persistent training board patch could not attach',err)}
