@@ -91,47 +91,58 @@
   }catch(err){console.warn('Scrollable Live Position Coach could not attach',err)}
 })();
 
-// Keep the changing training status/message area at a fixed height too. Text such as
-// engine/loading states and "Your move" may vary in length, but it should scroll inside
-// the status box instead of changing the whole side-panel height.
-(function makeTrainingStatusScrollable(){
+// Keep the training status box fixed and user-facing only. Internal engine/loading text
+// is replaced with exactly "Your move" or "Opponent move" based on whose turn it is.
+(function normalizeTrainingTurnStatus(){
   try{
-    if(globalThis.__COT_SCROLLABLE_TRAINING_STATUS__) return;
-    globalThis.__COT_SCROLLABLE_TRAINING_STATUS__=true;
+    if(globalThis.__COT_NORMALIZED_TURN_STATUS__) return;
+    globalThis.__COT_NORMALIZED_TURN_STATUS__=true;
     const style=document.createElement('style');
     style.textContent=`
       .cot-training-status-scroll{
         height:52px!important;
         min-height:52px!important;
         max-height:52px!important;
-        overflow-y:auto!important;
-        overflow-x:hidden!important;
-        scrollbar-gutter:stable;
-        overscroll-behavior:contain;
+        overflow:hidden!important;
+        display:flex!important;
+        align-items:center!important;
       }
     `;
     document.head.appendChild(style);
 
+    let applying=false;
+    const desiredText=()=>{
+      try{
+        const userColor=state?.side==='black'?'b':'w';
+        return state?.chess?.turn?.()===userColor?'Your move':'Opponent move';
+      }catch{return 'Your move'}
+    };
     const apply=()=>{
-      if(state?.screen!=='training') return;
-      const panels=[...document.querySelectorAll('.side-panel, aside')];
-      for(const panel of panels){
-        const nodes=[...panel.querySelectorAll('div,section,p')];
-        for(const el of nodes){
-          const t=String(el.textContent||'').trim();
-          if(!t) continue;
-          if(!(/Your move/i.test(t)||/engine/i.test(t)||/thinking/i.test(t)||/loading/i.test(t))) continue;
-          if(/Live Position Coach/i.test(t)||/Restart/i.test(t)||/Exit/i.test(t)||/OPPONENT['’]S IDEA/i.test(t)) continue;
-          const r=el.getBoundingClientRect();
-          if(r.width>180 && r.height>25 && r.height<140){
-            el.classList.add('cot-training-status-scroll');
-            break;
+      if(applying||state?.screen!=='training') return;
+      applying=true;
+      try{
+        const panels=[...document.querySelectorAll('.side-panel, aside')];
+        for(const panel of panels){
+          const nodes=[...panel.querySelectorAll('div,section,p')];
+          let target=null;
+          for(const el of nodes){
+            const t=String(el.textContent||'').trim();
+            if(!t) continue;
+            if(!(/Your move/i.test(t)||/Opponent move/i.test(t)||/engine/i.test(t)||/thinking/i.test(t)||/loading/i.test(t))) continue;
+            if(/Live Position Coach/i.test(t)||/Restart/i.test(t)||/Exit/i.test(t)||/OPPONENT['’]S IDEA/i.test(t)||/WHY THIS MOVE/i.test(t)) continue;
+            const r=el.getBoundingClientRect();
+            if(r.width>180 && r.height>25 && r.height<140){target=el;break}
+          }
+          if(target){
+            target.classList.add('cot-training-status-scroll');
+            const text=desiredText();
+            if(target.textContent!==text) target.textContent=text;
           }
         }
-      }
+      }finally{applying=false}
     };
-    const observer=new MutationObserver(apply);
+    const observer=new MutationObserver(()=>queueMicrotask(apply));
     observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
     apply();
-  }catch(err){console.warn('Scrollable training status could not attach',err)}
+  }catch(err){console.warn('Training turn status normalization could not attach',err)}
 })();
