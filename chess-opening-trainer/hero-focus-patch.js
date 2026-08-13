@@ -159,3 +159,41 @@
     apply();
   }catch(err){console.warn('Training turn status normalization could not attach',err)}
 })();
+
+// Practice/Rank board stability: do not rebuild the chessboard repeatedly when the
+// underlying position has not changed. Background status/engine updates can call render()
+// many times for the same FEN; those duplicate renders are the visible flash. Explicit
+// side-panel button actions are allowed through even at the same FEN.
+(function suppressDuplicateTestRenders(){
+  try{
+    if(globalThis.__COT_SUPPRESS_DUPLICATE_TEST_RENDERS__) return;
+    globalThis.__COT_SUPPRESS_DUPLICATE_TEST_RENDERS__=true;
+    const originalRender=render;
+    let lastKey='';
+    let forceNext=false;
+    const keyNow=()=>{
+      try{
+        const fen=state?.chess?.fen?.()||'';
+        return `${state?.screen||''}|${state?.mode||''}|${state?.side||''}|${fen}`;
+      }catch{return ''}
+    };
+    document.addEventListener('click',e=>{
+      try{
+        const button=e.target?.closest?.('button');
+        if(!button) return;
+        if(button.closest('.side-panel,aside')) forceNext=true;
+      }catch{}
+    },true);
+    render=function(...args){
+      const isTest=state?.screen==='training'&&(state?.mode==='test'||state?.mode==='rank');
+      const key=keyNow();
+      if(isTest && !forceNext && key && key===lastKey && document.querySelector('#board')){
+        return;
+      }
+      forceNext=false;
+      const out=originalRender(...args);
+      lastKey=keyNow();
+      return out;
+    };
+  }catch(err){console.warn('Duplicate Practice/Rank render suppression could not attach',err)}
+})();
