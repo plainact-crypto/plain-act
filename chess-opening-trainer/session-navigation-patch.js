@@ -353,3 +353,55 @@ try{
     document.head.appendChild(style);
   }
 }catch(err){console.warn('Persistent training board patch could not attach',err)}
+
+// --- Practice/Rank active-session navigation lock ---
+// A stale async callback was briefly rendering the variations screen in the middle of
+// an active test, then returning to training. Once a Practice/Rank session is armed,
+// keep it on the training screen until completion or an explicit Exit click.
+try{
+  if(!globalThis.__COT_TEST_SESSION_NAV_LOCK__){
+    globalThis.__COT_TEST_SESSION_NAV_LOCK__=true;
+    let locked=false;
+    let lockedMode=null;
+    let explicitExit=false;
+
+    const testMode=mode=>mode==='test'||mode==='rank';
+    const arm=()=>{
+      try{
+        if(state?.complete){locked=false;lockedMode=null;explicitExit=false;return}
+        if(state?.screen==='training'&&testMode(state?.mode)){
+          locked=true;
+          lockedMode=state.mode;
+          explicitExit=false;
+        }
+      }catch{}
+    };
+
+    document.addEventListener('click',event=>{
+      try{
+        if(!locked) return;
+        const button=event.target?.closest?.('button');
+        if(!button) return;
+        if(/^Exit$/i.test(String(button.textContent||'').trim())){
+          explicitExit=true;
+          locked=false;
+          lockedMode=null;
+        }
+      }catch{}
+    },true);
+
+    const navLockOriginalRender=render;
+    render=function(...args){
+      try{
+        if(locked&&!explicitExit&&!state?.complete&&state?.screen!=='training'){
+          state.screen='training';
+          if(lockedMode) state.mode=lockedMode;
+        }
+      }catch{}
+      const out=navLockOriginalRender(...args);
+      arm();
+      return out;
+    };
+    arm();
+  }
+}catch(err){console.warn('Practice/Rank navigation lock could not attach',err)}
