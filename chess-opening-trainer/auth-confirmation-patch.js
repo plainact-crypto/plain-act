@@ -1,4 +1,4 @@
-// --- Email confirmation recovery flow (Report #21) ---
+// --- Email confirmation recovery flow (Report #21/#22) ---
 try{
   if(!globalThis.__AUTH_CONFIRMATION_RECOVERY_PATCH__){
     globalThis.__AUTH_CONFIRMATION_RECOVERY_PATCH__=true;
@@ -12,7 +12,15 @@ try{
         body:JSON.stringify({type:'signup',email:normalized})
       });
       const d=await r.json().catch(()=>({}));
-      if(!r.ok) throw new Error(d.message||d.msg||'Could not resend the confirmation email.');
+      if(!r.ok){
+        const raw=String(d.message||d.msg||'');
+        if(r.status===429||/rate\s*limit|too many/i.test(raw)){
+          const e=new Error('Too many confirmation emails were requested. Please wait a few minutes before trying again.');
+          e.code='email_rate_limit';
+          throw e;
+        }
+        throw new Error(raw||'Could not resend the confirmation email.');
+      }
       return d;
     }
 
@@ -72,8 +80,13 @@ try{
           }catch(err){
             msg.style.color='#ffb6b6';
             msg.textContent=err?.message||'Could not resend the confirmation email.';
-            resendBtn.disabled=false;
-            resendBtn.textContent=old;
+            if(err?.code==='email_rate_limit'){
+              resendBtn.textContent='Please wait…';
+              setTimeout(()=>{if(resendBtn?.isConnected){resendBtn.disabled=false;resendBtn.textContent=old}},60000);
+            }else{
+              resendBtn.disabled=false;
+              resendBtn.textContent=old;
+            }
           }
         };
         msg.insertAdjacentElement('afterend',resendBtn);
