@@ -12,9 +12,9 @@ async function gotoReady(page,url){
       const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
       assert(r?.ok(),`${url} HTTP ${r?.status()}`);
       await page.waitForTimeout(700);
-      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__));
+      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__));
       if(ok)return;
-      last=new Error(`${url}: performance patch not deployed yet`);
+      last=new Error(`${url}: reports #42-#47 root fix not deployed yet`);
     }catch(e){last=e}
     await page.waitForTimeout(5000);
   }
@@ -44,46 +44,55 @@ try{
 
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
     await reportTrigger.waitFor({state:'visible',timeout:5000});
-    const before=Date.now();
-    await reportTrigger.click({timeout:5000});
+    const before=Date.now();await reportTrigger.click({timeout:5000});
     await page.locator('#issueReportModal').waitFor({state:'visible',timeout:1000});
-    const reportMs=Date.now()-before;
-    await page.waitForTimeout(250);
+    const reportMs=Date.now()-before;await page.waitForTimeout(250);
     const report=await page.evaluate(()=>({modal:!!document.querySelector('#issueReportModal'),html2canvasRequested:!!document.querySelector('script[data-issue-html2canvas]')}));
     assert(report.modal,`${url}: Report Issue modal did not open`);
     assert(reportMs<250,`${url}: Report Issue interaction took ${reportMs}ms`);
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
-    // Follow the actual activation CTA and refuse to measure until the real chessboard
-    // is mounted. This keeps the performance gate honest about gameplay, not dashboard speed.
+    // Reports #45-#47: use the real CTA. It must deterministically reach an actionable
+    // Guided destination with complete side/depth state and no Activation hub in the flow layout.
     await page.locator('#cotPrimaryNext').click();
     await page.locator('#board').waitFor({state:'visible',timeout:12000});
     await page.waitForTimeout(500);
+    const nav=await page.evaluate(()=>({screen:state?.screen||null,mode:state?.mode||null,side:state?.side||null,depth:Number(state?.sessionLength||state?.level||0),variation:Number(state?.variationIndex??-1),hub:!!document.querySelector('.cot-activation-hub'),flow:document.documentElement.dataset.cotFlow||''}));
+    assert(nav.screen==='training',`${url}: Continue Training did not reach training (${JSON.stringify(nav)})`);
+    assert(nav.side==='white',`${url}: Continue Training lost opening side (${JSON.stringify(nav)})`);
+    assert(nav.depth===5,`${url}: Continue Training lost depth/level (${JSON.stringify(nav)})`);
+    assert(nav.variation===0,`${url}: Continue Training lost variation (${JSON.stringify(nav)})`);
+    assert(!nav.hub&&nav.flow==='training',`${url}: Activation hub still participates in training/course layout (${JSON.stringify(nav)})`);
 
     const perf=await page.evaluate(async()=>{
-      const long=[];
-      let po=null;
+      const long=[];let po=null;
       try{po=new PerformanceObserver(list=>{for(const e of list.getEntries())long.push(e.duration)});po.observe({type:'longtask',buffered:true})}catch{}
       const samples=[];
       for(let i=0;i<8;i++){
-        const t=performance.now();
-        try{render?.()}catch{}
-        samples.push(performance.now()-t);
-        await new Promise(r=>requestAnimationFrame(r));
+        const t=performance.now();try{render?.()}catch{}samples.push(performance.now()-t);await new Promise(r=>requestAnimationFrame(r));
       }
       await new Promise(r=>setTimeout(r,300));po?.disconnect();
-      const board=document.querySelector('#board');
-      const rect=board?.getBoundingClientRect();
-      return {board:Boolean(board&&rect&&rect.width>240&&rect.height>240),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__)};
+      const board=document.querySelector('#board'),rect=board?.getBoundingClientRect();
+
+      // Report #44: prove idle Practice does not keep sending engine work every 350ms.
+      let workerPosts=0;const rawPost=Worker.prototype.postMessage;
+      Worker.prototype.postMessage=function(message,...rest){if(/^(?:position\s+fen|go\s+)/i.test(String(message||'')))workerPosts++;return rawPost.call(this,message,...rest)};
+      const oldMode=state.mode;state.mode='test';try{render()}catch{};
+      await new Promise(r=>setTimeout(r,1800));
+      const idlePracticeWorkerPosts=workerPosts;
+      state.mode=oldMode;Worker.prototype.postMessage=rawPost;
+
+      return {board:Boolean(board&&rect&&rect.width>240&&rect.height>240),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,idlePracticeWorkerPosts,fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__),rootFix:Boolean(globalThis.__COT_REPORTS_42_47_ROOT_FIX__)};
     });
-    assert(perf.fix,`${url}: performance fix marker disappeared`);
+    assert(perf.fix&&perf.rootFix,`${url}: root performance/navigation fix marker disappeared`);
     assert(perf.board,`${url}: performance test did not reach a live mobile chessboard`);
     assert(perf.maxRender<180,`${url}: repeated live-board render blocked ${perf.maxRender.toFixed(1)}ms`);
     assert(perf.maxLong<250,`${url}: long task ${perf.maxLong.toFixed(1)}ms on live mobile training board`);
+    assert(perf.idlePracticeWorkerPosts<=1,`${url}: idle Practice sent ${perf.idlePracticeWorkerPosts} engine commands in 1.8s; recurring evaluation loop remains`);
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
-    console.log(`PASS mobile-performance ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms board=${perf.board}`);
+    console.log(`PASS reports-42-47-mobile ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms idlePracticeEngine=${perf.idlePracticeWorkerPosts} side=${nav.side} depth=${nav.depth} board=${perf.board}`);
     await context.close();
   }
 }finally{await browser.close()}
