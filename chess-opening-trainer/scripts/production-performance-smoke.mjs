@@ -12,9 +12,9 @@ async function gotoReady(page,url){
       const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
       assert(r?.ok(),`${url} HTTP ${r?.status()}`);
       await page.waitForTimeout(700);
-      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__));
+      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__));
       if(ok)return;
-      last=new Error(`${url}: reports #42-#49 root fix not deployed yet`);
+      last=new Error(`${url}: Depth 10 / reports #42-#49 production markers not deployed yet`);
     }catch(e){last=e}
     await page.waitForTimeout(5000);
   }
@@ -42,12 +42,14 @@ try{
     await page.evaluate(()=>{try{render?.()}catch{}});
     await page.locator('#cotPrimaryNext').waitFor({state:'visible',timeout:5000});
 
-    const depth5Before=await page.evaluate(()=>{
+    const depthState=await page.evaluate(()=>{
       const text=document.body.innerText||'';
       const depth5Control=[...document.querySelectorAll('[data-n],button,a')].some(el=>el.getAttribute('data-n')==='5'||/\bDepth\s*5\b/i.test(el.textContent||''));
-      return {depth5Control,textMentions:/\bDepth\s*5\b/i.test(text)};
+      return {depth:Number(state?.sessionLength||0),depth5Control,textMentions:/\bDepth\s*5\b/i.test(text),guard:Boolean(globalThis.__COT_DEPTH_5_RETIRED__)};
     });
-    assert(!depth5Before.depth5Control&&!depth5Before.textMentions,`${url}: Depth 5 is still exposed before training (${JSON.stringify(depth5Before)})`);
+    assert(depthState.guard,`${url}: Depth 5 retirement guard missing`);
+    assert(depthState.depth===10,`${url}: fresh runtime state still starts at Depth ${depthState.depth}`);
+    assert(!depthState.depth5Control&&!depthState.textMentions,`${url}: Depth 5 is still exposed before training (${JSON.stringify(depthState)})`);
 
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
     await reportTrigger.waitFor({state:'visible',timeout:5000});
@@ -60,7 +62,6 @@ try{
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
-    // Zero-progress users must start at Depth 10. Depth 5 is no longer a user-facing stage.
     await page.locator('#cotPrimaryNext').click();
     await page.locator('#board').waitFor({state:'visible',timeout:15000});
     await page.waitForTimeout(500);
