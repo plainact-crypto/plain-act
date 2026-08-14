@@ -6,7 +6,12 @@ let source=await readFile(mainPath,'utf8');
 
 const legacyDepthList=/\[\s*5\s*,\s*10\s*,\s*15\s*,\s*20\s*,\s*25\s*,\s*30\s*\]/g;
 const matches=source.match(legacyDepthList)?.length||0;
-if(matches<1)throw new Error('Depth 5 progression list not found; refusing silent build drift.');
+const hasLegacyDefault=/sessionLength\s*:\s*5\b/.test(source);
+
+if(matches===0&&!hasLegacyDefault){
+  console.log('Depth 5 is already retired from final trainer source.');
+  process.exit(0);
+}
 
 source=source.replace(legacyDepthList,'[10,15,20,25,30]');
 source=source.replace(/sessionLength\s*:\s*5\b/g,'sessionLength:10');
