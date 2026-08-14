@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const patch = await readFile(new URL('../activation-onboarding-patch.js', import.meta.url), 'utf8');
+const patch = await readFile(new URL('../activation-onboarding-v2.js', import.meta.url), 'utf8');
 const injector = await readFile(new URL('../scripts/inject-activation.mjs', import.meta.url), 'utf8');
 
 const requiredEvents = [
@@ -35,8 +35,14 @@ test('dashboard activation hub exposes progress and next action', () => {
   assert.match(patch, /valid passes/);
 });
 
-test('activation patch is idempotently injected into generated source', () => {
-  assert.match(injector, /__COT_ACTIVATION_ONBOARDING__/);
+test('activation observer is debounced and hub rendering is signature-stable', () => {
+  assert.match(patch, /if\(scheduled\)return/);
+  assert.match(patch, /dataset\.activationHtml/);
+  assert.match(patch, /setTimeout\(refresh,40\)/);
+});
+
+test('activation V2 patch is idempotently injected into generated source', () => {
+  assert.match(injector, /__COT_ACTIVATION_ONBOARDING_V2__/);
   assert.match(injector, /main\.includes\(marker\)/);
   assert.match(injector, /appendFile/);
 });
