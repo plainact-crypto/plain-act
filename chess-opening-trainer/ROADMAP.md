@@ -1,6 +1,6 @@
 # Chess Opening Trainer — P0 Roadmap
 
-Updated: 2026-08-13
+Updated: 2026-08-14
 
 ## Current P0 sequence
 
@@ -71,12 +71,34 @@ Updated: 2026-08-13
   - Dashboard/profile, depth/course navigation, Practice, Rank Test, completion summaries, Opening Elo presentation, badges, labels, and next-target copy use the shared progression module.
   - Opening Elo scoring and chess move logic remain unchanged.
 
+## Activation & Onboarding — Audit & Redesign
+
+- [x] **Beta Readiness blocker closed — 2026-08-14**
+  - Benchmarked the activation patterns used by Chess.com Lessons/Study Plan and Chessable/MoveTrainer: reduce choice overload, expose one next lesson/action, show a visible learning path, and keep progress/review status persistent.
+  - First-time onboarding is intentionally short: choose the first repertoire (London System / Caro-Kann), see the full path, then start the first Guided Training from one primary CTA.
+  - Product journey is explicit across the activation experience: **Learn → Practice → Pass → Rank → Next Level**.
+  - Dashboard now exposes one **Your next best action / Continue Training** action rather than forcing a new user to infer what to do next.
+  - White and Black opening cards expose completed variations, progression/mastery label, next variation/action, current Practice pass requirement/progress, Rank Test unlock/status, and Opening Elo.
+  - Empty-state behavior for a brand-new profile points directly to Variation 1 at the first depth instead of showing unexplained zero-state metrics only.
+  - Session completion surfaces **What you achieved** and the recommended next action.
+  - Returning users receive the same next-action logic from saved progress rather than restarting the onboarding journey.
+  - Mobile layout collapses activation cards/path cleanly without horizontal overflow; desktop keeps the same information hierarchy.
+  - No chess move logic, engine policy, Practice scoring, Rank scoring, or Opening Elo calculation was changed for this phase.
+  - First implementation exposed a render-loop blocker during the production browser gate; it was rejected, replaced by the debounced/signature-stable V2 implementation, and regression coverage was added.
+  - Supabase migration `add_activation_events_funnel` created `activation_events` with RLS and indexes.
+  - Funnel events implemented exactly: `landing_view → signup_started → signup_completed → onboarding_completed → first_training_started → first_variation_completed → practice_started → rank_started → returned_user`.
+  - Automated activation regression tests cover event taxonomy, onboarding path/content, next-action/dashboard requirements, stable observer rendering, and idempotent production injection.
+  - Production build/deploy passed on commit `d1a7b63729e31df80fcfa1b7f2847ae14b9d710a`.
+  - Production Playwright gate passed on both **Desktop 1440×1000** and **Mobile 390×844** against both GitHub Pages and the official Cloudflare Pages deployment `chess-opening-trainer-3jh.pages.dev`.
+  - Production gate verifies landing/signup state, activation patch presence, first-run onboarding, repertoire selection, Learn/Practice/Pass/Rank/Next Level path, CTA progression, destination visibility, and no horizontal overflow.
+
 ## Next phase
 
-- [ ] **Rank Test — current gate phase; Beta Readiness remains blocked**
-  - Rank Test P0 implementation is closed, but the official current gate remains Rank Test while Guided Training classification verification is outstanding.
+- [ ] **Guided Training classification verification — current release blocker**
+  - Production verification of Reports #30–#32 remains required before Core P0 can close.
 
-- [ ] **Beta Readiness — Full Product QA & Release Gate** — BLOCKED
+- [ ] **Beta Readiness — Full Product QA & Release Gate** — BLOCKED by Guided Training classification verification only
+  - Activation & Onboarding blocker is closed.
   - Full-product desktop/mobile regression QA across Core flows.
   - Authentication/profile/cloud-sync and persistence checks.
   - Cross-mode navigation and state-transition regression.
