@@ -104,17 +104,28 @@ Updated: 2026-08-14
   - The production gate forces three consecutive app renders, samples the CTA/hub position for 30 animation frames, requires a single activation hub, requires detailed progress to stay collapsed, and requires the CTA to precede visible base `0/30` / `0/20` stats when present.
   - Verified result on both production origins: primary CTA top = **161px**; measured CTA vertical spread after repeated renders = **0.00px**.
 
+## Active production regression cluster — Reports #38–#49
+
+- [ ] **Mobile Practice / Continue Training stability — release blocker**
+  - Supabase still has Reports #38–#40 and #42–#49 in `confirmed` status as of 2026-08-14.
+  - The current cluster covers Practice screen shake/flash, mobile training slowness, stale Practice chooser/DOM, Continue Training routing that can fail to reach a live board, Practice entry not starting visibly, and Back to Level not responding.
+  - Root fixes were implemented through commits including `dfe07421ed4ad8a0055465bb3bc36ddf9a2fc65c`, `97a97bf9a34718298492dce05301065435d367e4`, `977b51074e4450193f84de73d3fec9dc3ffa97bf`, and production gate commit `f0f01cf38685a34af960b6e97a4c23b22c1d3b88`.
+  - Build and GitHub Pages deployment for `f0f01cf38685a34af960b6e97a4c23b22c1d3b88` succeeded, and Activation smoke passed on desktop/mobile for both GitHub Pages and Cloudflare Pages.
+  - **Production training-performance smoke failed** on the same commit because `#board` did not become visible within 15 seconds after the real Continue Training CTA. Therefore these reports are not closed and the release gate must remain blocked.
+  - Do not mark this cluster resolved until the real CTA reliably reaches a live board and Practice entry/exit pass the production mobile gate on both production origins.
+
 ## Next phase
 
-- [ ] **Guided Training classification verification — current release blocker**
-  - Production verification of Reports #30–#32 remains required before Core P0 can close.
+- [ ] **Current release blockers**
+  - Production verification of Reports #30–#32 move-quality classification.
+  - Close the confirmed mobile Practice / Continue Training regression cluster #38–#49 with a passing production mobile gate.
 
-- [ ] **Beta Readiness — Full Product QA & Release Gate** — BLOCKED by Guided Training classification verification only
-  - Activation & Onboarding blocker is closed.
+- [ ] **Beta Readiness — Full Product QA & Release Gate** — BLOCKED
+  - Activation & Onboarding redesign itself is closed, but current mobile regressions still block the gate.
   - Full-product desktop/mobile regression QA across Core flows.
   - Authentication/profile/cloud-sync and persistence checks.
   - Cross-mode navigation and state-transition regression.
   - Production smoke tests and release-blocker triage.
   - Beta release checklist and go/no-go gate.
 
-After Beta Readiness: **Private Beta → Analytics/Retention → Monetization → Launch → Growth**.
+After Beta Readiness: **Private Beta → Analytics/Retention → Monetization → Payments/Subscription → Public Launch → Growth**.
