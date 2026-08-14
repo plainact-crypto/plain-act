@@ -1,5 +1,5 @@
-// --- Root regression closure for Reports #42-#47 ---
-// Deterministic activation navigation + stable course/side lifecycle.
+// --- Root regression closure for Reports #42-#49 ---
+// Deterministic activation navigation + stable Practice entry/exit lifecycle.
 try{
   if(!globalThis.__COT_REPORTS_42_47_ROOT_FIX__){
     globalThis.__COT_REPORTS_42_47_ROOT_FIX__=true;
@@ -39,15 +39,40 @@ try{
     stableCss.textContent=`html[data-cot-flow="side"] .cot-activation-hub,html[data-cot-flow="course"] .cot-activation-hub,html[data-cot-flow="training"] .cot-activation-hub{display:none!important}`;
     document.head.appendChild(stableCss);
 
+    // Reports #44/#48/#49: the old Practice DOM-stability guard correctly avoids
+    // rebuilding the board DURING a Practice attempt, but it could mistake the
+    // existing Guided board for an already-mounted Practice board on the first
+    // render. Force exactly one clean boundary render by invalidating the old board
+    // instance before entering Practice; later renders remain stable/in-place.
+    try{
+      if(typeof startPracticeTest==='function'&&!globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__){
+        globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__=true;
+        const entryBaseStartPractice=startPracticeTest;
+        startPracticeTest=async function(index){
+          try{
+            if(document.querySelector('.training')&&state?.board){
+              try{state.board.destroy?.()}catch{}
+              state.board=null;
+            }
+          }catch{}
+          const out=await entryBaseStartPractice(index);
+          try{
+            if(state?.screen==='training'&&state?.mode==='test'){
+              state.engineBusy=false;
+              if(!document.querySelector('#board')||!state?.board)render();
+            }
+          }catch{}
+          return out;
+        };
+      }
+    }catch(err){console.warn('Practice entry boundary fix could not attach',err)}
+
     async function launchAction(explicitSide){
       const p=loadProfile?.();if(!p)return false;
       const side=focusedSide(p,explicitSide),a=nextAction(p,side);localStorage.setItem(FOCUS_KEY,side);
       nextActionFlowActive=true;
       try{
         state.side=side;state.sessionLength=a.depth;state.level=a.depth;state.variationIndex=a.variation;state.complete=false;
-        // Reports #45/#46 root fix: do not navigate by searching button text.
-        // The mode launch functions are the product's actual state transitions, so
-        // call them directly with the already resolved side/depth/variation.
         markFlow();document.querySelector('.cot-activation-hub')?.remove();
         if(a.mode==='rank'){
           if(typeof startRankTest!=='function')throw new Error('startRankTest unavailable');
@@ -56,22 +81,28 @@ try{
           if(typeof startPracticeTest!=='function')throw new Error('startPracticeTest unavailable');
           await startPracticeTest(a.variation);
         }else{
-          if(typeof startSavedTraining!=='function')throw new Error('startSavedTraining unavailable');
-          await startSavedTraining(a.variation);
+          // A brand-new variation has no saved line yet, so startSavedTraining() is
+          // intentionally a no-op. Enter the resolved course and activate the exact
+          // variation's data-new control (not a text search / retry loop). This uses
+          // the product's canonical New Training transition and keeps all chess logic.
+          state.screen='course';render();await nextFrame();
+          const start=document.querySelector(`[data-new="${a.variation}"]`);
+          if(!start)throw new Error('New Training action unavailable');
+          start.click();
         }
       }catch(err){
         nextActionFlowActive=false;markFlow();
         try{state.screen='course';render()}catch{}
         console.warn('Direct training launch failed',err);return false;
       }
-      const reached=await settle(()=>state?.screen==='training'&&!!document.querySelector('#board'),24);
+      const reached=await settle(()=>state?.screen==='training'&&!!document.querySelector('#board')&&!!state?.board,30);
       markFlow();document.querySelector('.cot-activation-hub')?.remove();
       if(!reached){nextActionFlowActive=false;markFlow()}
       return reached;
     }
     globalThis.__COT_LAUNCH_NEXT_ACTION__=launchAction;
 
-    // Capture before Activation V2's old target listeners. This prevents the old
+    // Capture before Activation V2's old target listeners. This prevents its old
     // recursive text-search driveTo() from running at all.
     document.addEventListener('click',e=>{
       const b=e.target?.closest?.('#cotPrimaryNext,[data-next-side]');if(!b)return;
@@ -79,9 +110,20 @@ try{
       const side=b.dataset?.nextSide||null;launchAction(side).catch(err=>{nextActionFlowActive=false;markFlow();console.warn('Continue Training navigation failed',err)});
     },true);
 
+    // Reports #49/#44: exit controls must always act on the CURRENT state, even if a
+    // stale pre-Practice element survived a prior regression. One delegated handler
+    // makes Back to Level / Exit deterministic without depending on old node listeners.
+    document.addEventListener('click',e=>{
+      const b=e.target?.closest?.('#exit,#menu,#pickerBack');if(!b)return;
+      e.preventDefault();e.stopImmediatePropagation();
+      nextActionFlowActive=false;
+      try{
+        state.engineBusy=false;state.complete=false;state.practiceReviewActive=false;state.hintVisible=false;
+        state.screen='course';markFlow();render();
+      }catch(err){console.warn('Back to Level navigation failed',err)}
+    },true);
+
     // Only hide the hub after Continue/Next Best Action has actually started.
-    // Auth/session restore can legitimately have state.screen='side'; that is still
-    // the dashboard context and must keep the primary CTA visible.
     const rootBaseRender=render;
     render=function(...args){
       const before=String(state?.screen||'');if(!/^(side|course|training)$/.test(before))nextActionFlowActive=false;
@@ -91,4 +133,4 @@ try{
     };
     markFlow();
   }
-}catch(err){console.warn('Reports #42-#47 root fix could not attach',err)}
+}catch(err){console.warn('Reports #42-#49 root fix could not attach',err)}
