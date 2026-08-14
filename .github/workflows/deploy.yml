@@ -85,3 +85,9 @@ jobs:
         env:
           PRODUCTION_URLS: https://plainact-crypto.github.io/plain-act/chess-opening-trainer/,https://chess-opening-trainer-3jh.pages.dev
         run: node scripts/production-activation-smoke.mjs
+
+      - name: Production training performance — Mobile
+        working-directory: chess-opening-trainer
+        env:
+          PRODUCTION_URLS: https://plainact-crypto.github.io/plain-act/chess-opening-trainer/,https://chess-opening-trainer-3jh.pages.dev
+        run: node scripts/production-performance-smoke.mjs
