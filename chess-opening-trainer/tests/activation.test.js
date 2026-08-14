@@ -35,13 +35,22 @@ test('dashboard activation hub exposes progress and next action', () => {
   assert.match(patch, /valid passes/);
 });
 
-test('activation observer is debounced and hub rendering is signature-stable', () => {
-  assert.match(patch, /if\(scheduled\)return/);
-  assert.match(patch, /dataset\.activationHtml/);
-  assert.match(patch, /setTimeout\(refresh,40\)/);
+test('production injection removes V2 global DOM observer and couples activation to render', () => {
+  assert.match(injector, /__COT_ACTIVATION_RENDER_HOOK__/);
+  assert.match(injector, /baseRender\.apply/);
+  assert.match(injector, /queueMicrotask\(refresh\)/);
+  assert.match(injector, /global observer regression remains/);
+  assert.match(injector, /new MutationObserver\\\(schedule\\\)/);
 });
 
-test('activation V2 patch is idempotently injected into generated source', () => {
+test('mobile hierarchy keeps next action above detailed opening progress', () => {
+  assert.match(injector, /cot-progress-details/);
+  assert.match(injector, /View opening progress/);
+  assert.match(injector, /order:-10000/);
+  assert.match(injector, /grid-column:1\/\-1/);
+});
+
+test('activation V2 regression fix remains idempotently injected', () => {
   assert.match(injector, /__COT_ACTIVATION_ONBOARDING_V2__/);
   assert.match(injector, /main\.includes\(marker\)/);
   assert.match(injector, /appendFile/);
