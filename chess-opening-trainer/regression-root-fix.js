@@ -6,6 +6,7 @@ try{
     const DEPTHS=[5,10,15,20,25,30];
     const PASS_TARGET=typeof PRACTICE_PASSES_PER_VARIATION==='number'?PRACTICE_PASSES_PER_VARIATION:5;
     const FOCUS_KEY='cotActivationFocus';
+    let nextActionFlowActive=false;
     const visible=el=>{if(!el)return false;const r=el.getBoundingClientRect();const cs=getComputedStyle(el);return r.width>0&&r.height>0&&cs.display!=='none'&&cs.visibility!=='hidden'};
     const safeButtons=()=>[...document.querySelectorAll('#app button,#app [role="button"],#app a')].filter(el=>visible(el)&&!el.closest('.cot-activation-hub,#cotOnboarding,#issueReportModal,#cloudAuthGate'));
     const txt=el=>String(el?.textContent||'').replace(/\s+/g,' ').trim();
@@ -37,7 +38,11 @@ try{
       nodes.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length);return nodes[0]||null;
     }
     function markFlow(){
-      try{const screen=String(state?.screen||'');document.documentElement.dataset.cotFlow=/^(side|course|training)$/.test(screen)?screen:'dashboard'}catch{document.documentElement.dataset.cotFlow='dashboard'}
+      try{
+        const screen=String(state?.screen||'');
+        if(nextActionFlowActive&&/^(side|course|training)$/.test(screen))document.documentElement.dataset.cotFlow=screen;
+        else document.documentElement.dataset.cotFlow='dashboard';
+      }catch{document.documentElement.dataset.cotFlow='dashboard'}
     }
     const stableCss=document.createElement('style');
     stableCss.textContent=`html[data-cot-flow="side"] .cot-activation-hub,html[data-cot-flow="course"] .cot-activation-hub,html[data-cot-flow="training"] .cot-activation-hub{display:none!important}`;
@@ -46,26 +51,28 @@ try{
     async function launchAction(explicitSide){
       const p=loadProfile?.();if(!p)return false;
       const side=focusedSide(p,explicitSide),a=nextAction(p,side);localStorage.setItem(FOCUS_KEY,side);
+      nextActionFlowActive=true;
       // Root fix: enter the destination course from state directly. Do not text-click
       // White/Black/Depth controls and do not poll/retry clicks across the whole DOM.
       try{
         state.side=side;state.sessionLength=a.depth;state.level=a.depth;state.variationIndex=a.variation;state.screen='course';state.complete=false;
         markFlow();document.querySelector('.cot-activation-hub')?.remove();render();
-      }catch(err){console.warn('Direct course navigation failed',err);return false}
+      }catch(err){nextActionFlowActive=false;markFlow();console.warn('Direct course navigation failed',err);return false}
       await settle(()=>state?.screen==='course',8);
 
       if(a.mode==='rank'){
-        const ok=clickOne(/(?:Start\s+)?Rank Test|Take .*Rank/i);if(!ok)return false;
+        const ok=clickOne(/(?:Start\s+)?Rank Test|Take .*Rank/i);if(!ok){nextActionFlowActive=false;markFlow();return false}
       }else{
         const card=variationContainer(a.variation);
         const modeRe=a.mode==='test'?/(?:Start\s+)?Practice|Test from memory/i:/(?:Start\s+)?Guided|Guided Training|\bLearn\b|\bTrain\b/i;
         let clicked=card?clickOne(modeRe,card):false;
         if(!clicked&&card){const first=[...card.querySelectorAll('button,[role="button"],a')].find(visible);if(first){first.click();clicked=true;await nextFrame();if(state?.screen!=='training')clicked=clickOne(modeRe)||clicked}}
         if(!clicked)clicked=clickOne(modeRe);
-        if(!clicked)return false;
+        if(!clicked){nextActionFlowActive=false;markFlow();return false}
       }
       const reached=await settle(()=>state?.screen==='training',20);
       markFlow();document.querySelector('.cot-activation-hub')?.remove();
+      if(!reached){nextActionFlowActive=false;markFlow()}
       return reached;
     }
     globalThis.__COT_LAUNCH_NEXT_ACTION__=launchAction;
@@ -75,14 +82,19 @@ try{
     document.addEventListener('click',e=>{
       const b=e.target?.closest?.('#cotPrimaryNext,[data-next-side]');if(!b)return;
       e.preventDefault();e.stopImmediatePropagation();
-      const side=b.dataset?.nextSide||null;launchAction(side).catch(err=>console.warn('Continue Training navigation failed',err));
+      const side=b.dataset?.nextSide||null;launchAction(side).catch(err=>{nextActionFlowActive=false;markFlow();console.warn('Continue Training navigation failed',err)});
     },true);
 
-    // Keep Activation hub out of side/course/training layout synchronously. The V2
-    // render hook may try to reinsert it in a microtask; display:none is already set
-    // before paint and this cleanup removes it from DOM entirely.
+    // Only hide the hub after Continue/Next Best Action has actually started.
+    // Auth/session restore can legitimately have state.screen='side'; that is still
+    // the dashboard context and must keep the primary CTA visible.
     const rootBaseRender=render;
-    render=function(...args){markFlow();const out=rootBaseRender.apply(this,args);markFlow();if(/^(side|course|training)$/.test(String(state?.screen||'')))queueMicrotask(()=>document.querySelector('.cot-activation-hub')?.remove());return out};
+    render=function(...args){
+      const before=String(state?.screen||'');if(!/^(side|course|training)$/.test(before))nextActionFlowActive=false;
+      markFlow();const out=rootBaseRender.apply(this,args);markFlow();
+      if(nextActionFlowActive&&/^(side|course|training)$/.test(String(state?.screen||'')))queueMicrotask(()=>document.querySelector('.cot-activation-hub')?.remove());
+      return out;
+    };
     markFlow();
   }
 }catch(err){console.warn('Reports #42-#47 root fix could not attach',err)}
