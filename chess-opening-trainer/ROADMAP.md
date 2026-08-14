@@ -87,10 +87,22 @@ Updated: 2026-08-14
   - First implementation exposed a render-loop blocker during the production browser gate; it was rejected, replaced by the debounced/signature-stable V2 implementation, and regression coverage was added.
   - Supabase migration `add_activation_events_funnel` created `activation_events` with RLS and indexes.
   - Funnel events implemented exactly: `landing_view → signup_started → signup_completed → onboarding_completed → first_training_started → first_variation_completed → practice_started → rank_started → returned_user`.
-  - Automated activation regression tests cover event taxonomy, onboarding path/content, next-action/dashboard requirements, stable observer rendering, and idempotent production injection.
+  - Automated activation regression tests cover event taxonomy, onboarding path/content, next-action/dashboard requirements, stable rendering, and idempotent production injection.
   - Production build/deploy passed on commit `d1a7b63729e31df80fcfa1b7f2847ae14b9d710a`.
   - Production Playwright gate passed on both **Desktop 1440×1000** and **Mobile 390×844** against both GitHub Pages and the official Cloudflare Pages deployment `chess-opening-trainer-3jh.pages.dev`.
-  - Production gate verifies landing/signup state, activation patch presence, first-run onboarding, repertoire selection, Learn/Practice/Pass/Rank/Next Level path, CTA progression, destination visibility, and no horizontal overflow.
+
+- [x] **Activation V2 mobile authenticated-profile regression — closed 2026-08-14**
+  - Regression linked to the Activation V2 rollout chain: `b7e79414ebaa50b5b5bb6de81006678a0d5be319`, `90bb569804c6b5bf1374ae6a31cc45fd37c3d3ed`, `db1d1ea058a36f4d731d05249ee67e0c644cf23f`, `d1a7b63729e31df80fcfa1b7f2847ae14b9d710a`, and closure commit `c7141c01a805e02ae875824f668cdb4070481496`.
+  - Symptom: authenticated mobile profile visibly shifted vertically while progress/profile DOM was rendered/hydrated; detailed email/progress/zero-state cards could occupy the first viewport before the activation CTA.
+  - Root cause: Activation V2 observed the entire DOM subtree and re-ran activation injection around base `render()` calls. During cloud progress hydration and `enterProfile()` rendering, the activation hub could be inserted against transient profile state, removed by the next base render, then reinserted, producing visible vertical movement.
+  - Source fix removes the Activation V2 global `MutationObserver` from the generated production source and couples activation synchronization directly to the app `render()` lifecycle with a single queued microtask. No delay, timeout, fixed overlay, animation, or visual masking is used to hide the instability.
+  - Mobile hierarchy now keeps **Your next best action / Continue Training** above the detailed profile/progress statistics. All opening progress data remains available under **View opening progress**, collapsed by default below the CTA.
+  - Activation hub is explicitly the first full-width app item in grid/flex layouts; detailed stats no longer compete with the primary action in the first viewport.
+  - Source/regression commits: `8d089ec371b49109efaf47cc0bce20d4fadbca3b`, `150a810180f4265f0abde56effeabd4ad09092b8`, `681f2104e924d30b2c3db6b67d63946c212c1275`.
+  - Production build and deployment passed for `681f2104e924d30b2c3db6b67d63946c212c1275`.
+  - Real Chromium mobile verification at **390×844** passed on both GitHub Pages and Cloudflare Pages.
+  - The production gate forces three consecutive app renders, samples the CTA/hub position for 30 animation frames, requires a single activation hub, requires detailed progress to stay collapsed, and requires the CTA to precede visible base `0/30` / `0/20` stats when present.
+  - Verified result on both production origins: primary CTA top = **161px**; measured CTA vertical spread after repeated renders = **0.00px**.
 
 ## Next phase
 
