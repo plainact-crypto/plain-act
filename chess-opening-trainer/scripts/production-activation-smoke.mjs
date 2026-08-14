@@ -19,8 +19,8 @@ async function gotoWithRetry(page, url, markerRequired = true) {
       const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       assert(response && response.ok(), `${url} returned HTTP ${response?.status()}`);
       await page.waitForTimeout(700);
-      if (!markerRequired || await page.evaluate(() => Boolean(globalThis.__COT_ACTIVATION_ONBOARDING__))) return;
-      lastError = new Error(`${url} does not yet contain activation patch`);
+      if (!markerRequired || await page.evaluate(() => Boolean(globalThis.__COT_ACTIVATION_ONBOARDING_V2__))) return;
+      lastError = new Error(`${url} does not yet contain activation V2 patch`);
     } catch (err) { lastError = err; }
     await page.waitForTimeout(5000);
   }
@@ -46,9 +46,7 @@ try {
       const publicOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(publicOverflow <= 2, `${url} ${viewport.name}: horizontal overflow ${publicOverflow}px on landing`);
 
-      // Exercise first-run authenticated UI with isolated local browser state only.
-      // The invalid token prevents any production account/data mutation; the local profile
-      // is sufficient to verify onboarding, empty-state progress and responsive layout.
+      // Isolated synthetic signed-in browser state: no real production account is created.
       await page.evaluate(({ fakeEmail, fakeUserId }) => {
         localStorage.clear(); sessionStorage.clear();
         localStorage.setItem('chessTrainerCloudSession', JSON.stringify({
@@ -81,9 +79,7 @@ try {
       const onboardOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(onboardOverflow <= 2, `${url} ${viewport.name}: horizontal overflow ${onboardOverflow}px in onboarding`);
 
-      // Complete setup without invoking a real authenticated API mutation. This exercises
-      // the CTA and ensures the product proceeds instead of leaving the user in a dead end.
-      await go.click();
+      await go.click({ timeout: 10000 });
       await page.waitForTimeout(1400);
       assert(!(await page.locator('#cotOnboarding').isVisible().catch(() => false)), `${url} ${viewport.name}: onboarding did not close`);
       const hasJourneyDestination = await page.evaluate(() => {
