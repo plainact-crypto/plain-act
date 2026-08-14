@@ -42,15 +42,18 @@ try{
     await page.evaluate(()=>{try{render?.()}catch{}});
     await page.locator('#cotPrimaryNext').waitFor({state:'visible',timeout:5000});
 
-    const report=await page.evaluate(async()=>{
-      const before=performance.now();
-      openIssueReport();
-      const syncMs=performance.now()-before;
-      await new Promise(r=>setTimeout(r,250));
-      return {syncMs,modal:!!document.querySelector('#issueReportModal'),html2canvasRequested:!!document.querySelector('script[data-issue-html2canvas]')};
-    });
+    // Use the real user-facing trigger. Module-scope openIssueReport is intentionally
+    // not a window global, so the gate must exercise the same click path as a phone user.
+    const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
+    await reportTrigger.waitFor({state:'visible',timeout:5000});
+    const before=Date.now();
+    await reportTrigger.click({timeout:5000});
+    await page.locator('#issueReportModal').waitFor({state:'visible',timeout:1000});
+    const reportMs=Date.now()-before;
+    await page.waitForTimeout(250);
+    const report=await page.evaluate(()=>({modal:!!document.querySelector('#issueReportModal'),html2canvasRequested:!!document.querySelector('script[data-issue-html2canvas]')}));
     assert(report.modal,`${url}: Report Issue modal did not open`);
-    assert(report.syncMs<80,`${url}: Report Issue blocked main thread for ${report.syncMs.toFixed(1)}ms`);
+    assert(reportMs<250,`${url}: Report Issue interaction took ${reportMs}ms`);
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
@@ -68,14 +71,14 @@ try{
         await new Promise(r=>requestAnimationFrame(r));
       }
       await new Promise(r=>setTimeout(r,300));po?.disconnect();
-      return {screen:globalThis.state?.screen||null,board:!!document.querySelector('#board'),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,legacyPollMarker:Boolean(globalThis.__WOOD_PIECE_SOUND_PATCH__),fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__)};
+      return {board:!!document.querySelector('#board'),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__)};
     });
     assert(perf.fix,`${url}: performance fix marker disappeared`);
     assert(perf.maxRender<180,`${url}: repeated render blocked ${perf.maxRender.toFixed(1)}ms`);
     assert(perf.maxLong<250,`${url}: long task ${perf.maxLong.toFixed(1)}ms during mobile training transition`);
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
-    console.log(`PASS mobile-performance ${url} report=${report.syncMs.toFixed(1)}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms board=${perf.board}`);
+    console.log(`PASS mobile-performance ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms board=${perf.board}`);
     await context.close();
   }
 }finally{await browser.close()}
