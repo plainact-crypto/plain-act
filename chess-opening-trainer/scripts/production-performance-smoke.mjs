@@ -42,8 +42,6 @@ try{
     await page.evaluate(()=>{try{render?.()}catch{}});
     await page.locator('#cotPrimaryNext').waitFor({state:'visible',timeout:5000});
 
-    // Use the real user-facing trigger. Module-scope openIssueReport is intentionally
-    // not a window global, so the gate must exercise the same click path as a phone user.
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
     await reportTrigger.waitFor({state:'visible',timeout:5000});
     const before=Date.now();
@@ -57,8 +55,12 @@ try{
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
+    // Follow the actual activation CTA and refuse to measure until the real chessboard
+    // is mounted. This keeps the performance gate honest about gameplay, not dashboard speed.
     await page.locator('#cotPrimaryNext').click();
-    await page.waitForTimeout(1400);
+    await page.locator('#board').waitFor({state:'visible',timeout:12000});
+    await page.waitForTimeout(500);
+
     const perf=await page.evaluate(async()=>{
       const long=[];
       let po=null;
@@ -71,11 +73,14 @@ try{
         await new Promise(r=>requestAnimationFrame(r));
       }
       await new Promise(r=>setTimeout(r,300));po?.disconnect();
-      return {board:!!document.querySelector('#board'),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__)};
+      const board=document.querySelector('#board');
+      const rect=board?.getBoundingClientRect();
+      return {board:Boolean(board&&rect&&rect.width>240&&rect.height>240),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__)};
     });
     assert(perf.fix,`${url}: performance fix marker disappeared`);
-    assert(perf.maxRender<180,`${url}: repeated render blocked ${perf.maxRender.toFixed(1)}ms`);
-    assert(perf.maxLong<250,`${url}: long task ${perf.maxLong.toFixed(1)}ms during mobile training transition`);
+    assert(perf.board,`${url}: performance test did not reach a live mobile chessboard`);
+    assert(perf.maxRender<180,`${url}: repeated live-board render blocked ${perf.maxRender.toFixed(1)}ms`);
+    assert(perf.maxLong<250,`${url}: long task ${perf.maxLong.toFixed(1)}ms on live mobile training board`);
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
     console.log(`PASS mobile-performance ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms board=${perf.board}`);
