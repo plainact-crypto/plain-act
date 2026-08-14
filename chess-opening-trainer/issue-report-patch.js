@@ -13,3 +13,54 @@ async function issueUploadScreenshot(blob,signedIn,s){if(!blob)return null;const
 async function submitIssueReport(description,guestEmail=""){const s=window.CHESS_AUTH_SESSION?.();const sb=window.CHESS_SUPABASE;if(!sb?.url||!sb?.key)throw new Error("Report service is unavailable.");const gameRecord=issueCurrentGameRecord();const signedIn=!!(s?.access_token&&s?.user?.id);const reporter=(signedIn?s.user.email:guestEmail||state.profileEmail||"").trim()||null;const authHeaders=signedIn?{Authorization:`Bearer ${s.access_token}`}:{ };let screenshotUrl=null;try{const blob=ISSUE_SCREENSHOT_PROMISE?await ISSUE_SCREENSHOT_PROMISE:null;screenshotUrl=await issueUploadScreenshot(blob,signedIn,s)}catch{}const prefer=signedIn?"return=representation":"return=minimal";const r=await fetch(`${sb.url}/rest/v1/issue_reports`,{method:"POST",headers:{apikey:sb.key,...authHeaders,"Content-Type":"application/json",Prefer:prefer},body:JSON.stringify({user_id:signedIn?s.user.id:null,reporter_email:reporter,description:description.trim(),context:issueContext(),game_record:gameRecord,engine_trace:ISSUE_ENGINE_TRACE,screenshot_url:screenshotUrl,status:"new"})});const d=await r.json().catch(()=>null);if(!r.ok)throw new Error(d?.message||"Could not send report.");return Array.isArray(d)?d[0]:d}
 function openIssueReport(){ISSUE_SCREENSHOT_PROMISE=issueCaptureScreenshot();document.querySelector("#issueReportModal")?.remove();const session=window.CHESS_AUTH_SESSION?.();const signedIn=!!(session?.access_token&&session?.user?.id);const m=document.createElement("div");m.id="issueReportModal";m.className="issue-modal";m.style.cssText="position:fixed;inset:0;z-index:20050;background:#000b;display:grid;place-items:center;padding:18px;overflow:auto";m.innerHTML=`<div class="issue-card" role="dialog" aria-modal="true" style="width:min(560px,100%);background:#111820;border:1px solid #34404d;border-radius:18px;padding:22px;color:#f4f7f8;box-shadow:0 24px 90px #0009"><h2 style="margin-top:0">Report Issue</h2><p class="small">Describe what went wrong. Technical details and a screenshot of the current screen are attached automatically.</p>${signedIn?"":`<label style="display:block;margin:14px 0 6px;font-weight:800">Your email (optional)</label><input id="issueReporterEmail" type="email" placeholder="you@example.com" style="width:100%;height:46px;border:1px solid #384655;background:#0a1016;color:#fff;border-radius:10px;padding:0 12px">`}<label style="display:block;margin:14px 0 6px;font-weight:800">What went wrong?</label><textarea id="issueReportText" placeholder="Describe the problem you saw..." style="width:100%;min-height:150px;border:1px solid #384655;background:#0a1016;color:#fff;border-radius:10px;padding:12px;resize:vertical"></textarea><div class="issue-diagnostics" style="margin:14px 0;padding:12px;border-radius:10px;background:#0b1117;color:#9da9b4"><strong style="color:#c8ff5a">Attached automatically</strong><br>Screenshot, app version, page, browser, mode, level, variation, moves, live FEN and analysis trace when available.</div><div class="issue-actions" style="display:flex;gap:10px"><button type="button" id="cancelIssueReport" style="flex:1;height:48px;border:1px solid #3a4653;background:#171f28;color:#fff;border-radius:10px;font-weight:800">Cancel</button><button type="button" id="sendIssueReport" style="flex:1;height:48px;border:0;background:#c8ff5a;color:#0a0d10;border-radius:10px;font-weight:900">Send Report</button></div><div id="issueReportStatus" class="small" style="min-height:20px;margin-top:10px;color:#b9c4cd"></div></div>`;document.body.appendChild(m);const t=m.querySelector("#issueReportText"),email=m.querySelector("#issueReporterEmail"),b=m.querySelector("#sendIssueReport"),status=m.querySelector("#issueReportStatus");t?.focus();m.querySelector("#cancelIssueReport")?.addEventListener("click",()=>m.remove());m.addEventListener("click",e=>{if(e.target===m)m.remove()});b?.addEventListener("click",async()=>{const d=t?.value?.trim()||"";const guestEmail=email?.value?.trim()||"";if(d.length<3){status.textContent="Please describe the problem.";t?.focus();return}if(guestEmail&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)){status.textContent="Enter a valid email or leave it blank.";email?.focus();return}b.disabled=true;status.textContent="Sending report + screenshot...";try{const saved=await submitIssueReport(d,guestEmail);status.style.color="#c8ff5a";status.textContent=`Report sent successfully${saved?.id?` · #${saved.id}`:""}.`;setTimeout(()=>m.remove(),1500)}catch(e){status.style.color="#ffb6b6";status.textContent=e?.message||"Could not send report.";b.disabled=false}})}
 try{if(engineService&&!engineService.__issueTraceWrapped){engineService.__issueTraceWrapped=true;for(const name of ["bestMove","topMoves","evaluate"]){if(typeof engineService[name]!=="function")continue;const original=engineService[name].bind(engineService);engineService[name]=async(...args)=>{const live=issueLiveGame();const fen=args?.[0]?.fen||args?.[0]||live?.fen?.()||"";const result=await original(...args);issueTracePush({type:name,fen,result});return result}}}}catch(err){console.warn("Issue trace recorder could not attach",err)}
+
+// Reports #38-#40 mobile Practice: prevent the live training DOM from being rebuilt on every move.
+// The legacy board-rebuild mask is disabled before later patches load; it is no longer needed once
+// the actual board DOM stays mounted. During an active Practice Test, render() becomes an in-place
+// updater: only the existing board position and status text change. Full render is still allowed for
+// first mount, variation/session changes, completion/result, review, navigation, and other modes.
+try{
+  globalThis.__COT_TEST_BOARD_REBUILD_MASK__=true;
+  if(!globalThis.__COT_PRACTICE_DOM_STABILITY_38_40__){
+    globalThis.__COT_PRACTICE_DOM_STABILITY_38_40__=true;
+    const practiceDomOriginalRender=render;
+    let mountedSessionKey='';
+
+    const sessionKey=()=>`${state?.side||''}|${state?.sessionLength||''}|${state?.variationIndex??''}`;
+    const activePractice=()=>state?.screen==='training'&&state?.mode==='test'&&!state?.complete&&!state?.practiceReviewActive;
+    const liveBoardMounted=()=>!!(document.querySelector('.training')&&document.querySelector('#board')&&state?.board);
+
+    const updateInPlace=()=>{
+      try{state?.board?.setPosition?.(state?.chess?.fen?.()||'',true)}catch{}
+      try{
+        const status=document.querySelector('.status');
+        if(status){
+          status.textContent=String(state?.status||'Your move');
+          status.classList.toggle('error',!!state?.statusError);
+        }
+      }catch{}
+      try{
+        const guide=document.querySelector('#guide');
+        if(guide&&!state?.hintVisible) guide.replaceChildren();
+      }catch{}
+    };
+
+    render=function(...args){
+      if(!activePractice()){
+        mountedSessionKey='';
+        return practiceDomOriginalRender(...args);
+      }
+
+      const key=sessionKey();
+      if(!liveBoardMounted() || (mountedSessionKey&&mountedSessionKey!==key)){
+        const out=practiceDomOriginalRender(...args);
+        mountedSessionKey=key;
+        return out;
+      }
+
+      if(!mountedSessionKey) mountedSessionKey=key;
+      updateInPlace();
+      return undefined;
+    };
+  }
+}catch(err){console.warn('Practice DOM stability patch could not attach',err)}
