@@ -153,3 +153,66 @@
     document.head.appendChild(style);
   }catch(err){console.warn('Mobile board frame patch could not attach',err)}
 })();
+
+// Reports #39/#40: Practice mobile viewport must not jump on every move.
+// Earlier compatibility patches preserve the live board across renders, but one of them
+// also schedules a requestAnimationFrame scrollTo correction after every render. Chrome
+// mobile then combines that programmatic scroll with scroll anchoring/address-bar reflow,
+// which is perceived as a flash/pulse/shake. Keep document height stable through the
+// render, suppress only those short-lived programmatic scroll corrections, and remove
+// the legacy rebuild mask before it can paint. User touch scrolling remains untouched.
+(function installPracticeViewportStability(){
+  try{
+    if(globalThis.__COT_PRACTICE_VIEWPORT_STABILITY_39_40__) return;
+    globalThis.__COT_PRACTICE_VIEWPORT_STABILITY_39_40__=true;
+
+    const css=document.createElement('style');
+    css.textContent=`
+      html,body,#app{overflow-anchor:none!important}
+      @media(max-width:820px){
+        body.cot-practice-render-lock{overscroll-behavior:none!important}
+        body.cot-practice-render-lock .training{contain:layout style!important}
+      }
+    `;
+    document.head.appendChild(css);
+
+    const nativeScrollTo=window.scrollTo.bind(window);
+    let suppressProgrammaticUntil=0;
+    window.scrollTo=function(...args){
+      try{
+        const practice=state?.screen==='training'&&(state?.mode==='test'||state?.mode==='rank');
+        if(practice&&performance.now()<suppressProgrammaticUntil) return;
+      }catch{}
+      return nativeScrollTo(...args);
+    };
+
+    const stableOriginalRender=render;
+    render=function(...args){
+      const practice=state?.screen==='training'&&(state?.mode==='test'||state?.mode==='rank')&&!state?.complete;
+      if(!practice) return stableOriginalRender(...args);
+
+      const y=window.scrollY;
+      const minHeight=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,innerHeight);
+      const oldMinHeight=document.body.style.minHeight;
+      document.body.style.minHeight=`${minHeight}px`;
+      document.body.classList.add('cot-practice-render-lock');
+      suppressProgrammaticUntil=performance.now()+320;
+
+      const out=stableOriginalRender(...args);
+
+      // The old mask intentionally kept the previous board over the new one for two
+      // animation frames. With the persistent-board patch this is redundant and creates
+      // the exact pulse reported on real phones, so remove it synchronously.
+      try{document.querySelector('#cotBoardRebuildMask')?.remove()}catch{}
+
+      // If DOM replacement altered scroll synchronously, restore it before the next paint.
+      if(Math.abs(window.scrollY-y)>0.5) nativeScrollTo(0,y);
+
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        document.body.classList.remove('cot-practice-render-lock');
+        document.body.style.minHeight=oldMinHeight;
+      }));
+      return out;
+    };
+  }catch(err){console.warn('Practice viewport stability patch could not attach',err)}
+})();
