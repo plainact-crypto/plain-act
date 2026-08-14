@@ -123,7 +123,7 @@ try{
     };
     const normalize=()=>{
       try{
-        if(state?.screen!=='training'||state?.mode!=='guided') return;
+        if(state?.screen!=="training"||state?.mode!=="guided") return;
         const wanted=desired();
         for(const panel of document.querySelectorAll('.side-panel,aside')){
           for(const el of panel.querySelectorAll('div,section,p')){
@@ -157,7 +157,7 @@ try{
   }
 }catch(err){console.warn('Guided status hard lock could not attach',err)}
 
-// --- Mobile board layout guard (Report #35) ---
+// --- Mobile board layout guard (Reports #35-#37) ---
 try{
   if(!globalThis.__MOBILE_BOARD_LAYOUT_GUARD__){
     globalThis.__MOBILE_BOARD_LAYOUT_GUARD__=true;
@@ -165,31 +165,51 @@ try{
     style.textContent=`
       @media (max-width:820px){
         .training{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:100%!important;gap:18px!important;align-items:start!important}
-        .training>.board-area{display:block!important;width:100%!important;max-width:680px!important;min-width:0!important;margin:0 auto!important;justify-self:stretch!important}
-        .training .board-shell,.practice-review-grid .board-shell,.rank-review-grid .board-shell{position:relative!important;display:block!important;width:100%!important;max-width:680px!important;min-width:0!important;height:auto!important;aspect-ratio:1/1!important;margin:0 auto!important;overflow:visible!important}
-        .training #board,.practice-review-grid #board,.rank-review-grid #board{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important}
+        .training>.board-area{width:100%!important;max-width:680px!important;min-width:0!important;margin:0 auto!important;justify-self:stretch!important}
+        .training .board-shell,.practice-review-grid .board-shell,.rank-review-grid .board-shell{position:relative!important;width:100%!important;max-width:680px!important;min-width:0!important;margin:0 auto!important}
+        .training #board,.practice-review-grid #board,.rank-review-grid #board{width:100%!important;aspect-ratio:1/1!important;min-width:0!important}
         .training .cm-chessboard,.practice-review-grid .cm-chessboard,.rank-review-grid .cm-chessboard{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important}
         .training>.side-panel,.practice-review-grid>.side-panel,.rank-review-grid>.side-panel{width:100%!important;min-width:0!important;max-width:none!important}
-        .training .guide-layer,.practice-review-grid .guide-layer,.rank-review-grid .guide-layer{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;pointer-events:none!important}
       }
     `;
     document.head.appendChild(style);
-    let lastRepairKey='';
+
     const repair=()=>{
       try{
-        if(innerWidth>820||state?.screen!=='training') return;
+        if(state?.screen!=='training') return;
+        const area=document.querySelector('.training .board-area');
         const shell=document.querySelector('.training .board-shell');
-        const board=document.querySelector('.training #board .cm-chessboard')||document.querySelector('.training #board');
-        if(!shell||!board) return;
-        const sr=shell.getBoundingClientRect(),br=board.getBoundingClientRect();
-        if(sr.width>=240&&br.width<Math.min(220,sr.width*.7)){
-          const key=`${state?.mode||''}|${state?.side||''}|${state?.sessionLength||''}|${state?.variationIndex??''}|${state?.chess?.fen?.()||''}`;
-          if(key!==lastRepairKey){lastRepairKey=key;requestAnimationFrame(()=>{try{render()}catch{}})}
+        const board=document.querySelector('.training #board');
+        if(!area||!shell||!board) return;
+
+        // Root cause: Practice removes the eval column after render, while board-area
+        // keeps the 34px/44px two-column grid. The remaining board then occupies
+        // the narrow first grid column. Collapse that grid whenever eval is absent.
+        const evalColumn=area.querySelector('.eval-column');
+        if(state?.mode==='test' || state?.mode==='rank' || !evalColumn){
+          area.style.setProperty('display','grid','important');
+          area.style.setProperty('grid-template-columns','minmax(0,1fr)','important');
+          area.style.setProperty('width','100%','important');
+          shell.style.setProperty('grid-column','1 / -1','important');
+          shell.style.setProperty('width','100%','important');
+          shell.style.setProperty('max-width','720px','important');
+          board.style.setProperty('width','100%','important');
+          board.style.setProperty('aspect-ratio','1 / 1','important');
         }
       }catch{}
     };
+
+    const previousRenderForBoard=render;
+    render=function(...args){
+      const out=previousRenderForBoard(...args);
+      queueMicrotask(repair);
+      requestAnimationFrame(repair);
+      setTimeout(repair,80);
+      return out;
+    };
+    new MutationObserver(()=>queueMicrotask(repair)).observe(document.documentElement,{childList:true,subtree:true});
     addEventListener('resize',()=>setTimeout(repair,80),{passive:true});
     addEventListener('orientationchange',()=>setTimeout(repair,180),{passive:true});
-    setInterval(repair,500);
+    repair();
   }
 }catch(err){console.warn('Mobile board layout guard could not attach',err)}
