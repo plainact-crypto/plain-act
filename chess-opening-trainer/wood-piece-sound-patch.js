@@ -213,3 +213,42 @@ try{
     repair();
   }
 }catch(err){console.warn('Mobile board layout guard could not attach',err)}
+
+// --- Practice layout stability (Report #38) ---
+try{
+  if(!globalThis.__PRACTICE_LAYOUT_STABILITY_CSS__){
+    globalThis.__PRACTICE_LAYOUT_STABILITY_CSS__=true;
+    const style=document.createElement('style');
+    style.textContent=`
+      .training .board-area,.training .board-shell,.training #board,.training .cm-chessboard{
+        transition-property:none!important;
+      }
+      @supports selector(.board-area:has(.eval-column)){
+        .training .board-area:not(:has(.eval-column)){
+          display:grid!important;
+          grid-template-columns:minmax(0,1fr)!important;
+          width:100%!important;
+        }
+        .training .board-area:not(:has(.eval-column)) .board-shell{
+          grid-column:1 / -1!important;
+          width:100%!important;
+          max-width:720px!important;
+          margin-inline:auto!important;
+        }
+        .training .board-area:not(:has(.eval-column)) #board{
+          width:100%!important;
+          aspect-ratio:1 / 1!important;
+        }
+      }
+      @media (max-width:820px){
+        html,body,#app,.training,.training .board-area,.training .board-shell{
+          max-width:100%!important;
+        }
+        .training .board-area,.training .board-shell,.training #board{
+          contain:layout style;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+}catch(err){console.warn('Practice layout stability CSS could not attach',err)}
