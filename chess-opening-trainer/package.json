@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "copy-assets": "node scripts/copy-assets.mjs",
-    "dev": "npm run copy-assets && vite",
-    "build": "npm run copy-assets && vite build",
-    "test": "node --test tests/*.test.js",
+    "inject-activation": "node scripts/inject-activation.mjs",
+    "dev": "npm run copy-assets && npm run inject-activation && vite",
+    "build": "npm run copy-assets && npm run inject-activation && vite build",
+    "test": "node --test tests/*.test.js && node --check activation-onboarding-patch.js && node --check scripts/inject-activation.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
