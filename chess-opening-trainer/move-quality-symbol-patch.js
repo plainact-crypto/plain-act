@@ -126,3 +126,30 @@
     detect();
   }catch(err){console.warn('Conservative move-quality system could not attach',err)}
 })();
+
+// Report #34: keep a visible chessboard frame on narrow mobile viewports.
+// The frame is inset / box-sized so it cannot be clipped by the 384px layout or create horizontal overflow.
+(function installMobileBoardFrame(){
+  try{
+    if(globalThis.__COT_MOBILE_BOARD_FRAME_34__) return;
+    globalThis.__COT_MOBILE_BOARD_FRAME_34__=true;
+    const style=document.createElement('style');
+    style.textContent=`
+      @media(max-width:760px){
+        #board{
+          box-sizing:border-box!important;
+          border:2px solid #6f7d89!important;
+          border-radius:4px!important;
+          overflow:hidden!important;
+          background:#6f7d89!important;
+        }
+        #board>.cm-chessboard,#board .cm-chessboard{
+          box-sizing:border-box!important;
+          max-width:100%!important;
+        }
+        .board-shell{box-sizing:border-box!important;max-width:100%!important;overflow:visible!important}
+      }
+    `;
+    document.head.appendChild(style);
+  }catch(err){console.warn('Mobile board frame patch could not attach',err)}
+})();
