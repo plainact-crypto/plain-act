@@ -7,9 +7,10 @@
     "copy-assets": "node scripts/copy-assets.mjs",
     "inject-performance": "node scripts/inject-training-performance.mjs",
     "inject-activation": "node scripts/inject-activation.mjs",
-    "dev": "npm run copy-assets && npm run inject-performance && npm run inject-activation && vite",
-    "build": "npm run copy-assets && npm run inject-performance && npm run inject-activation && vite build",
-    "test": "node --test tests/*.test.js && node --check training-performance-audio-patch.js && node --check scripts/inject-training-performance.mjs && node --check activation-onboarding-v2.js && node --check scripts/inject-activation.mjs",
+    "inject-regression-root-fix": "node scripts/inject-regression-root-fix.mjs",
+    "dev": "npm run copy-assets && npm run inject-performance && npm run inject-activation && npm run inject-regression-root-fix && vite",
+    "build": "npm run copy-assets && npm run inject-performance && npm run inject-activation && npm run inject-regression-root-fix && vite build",
+    "test": "node --test tests/*.test.js && node --check training-performance-audio-patch.js && node --check scripts/inject-training-performance.mjs && node --check activation-onboarding-v2.js && node --check scripts/inject-activation.mjs && node --check regression-root-fix.js && node --check scripts/inject-regression-root-fix.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
