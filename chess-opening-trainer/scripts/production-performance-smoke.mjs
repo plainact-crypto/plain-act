@@ -12,9 +12,9 @@ async function gotoReady(page,url){
       const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
       assert(r?.ok(),`${url} HTTP ${r?.status()}`);
       await page.waitForTimeout(700);
-      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__));
+      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__));
       if(ok)return;
-      last=new Error(`${url}: reports #42-#47 root fix not deployed yet`);
+      last=new Error(`${url}: reports #42-#49 root fix not deployed yet`);
     }catch(e){last=e}
     await page.waitForTimeout(5000);
   }
@@ -53,17 +53,20 @@ try{
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
-    // Reports #45-#47: use the real CTA. It must deterministically reach an actionable
-    // Guided destination with complete side/depth state and no Activation hub in the flow layout.
+    // Reports #45-#48: real Continue CTA from a zero-progress profile must start
+    // New Training (not the saved-line no-op), keep complete state and mount a board.
     await page.locator('#cotPrimaryNext').click();
-    await page.locator('#board').waitFor({state:'visible',timeout:12000});
+    await page.locator('#board').waitFor({state:'visible',timeout:15000});
     await page.waitForTimeout(500);
-    const nav=await page.evaluate(()=>({screen:state?.screen||null,mode:state?.mode||null,side:state?.side||null,depth:Number(state?.sessionLength||state?.level||0),variation:Number(state?.variationIndex??-1),hub:!!document.querySelector('.cot-activation-hub'),flow:document.documentElement.dataset.cotFlow||''}));
+    const nav=await page.evaluate(()=>({screen:state?.screen||null,mode:state?.mode||null,side:state?.side||null,depth:Number(state?.sessionLength||state?.level||0),variation:Number(state?.variationIndex??-1),boardInstance:!!state?.board,hub:!!document.querySelector('.cot-activation-hub'),flow:document.documentElement.dataset.cotFlow||'',practiceBoundary:Boolean(globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__)}));
     assert(nav.screen==='training',`${url}: Continue Training did not reach training (${JSON.stringify(nav)})`);
+    assert(nav.mode==='guided',`${url}: zero-progress Continue did not start New Training (${JSON.stringify(nav)})`);
     assert(nav.side==='white',`${url}: Continue Training lost opening side (${JSON.stringify(nav)})`);
     assert(nav.depth===5,`${url}: Continue Training lost depth/level (${JSON.stringify(nav)})`);
     assert(nav.variation===0,`${url}: Continue Training lost variation (${JSON.stringify(nav)})`);
-    assert(!nav.hub&&nav.flow==='training',`${url}: Activation hub still participates in training/course layout (${JSON.stringify(nav)})`);
+    assert(nav.boardInstance,`${url}: training DOM exists without a live board instance (${JSON.stringify(nav)})`);
+    assert(nav.practiceBoundary,`${url}: Practice entry boundary fix missing`);
+    assert(!nav.hub&&nav.flow==='training',`${url}: Activation hub still participates in training layout (${JSON.stringify(nav)})`);
 
     const perf=await page.evaluate(async()=>{
       const long=[];let po=null;
@@ -75,7 +78,7 @@ try{
       await new Promise(r=>setTimeout(r,300));po?.disconnect();
       const board=document.querySelector('#board'),rect=board?.getBoundingClientRect();
 
-      // Report #44: prove idle Practice does not keep sending engine work every 350ms.
+      // Report #44: idle Practice must not keep sending hidden evaluation work.
       let workerPosts=0;const rawPost=Worker.prototype.postMessage;
       Worker.prototype.postMessage=function(message,...rest){if(/^(?:position\s+fen|go\s+)/i.test(String(message||'')))workerPosts++;return rawPost.call(this,message,...rest)};
       const oldMode=state.mode;state.mode='test';try{render()}catch{};
@@ -90,9 +93,17 @@ try{
     assert(perf.maxRender<180,`${url}: repeated live-board render blocked ${perf.maxRender.toFixed(1)}ms`);
     assert(perf.maxLong<250,`${url}: long task ${perf.maxLong.toFixed(1)}ms on live mobile training board`);
     assert(perf.idlePracticeWorkerPosts<=1,`${url}: idle Practice sent ${perf.idlePracticeWorkerPosts} engine commands in 1.8s; recurring evaluation loop remains`);
+
+    // Report #49: leaving the training session must always navigate to the current
+    // course. The delegated handler is intentionally independent of node lifetimes.
+    await page.locator('#exit').click({timeout:3000});
+    await page.waitForFunction(()=>state?.screen==='course',{timeout:3000});
+    const exitState=await page.evaluate(()=>({screen:state?.screen,training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head')}));
+    assert(exitState.screen==='course'&&!exitState.training&&exitState.course,`${url}: Back to Level/Exit did not leave training cleanly (${JSON.stringify(exitState)})`);
+
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
-    console.log(`PASS reports-42-47-mobile ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms idlePracticeEngine=${perf.idlePracticeWorkerPosts} side=${nav.side} depth=${nav.depth} board=${perf.board}`);
+    console.log(`PASS reports-42-49-mobile ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms idlePracticeEngine=${perf.idlePracticeWorkerPosts} side=${nav.side} depth=${nav.depth} exit=${exitState.screen}`);
     await context.close();
   }
 }finally{await browser.close()}
