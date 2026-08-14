@@ -42,6 +42,13 @@ try{
     await page.evaluate(()=>{try{render?.()}catch{}});
     await page.locator('#cotPrimaryNext').waitFor({state:'visible',timeout:5000});
 
+    const depth5Before=await page.evaluate(()=>{
+      const text=document.body.innerText||'';
+      const depth5Control=[...document.querySelectorAll('[data-n],button,a')].some(el=>el.getAttribute('data-n')==='5'||/\bDepth\s*5\b/i.test(el.textContent||''));
+      return {depth5Control,textMentions:/\bDepth\s*5\b/i.test(text)};
+    });
+    assert(!depth5Before.depth5Control&&!depth5Before.textMentions,`${url}: Depth 5 is still exposed before training (${JSON.stringify(depth5Before)})`);
+
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
     await reportTrigger.waitFor({state:'visible',timeout:5000});
     const before=Date.now();await reportTrigger.click({timeout:5000});
@@ -53,8 +60,7 @@ try{
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
-    // Reports #45-#48: real Continue CTA from a zero-progress profile must start
-    // New Training (not the saved-line no-op), keep complete state and mount a board.
+    // Zero-progress users must start at Depth 10. Depth 5 is no longer a user-facing stage.
     await page.locator('#cotPrimaryNext').click();
     await page.locator('#board').waitFor({state:'visible',timeout:15000});
     await page.waitForTimeout(500);
@@ -62,7 +68,7 @@ try{
     assert(nav.screen==='training',`${url}: Continue Training did not reach training (${JSON.stringify(nav)})`);
     assert(nav.mode==='guided',`${url}: zero-progress Continue did not start New Training (${JSON.stringify(nav)})`);
     assert(nav.side==='white',`${url}: Continue Training lost opening side (${JSON.stringify(nav)})`);
-    assert(nav.depth===5,`${url}: Continue Training lost depth/level (${JSON.stringify(nav)})`);
+    assert(nav.depth===10,`${url}: new user did not start at Depth 10 (${JSON.stringify(nav)})`);
     assert(nav.variation===0,`${url}: Continue Training lost variation (${JSON.stringify(nav)})`);
     assert(nav.boardInstance,`${url}: training DOM exists without a live board instance (${JSON.stringify(nav)})`);
     assert(nav.practiceBoundary,`${url}: Practice entry boundary fix missing`);
@@ -77,15 +83,12 @@ try{
       }
       await new Promise(r=>setTimeout(r,300));po?.disconnect();
       const board=document.querySelector('#board'),rect=board?.getBoundingClientRect();
-
-      // Report #44: idle Practice must not keep sending hidden evaluation work.
       let workerPosts=0;const rawPost=Worker.prototype.postMessage;
       Worker.prototype.postMessage=function(message,...rest){if(/^(?:position\s+fen|go\s+)/i.test(String(message||'')))workerPosts++;return rawPost.call(this,message,...rest)};
       const oldMode=state.mode;state.mode='test';try{render()}catch{};
       await new Promise(r=>setTimeout(r,1800));
       const idlePracticeWorkerPosts=workerPosts;
       state.mode=oldMode;Worker.prototype.postMessage=rawPost;
-
       return {board:Boolean(board&&rect&&rect.width>240&&rect.height>240),maxRender:Math.max(...samples),avgRender:samples.reduce((a,b)=>a+b,0)/samples.length,maxLong:long.length?Math.max(...long):0,idlePracticeWorkerPosts,fix:Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__),rootFix:Boolean(globalThis.__COT_REPORTS_42_47_ROOT_FIX__)};
     });
     assert(perf.fix&&perf.rootFix,`${url}: root performance/navigation fix marker disappeared`);
@@ -94,8 +97,6 @@ try{
     assert(perf.maxLong<250,`${url}: long task ${perf.maxLong.toFixed(1)}ms on live mobile training board`);
     assert(perf.idlePracticeWorkerPosts<=1,`${url}: idle Practice sent ${perf.idlePracticeWorkerPosts} engine commands in 1.8s; recurring evaluation loop remains`);
 
-    // Report #49: leaving the training session must always navigate to the current
-    // course. The delegated handler is intentionally independent of node lifetimes.
     await page.locator('#exit').click({timeout:3000});
     await page.waitForFunction(()=>state?.screen==='course',{timeout:3000});
     const exitState=await page.evaluate(()=>({screen:state?.screen,training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head')}));
@@ -103,7 +104,7 @@ try{
 
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
-    console.log(`PASS reports-42-49-mobile ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms idlePracticeEngine=${perf.idlePracticeWorkerPosts} side=${nav.side} depth=${nav.depth} exit=${exitState.screen}`);
+    console.log(`PASS depth-10-and-reports-42-49-mobile ${url} report=${reportMs}ms renderMax=${perf.maxRender.toFixed(1)}ms longMax=${perf.maxLong.toFixed(1)}ms idlePracticeEngine=${perf.idlePracticeWorkerPosts} side=${nav.side} depth=${nav.depth} exit=${exitState.screen}`);
     await context.close();
   }
 }finally{await browser.close()}
