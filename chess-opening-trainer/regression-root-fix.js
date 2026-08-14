@@ -7,9 +7,6 @@ try{
     const PASS_TARGET=typeof PRACTICE_PASSES_PER_VARIATION==='number'?PRACTICE_PASSES_PER_VARIATION:5;
     const FOCUS_KEY='cotActivationFocus';
     let nextActionFlowActive=false;
-    const visible=el=>{if(!el)return false;const r=el.getBoundingClientRect();const cs=getComputedStyle(el);return r.width>0&&r.height>0&&cs.display!=='none'&&cs.visibility!=='hidden'};
-    const safeButtons=()=>[...document.querySelectorAll('#app button,#app [role="button"],#app a')].filter(el=>visible(el)&&!el.closest('.cot-activation-hub,#cotOnboarding,#issueReportModal,#cloudAuthGate'));
-    const txt=el=>String(el?.textContent||'').replace(/\s+/g,' ').trim();
     const nextFrame=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     async function settle(predicate,frames=12){for(let i=0;i<frames;i++){try{if(predicate())return true}catch{}await nextFrame()}return false}
     function progressLevel(p,side,depth){try{return ensureLevelProgress(p,side,depth)}catch{return null}}
@@ -31,12 +28,6 @@ try{
       const stored=localStorage.getItem(FOCUS_KEY);if(stored==='white'||stored==='black')return stored;
       try{return Number(openingProgress(p,'black')?.capped||0)>Number(openingProgress(p,'white')?.capped||0)?'black':'white'}catch{return 'white'}
     }
-    function clickOne(re,within=null){const pool=within?[...within.querySelectorAll('button,[role="button"],a')].filter(visible):safeButtons();const b=pool.find(el=>re.test(txt(el)));if(!b)return false;b.click();return true}
-    function variationContainer(index){
-      const re=new RegExp(`Variation\\s*${index+1}(?:\\D|$)`,'i');
-      const nodes=[...document.querySelectorAll('#app article,#app section,#app .variation-card,#app div')].filter(el=>!el.closest('.cot-activation-hub')&&re.test(txt(el))&&el.querySelector('button,[role="button"],a'));
-      nodes.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length);return nodes[0]||null;
-    }
     function markFlow(){
       try{
         const screen=String(state?.screen||'');
@@ -52,25 +43,28 @@ try{
       const p=loadProfile?.();if(!p)return false;
       const side=focusedSide(p,explicitSide),a=nextAction(p,side);localStorage.setItem(FOCUS_KEY,side);
       nextActionFlowActive=true;
-      // Root fix: enter the destination course from state directly. Do not text-click
-      // White/Black/Depth controls and do not poll/retry clicks across the whole DOM.
       try{
-        state.side=side;state.sessionLength=a.depth;state.level=a.depth;state.variationIndex=a.variation;state.screen='course';state.complete=false;
-        markFlow();document.querySelector('.cot-activation-hub')?.remove();render();
-      }catch(err){nextActionFlowActive=false;markFlow();console.warn('Direct course navigation failed',err);return false}
-      await settle(()=>state?.screen==='course',8);
-
-      if(a.mode==='rank'){
-        const ok=clickOne(/(?:Start\s+)?Rank Test|Take .*Rank/i);if(!ok){nextActionFlowActive=false;markFlow();return false}
-      }else{
-        const card=variationContainer(a.variation);
-        const modeRe=a.mode==='test'?/(?:Start\s+)?Practice|Test from memory/i:/(?:Start\s+)?Guided|Guided Training|\bLearn\b|\bTrain\b/i;
-        let clicked=card?clickOne(modeRe,card):false;
-        if(!clicked&&card){const first=[...card.querySelectorAll('button,[role="button"],a')].find(visible);if(first){first.click();clicked=true;await nextFrame();if(state?.screen!=='training')clicked=clickOne(modeRe)||clicked}}
-        if(!clicked)clicked=clickOne(modeRe);
-        if(!clicked){nextActionFlowActive=false;markFlow();return false}
+        state.side=side;state.sessionLength=a.depth;state.level=a.depth;state.variationIndex=a.variation;state.complete=false;
+        // Reports #45/#46 root fix: do not navigate by searching button text.
+        // The mode launch functions are the product's actual state transitions, so
+        // call them directly with the already resolved side/depth/variation.
+        markFlow();document.querySelector('.cot-activation-hub')?.remove();
+        if(a.mode==='rank'){
+          if(typeof startRankTest!=='function')throw new Error('startRankTest unavailable');
+          await startRankTest();
+        }else if(a.mode==='test'){
+          if(typeof startPracticeTest!=='function')throw new Error('startPracticeTest unavailable');
+          await startPracticeTest(a.variation);
+        }else{
+          if(typeof startSavedTraining!=='function')throw new Error('startSavedTraining unavailable');
+          await startSavedTraining(a.variation);
+        }
+      }catch(err){
+        nextActionFlowActive=false;markFlow();
+        try{state.screen='course';render()}catch{}
+        console.warn('Direct training launch failed',err);return false;
       }
-      const reached=await settle(()=>state?.screen==='training',20);
+      const reached=await settle(()=>state?.screen==='training'&&!!document.querySelector('#board'),24);
       markFlow();document.querySelector('.cot-activation-hub')?.remove();
       if(!reached){nextActionFlowActive=false;markFlow()}
       return reached;
