@@ -71,8 +71,8 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     // instead of building a backlog several moves long.
     const qualityCache=new Map();
     const rawSearch=qualityEngine.search.bind(qualityEngine);
-    const getPack=async(fen,depth=12,multiPv=3)=>{
-      const safeDepth=Math.min(12,Math.max(8,Number(depth)||12));
+    const getPack=async(fen,depth=20,multiPv=3)=>{
+      const safeDepth=Math.min(20,Math.max(8,Number(depth)||20));
       const count=Math.max(3,Number(multiPv)||1);
       const key=fen;
       if(!qualityCache.has(key)){
@@ -86,19 +86,19 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       return qualityCache.get(key);
     };
 
-    qualityEngine.evaluate=async(fen,depth=12)=>{
+    qualityEngine.evaluate=async(fen,depth=20)=>{
       const pack=await getPack(fen,depth,3);
       const result=pack?.lines?.[0]||null;
       trace('move-quality','evaluate',fen,result);
       return result;
     };
-    qualityEngine.bestMove=async(fen,depth=12)=>{
+    qualityEngine.bestMove=async(fen,depth=20)=>{
       const pack=await getPack(fen,depth,3);
       const result=pack?.bestmove||pack?.lines?.[0]?.uci||null;
       trace('move-quality','bestMove',fen,result);
       return result;
     };
-    qualityEngine.topMoves=async(fen,count=3,depth=12)=>{
+    qualityEngine.topMoves=async(fen,count=3,depth=20)=>{
       const pack=await getPack(fen,depth,Math.max(3,count));
       const result=(pack?.lines||[]).map(x=>x.uci).filter(Boolean).slice(0,count);
       trace('move-quality','topMoves',fen,result);
