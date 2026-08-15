@@ -75,6 +75,12 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
         if(name==='evaluate'&&state?.screen==='training'&&state?.mode!=='guided'){
           trace('evaluation-suppressed',name,fen,null);return null;
         }
+        // Report #54: while Guided is still calculating the next move, the eval bar
+        // must not compete with the coach for CPU. Coach stays full Depth 20; eval
+        // resumes after the move decision is ready.
+        if(name==='evaluate'&&state?.screen==='training'&&state?.mode==='guided'&&state?.engineBusy&&!state?.guideMove){
+          trace('evaluation-deferred-for-coach',name,fen,null);return null;
+        }
         const strongArgs=forceTrainingStrength(name,args);
         const result=await raw(...strongArgs);trace('evaluation-depth-20',name,fen,result);return result;
       };
@@ -122,30 +128,36 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     globalThis.__COT_ENGINE_ROLES__={
       user:'training-side-max-strength-best-move-depth-20',
       opponent:'opponent-side-max-strength-best-move-depth-20',
-      evaluation:'evaluation-bar-depth-20',
+      evaluation:'evaluation-bar-depth-20-coach-priority',
       quality:'move-quality-only-cached-depth-20'
     };
   }catch(err){console.warn('Four-engine architecture could not attach',err)}
 })();
 
-// Product rule: D4/C6 define the repertoire entry point. After that entry point,
-// Guided coaching must never prefer a weaker repertoire candidate over Stockfish's top move.
-// The first opponent reply used to identify a selected training branch remains scenario setup;
-// every engine-generated continuation inside that branch is Top-1 only.
+// Product rule: D4/C6 are the repertoire identity entry move only. Once that one
+// identity move has been made, normal Guided Training must use Stockfish Top-1.
+// Do not let repertoireAnchorForFen() force London/Caro setup moves after entry.
 try{
   if(typeof bestRepertoireMove==='function'){
     bestRepertoireMove=async function maxStrengthBestRepertoireMove(){
       try{
-        const anchor=typeof repertoireAnchorForFen==='function'
-          ? repertoireAnchorForFen(state.chess,state.side)
-          : null;
-        if(anchor){
-          return {from:anchor.slice(0,2),to:anchor.slice(2,4),promotion:anchor[4]||null};
+        const hist=state?.chess?.history?.({verbose:true})||[];
+        if(state?.side==='white'&&hist.length===0){
+          const legal=state.chess.moves({square:'d2',verbose:true}).some(m=>m.to==='d4');
+          if(legal) return {from:'d2',to:'d4',promotion:null};
+        }
+        if(state?.side==='black'){
+          const blackMoves=hist.filter(m=>m.color==='b');
+          if(blackMoves.length===0){
+            const legal=state.chess.moves({square:'c7',verbose:true}).some(m=>m.to==='c6');
+            if(legal) return {from:'c7',to:'c6',promotion:null};
+          }
         }
       }catch{}
       const best=await bestMove();
       return best?{from:best.slice(0,2),to:best.slice(2,4),promotion:best[4]||null}:null;
     };
+    globalThis.__COT_GUIDED_NORMAL_MOVE_POLICY__='D4/C6-entry-only-then-stockfish-top1-depth20';
   }
 }catch(err){console.warn('Max-strength Guided best-move override could not attach',err)}
 
