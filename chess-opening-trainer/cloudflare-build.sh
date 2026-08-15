@@ -228,7 +228,8 @@ for patch_file, marker in [
     ('move-quality-symbol-patch.js','__COT_SYMBOL_ONLY_MOVE_QUALITY__'),
     ('mobile-test-ux-patch.js','__MOBILE_TEST_UX_PATCH__'),
     ('rank-test-p0-patch.js','__RANK_TEST_P0_PATCH__'),
-    ('wood-piece-sound-patch.js','__WOOD_PIECE_SOUND_PATCH__')
+    ('wood-piece-sound-patch.js','__WOOD_PIECE_SOUND_PATCH__'),
+    ('training-lines-patch.js','__COT_INDEPENDENT_TRAINING_LINES__')
 ]:
     patch=Path(patch_file).read_text()
     if marker not in s:
