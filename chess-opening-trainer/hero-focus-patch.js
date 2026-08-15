@@ -160,10 +160,10 @@
   }catch(err){console.warn('Training turn status normalization could not attach',err)}
 })();
 
-// Practice/Rank board stability: do not rebuild the chessboard repeatedly when the
-// underlying position has not changed. Background status/engine updates can call render()
-// many times for the same FEN; those duplicate renders are the visible flash. Explicit
-// side-panel button actions are allowed through even at the same FEN.
+// Practice/Rank board stability: do not rebuild a LIVE chessboard repeatedly when the
+// underlying position has not changed. A bare #board container is not enough: during
+// Practice replay/restart the shell can exist before cm-chessboard mounts. Suppressing
+// that render caused Report #52 (blank board until Hint forced another render).
 (function suppressDuplicateTestRenders(){
   try{
     if(globalThis.__COT_SUPPRESS_DUPLICATE_TEST_RENDERS__) return;
@@ -177,6 +177,7 @@
         return `${state?.screen||''}|${state?.mode||''}|${state?.side||''}|${fen}`;
       }catch{return ''}
     };
+    const hasLiveBoard=()=>!!document.querySelector('#board .cm-chessboard');
     document.addEventListener('click',e=>{
       try{
         const button=e.target?.closest?.('button');
@@ -187,7 +188,7 @@
     render=function(...args){
       const isTest=state?.screen==='training'&&(state?.mode==='test'||state?.mode==='rank');
       const key=keyNow();
-      if(isTest && !forceNext && key && key===lastKey && document.querySelector('#board')){
+      if(isTest && !forceNext && key && key===lastKey && hasLiveBoard()){
         return;
       }
       forceNext=false;
