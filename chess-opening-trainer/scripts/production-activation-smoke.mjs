@@ -48,7 +48,6 @@ async function settleSyntheticAuth(page) {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
   await page.locator('#cloudAuthGate').evaluate(el => el.remove()).catch(() => {});
-  // The regression fix is render-coupled; use the real app render lifecycle, not a DOM mutation trigger.
   await page.evaluate(() => { try { if (typeof render === 'function') render(); } catch {} });
 }
 
@@ -75,7 +74,7 @@ try {
       await settleSyntheticAuth(page);
       await page.locator('#cotOnboarding').waitFor({ state: 'visible', timeout: 5000 });
       const onboardingText = await page.locator('#cotOnboarding').innerText();
-      for (const label of ['London System','Caro-Kann','Learn','Practice','Pass','Rank','Next Level']) {
+      for (const label of ['D4 Player','C6 Player','Learn','Practice','Pass','Rank','Next Level']) {
         assert(onboardingText.includes(label), `${url} ${viewport.name}: onboarding missing ${label}`);
       }
       const go = page.locator('#cotOnboardGo');
@@ -90,7 +89,7 @@ try {
       assert(!(await page.locator('#cotOnboarding').isVisible().catch(() => false)), `${url} ${viewport.name}: onboarding did not close`);
       const hasJourneyDestination = await page.evaluate(() => {
         const body = document.body.innerText || '';
-        return Boolean(document.querySelector('.cot-activation-hub') || document.querySelector('#board') || /Guided Training|Variation|London System/i.test(body));
+        return Boolean(document.querySelector('.cot-activation-hub') || document.querySelector('#board') || /Guided Training|Variation|D4 Player/i.test(body));
       });
       assert(hasJourneyDestination, `${url} ${viewport.name}: onboarding CTA reached no visible training/dashboard destination`);
       const finalOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -102,7 +101,6 @@ try {
       await context.close();
     }
 
-    // Activation V2 regression gate: authenticated profile at a real phone viewport.
     const mobile = { width: 390, height: 844 };
     const context = await browser.newContext({ viewport: mobile });
     const page = await context.newPage();
@@ -145,7 +143,6 @@ try {
       assert(hierarchy.ctaTop < hierarchy.firstBaseStatTop, `${url} mobile profile: base 0/30 or 0/20 stats appear before primary CTA`);
     }
 
-    // Force the exact repeated-render condition that caused V2 to remove/reinsert the hub.
     const stability = await page.evaluate(async () => {
       try { if (typeof render === 'function') { render(); render(); render(); } } catch {}
       await Promise.resolve();
