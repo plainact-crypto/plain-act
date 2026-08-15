@@ -103,6 +103,7 @@ new='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
 if old in s:
     s=s.replace(old,new,1)
 elif 'const rankProgress=rankUnlockProgress(lp);' not in s:
+    # The completed-count replacement above may already have changed the middle line.
     old2='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
   const completed=completedVariationsForLevel(lp);
 
@@ -117,6 +118,7 @@ s=s.replace('lp.rankUnlocked=lp.lessons.every(x=>x.passes>=5);','lp.rankUnlocked
 s=s.replace('${lesson?.passes||0}/5 valid passes','${lesson?.passes||0}/${PRACTICE_PASSES_PER_VARIATION} valid passes')
 s=s.replace('(lesson?.passes||0)>=5?"Back to Level":"Try Again"','variationCompleted(lesson)?"Back to Level":"Try Again"')
 
+# Keep 5/5 as variation completion while recording every later verified success.
 old='''    }else{
       lesson.passes=Math.min(PRACTICE_PASSES_PER_VARIATION,lesson.passes+1);
     }
@@ -219,7 +221,6 @@ if 'function openIssueReportLegacy()' not in s:
 for patch_file, marker in [
     ('issue-report-patch.js','const ISSUE_ENGINE_TRACE=[];'),
     ('triple-engine-patch.js','__COT_TRIPLE_ENGINE_ARCHITECTURE__'),
-    ('guided-single-search-broker.js','__COT_GUIDED_SINGLE_SEARCH_BROKER__'),
     ('cloud-auth-patch.js','const SB_URL='),
     ('auth-confirmation-patch.js','__AUTH_CONFIRMATION_RECOVERY_PATCH__'),
     ('session-navigation-patch.js','__ISSUE_SESSION_RETRY__'),
@@ -277,38 +278,176 @@ try{
       });
     }
     const evalEngine=globalThis.__COT_EVAL_ENGINE_SERVICE__||engineService;
-    const originalEvaluate=evalEngine.evaluate.bind(evalEngine);
-    async function publish(fen){
-      if(!fen||fen===guardedFen||fen===pendingFen)return;
-      pendingFen=fen;
+    const rawEvaluate=evalEngine.evaluate.bind(evalEngine);
+    async function publishCurrentFen(fen){
+      if(!fen || fen===guardedFen || fen===pendingFen) return;
       const seq=++evalSeq;
+      pendingFen=fen;
       try{
-        const result=await originalEvaluate(fen,20);
-        if(seq!==evalSeq||currentBoardFen()!==fen)return;
-        if(!result){guardedFen=fen;return}
-        const turn=String(fen).split(/\s+/)[1]||"w",perspective=turn==="w"?1:-1;
+        const result=await rawEvaluate(fen);
+        const now=currentBoardFen();
+        if(seq!==evalSeq || now!==fen || !result) return;
+        const turn=String(fen).split(/\s+/)[1]||"w";
+        const perspective=turn==="w"?1:-1;
         guarded.evalCp=result.cp==null?0:perspective*Number(result.cp||0);
         guarded.evalMate=result.mate==null?null:perspective*Number(result.mate||0);
         guarded.evalDepth=Number(result.depth||0);
         guarded.evalPv=String(result.pv||"");
         guardedFen=fen;
         try{render()}catch{}
-      }catch(e){console.warn("Current-position evaluation failed",e)}
-      finally{if(pendingFen===fen)pendingFen=""}
+      }catch(err){
+        console.warn("Current-position evaluation failed",err);
+      }finally{
+        if(pendingFen===fen) pendingFen="";
+      }
     }
     setInterval(()=>{
-      try{
-        if(state?.screen!=="training"||state?.mode!=="guided")return;
-        const fen=currentBoardFen();
-        if(fen&&fen!==guardedFen&&fen!==pendingFen)publish(fen)
-      }catch{}
+      const fen=currentBoardFen();
+      if(!fen){guardedFen="";pendingFen="";return;}
+      if(fen!==guardedFen && fen!==pendingFen) publishCurrentFen(fen);
     },350);
   }
-}catch(err){console.warn("Current position eval guard failed",err)}
+}catch(err){console.warn("Current-position evaluation guard could not attach",err)}
 '''
 
 p.write_text(s)
+
+p=Path('src/core/storage.js')
+s=p.read_text()
+s=s.replace('''    passes:Number(lesson.passes||0),
+    attempts:Number(lesson.attempts||0),''','''    passes:Number(lesson.passes||0),
+    validPracticeSuccesses:Math.max(Number(lesson.validPracticeSuccesses||0),Number(lesson.passes||0)),
+    attempts:Number(lesson.attempts||0),''')
+if 'validPracticeSuccesses:Math.max' not in s:
+    raise SystemExit('Could not normalize lifetime verified Practice successes')
+s=s.replace('lp.rankUnlocked=lp.lessons.every(x=>x.passes>=5);','lp.rankUnlocked=lp.lessons.filter(x=>Number(x.passes||0)>=5).length>=5;')
+if 'lp.lessons.filter(x=>Number(x.passes||0)>=5).length>=5;' not in s:
+    raise SystemExit('Could not patch persisted Rank unlock threshold')
+p.write_text(s)
+
+p=Path('src/core/engine.js')
+s=p.read_text().replace('constructor(workerUrl="/stockfish/stockfish-18-lite-single.js"){','constructor(workerUrl=`${import.meta.env.BASE_URL || "/"}stockfish/stockfish-18-lite-single.js`){')
+p.write_text(s)
+
+p=Path('src/core/repertoire.js')
+s=p.read_text()
+pattern=r'''export function repertoireAnchorForFen\(chess,side\)\{.*?\n\}\n\nexport function isRequiredRepertoireMove'''
+replacement='''export function repertoireAnchorForFen(chess,side){
+  try{
+    const fen=chess.fen();
+    const parts=fen.split(" ");
+    const turn=parts[1];
+    const fullmove=Number(parts[5]||1);
+
+    if(side==="white"){
+      if(turn==="w" && fullmove===1) return "d2d4";
+      return null;
+    }
+
+    if(side==="black" && turn==="b"){
+      const history=chess.history({verbose:true})||[];
+      const blackMoves=history.filter(m=>m.color==="b");
+      const whiteMoves=history.filter(m=>m.color==="w");
+      const firstWhite=whiteMoves[0];
+      const whitePlayedE4=whiteMoves.some(m=>m.from==="e2"&&m.to==="e4");
+      const blackPlayedC6=blackMoves.some(m=>m.from==="c7"&&m.to==="c6");
+      const blackPlayedD5=blackMoves.some(m=>m.from==="d7"&&m.to==="d5");
+
+      if(blackMoves.length===0){
+        if(firstWhite?.from==="e2"&&firstWhite?.to==="e4") return "c7c6";
+        return "d7d5";
+      }
+      if(blackMoves.length===1){
+        if(blackPlayedC6 && !blackPlayedD5) return "d7d5";
+        if(blackPlayedD5 && !blackPlayedC6 && !whitePlayedE4) return "c7c6";
+      }
+    }
+  }catch{}
+  return null;
+}
+
+export function isRequiredRepertoireMove'''
+s,count=re.subn(pattern,replacement,s,count=1,flags=re.S)
+if count!=1:
+    raise SystemExit('Could not patch Black opening family lock in repertoire.js')
+p.write_text(s)
 PY
 
+# source.zip is authoritative at build time, so harden the restored Rank math too.
+cat > src/core/rank.js <<'EOF'
+function finiteNumber(value,fallback=0){
+  if(value===null||value===undefined||value==='') return fallback;
+  const n=Number(value);
+  return Number.isFinite(n)?n:fallback;
+}
+
+function boundedAccuracy(value){
+  return Math.max(0,Math.min(100,finiteNumber(value,0)));
+}
+
+export function moveAccuracyFromLoss(lossCp){
+  if(lossCp===null||lossCp===undefined||lossCp==='') return 0;
+  const raw=Number(lossCp);
+  if(!Number.isFinite(raw)) return 0;
+  const loss=Math.max(0,Math.min(600,raw));
+  return 100*Math.exp(-loss/180);
+}
+
+export function avgAccuracy(items){
+  if(!Array.isArray(items)||!items.length) return 0;
+  return items.reduce((a,b)=>a+boundedAccuracy(b?.accuracy),0)/items.length;
+}
+
+export function avgLoss(items){
+  if(!Array.isArray(items)||!items.length) return 0;
+  return items.reduce((sum,x)=>sum+Math.max(0,Math.min(600,finiteNumber(x?.lossCp,600))),0)/items.length;
+}
+
+export function countLossBand(items,min,max=Infinity){
+  if(!Array.isArray(items)||!items.length) return 0;
+  const lo=Math.max(0,finiteNumber(min,0));
+  const hi=max===Infinity?Infinity:Math.max(lo,finiteNumber(max,Infinity));
+  return items.filter(x=>{
+    if(x?.lossCp===null||x?.lossCp===undefined||x?.lossCp==='') return false;
+    const v=Number(x.lossCp);
+    return Number.isFinite(v)&&v>=lo&&v<hi;
+  }).length;
+}
+
+export function rankCeiling(level){
+  return ({5:1100,10:1350,15:1650,20:2000,25:2400,30:2900})[Number(level)]||1100;
+}
+
+export function eloFromRank(savedAcc,freshAcc,level){
+  const safeSaved=boundedAccuracy(savedAcc);
+  const safeFresh=boundedAccuracy(freshAcc);
+  const weighted=safeSaved*.60+safeFresh*.40;
+  const floor=600;
+  const ceiling=rankCeiling(level);
+  const normalized=Math.max(0,Math.min(1,weighted/100));
+  const factor=Math.pow(normalized,2.15);
+  return {elo:Math.round(floor+(ceiling-floor)*factor),weighted};
+}
+
+export function rankPerformanceLabel(accuracy){
+  const safe=boundedAccuracy(accuracy);
+  if(safe>=97) return "Elite";
+  if(safe>=92) return "Excellent";
+  if(safe>=85) return "Strong";
+  if(safe>=75) return "Developing";
+  return "Needs more training";
+}
+
+export function fisherYates(items){
+  const a=Array.isArray(items)?[...items]:[];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+EOF
+
+npm install --no-audit --no-fund
 npm test
 npm run build
