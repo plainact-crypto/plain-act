@@ -75,7 +75,8 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
         if(name==='evaluate'&&state?.screen==='training'&&state?.mode!=='guided'){
           trace('evaluation-suppressed',name,fen,null);return null;
         }
-        const result=await raw(...args);trace('evaluation',name,fen,result);return result;
+        const strongArgs=forceTrainingStrength(name,args);
+        const result=await raw(...strongArgs);trace('evaluation-depth-20',name,fen,result);return result;
       };
     }
 
@@ -119,9 +120,9 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     };
 
     globalThis.__COT_ENGINE_ROLES__={
-      user:'training-side-max-strength-best-move',
-      opponent:'opponent-side-max-strength-best-move',
-      evaluation:'evaluation-bar-only',
+      user:'training-side-max-strength-best-move-depth-20',
+      opponent:'opponent-side-max-strength-best-move-depth-20',
+      evaluation:'evaluation-bar-depth-20',
       quality:'move-quality-only-cached-depth-20'
     };
   }catch(err){console.warn('Four-engine architecture could not attach',err)}
