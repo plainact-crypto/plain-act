@@ -33,14 +33,18 @@ try {
       return promise;
     };
 
-    async function packForFen(fen) {
+    async function packForFen(fen, foreground = false) {
       if (!fen) return null;
       const key = keyFor(fen);
       if (cache.has(key)) return cache.get(key);
-      if (pending.has(key)) return pending.get(key);
+      if (pending.has(key)) {
+        if (foreground) globalThis.__COT_COACH_DECISION_PENDING__ = true;
+        try { return await pending.get(key); }
+        finally { if (foreground) globalThis.__COT_COACH_DECISION_PENDING__ = false; }
+      }
 
       const run = rawSearchForFen(fen);
-      globalThis.__COT_COACH_DECISION_PENDING__ = true;
+      if (foreground) globalThis.__COT_COACH_DECISION_PENDING__ = true;
       const promise = Promise.resolve()
         .then(() => run({ fen, depth: DEPTH, multiPv: 1 }))
         .then((pack) => {
@@ -51,7 +55,7 @@ try {
           return pack || null;
         })
         .finally(() => {
-          globalThis.__COT_COACH_DECISION_PENDING__ = false;
+          if (foreground) globalThis.__COT_COACH_DECISION_PENDING__ = false;
         });
       return remember(key, promise);
     }
@@ -68,19 +72,45 @@ try {
     const line0 = (pack) => pack?.lines?.[0] || null;
     const bestUci = (pack) => pack?.bestmove || line0(pack)?.uci || null;
 
+    function childFenAfter(fen, uci) {
+      try {
+        if (!fen || !uci || !state?.chess?.constructor) return '';
+        let clone;
+        try { clone = new state.chess.constructor(fen); }
+        catch {
+          clone = new state.chess.constructor();
+          if (clone?.load) clone.load(fen);
+        }
+        const move = clone?.move?.({ from: uci.slice(0,2), to: uci.slice(2,4), promotion: uci[4] || 'q' });
+        return move ? clone.fen() : '';
+      } catch { return ''; }
+    }
+
+    function prefetchReply(fen, uci) {
+      try {
+        const childFen = childFenAfter(fen, uci);
+        if (!childFen || cache.has(keyFor(childFen)) || pending.has(keyFor(childFen))) return;
+        // Do exactly one child prefetch. It does not recurse and never blocks input.
+        Promise.resolve().then(() => packForFen(childFen, false)).catch(() => {});
+      } catch {}
+    }
+
     async function brokerBestMove(...args) {
       const fen = fenFromArgs(args);
       if (state?.screen !== 'training' || state?.mode !== 'guided') {
         return this.__cotRawBestMove ? this.__cotRawBestMove(...args) : null;
       }
-      return bestUci(await packForFen(fen));
+      const pack = await packForFen(fen, true);
+      const uci = bestUci(pack);
+      if (uci) prefetchReply(fen, uci);
+      return uci;
     }
     async function brokerEvaluate(...args) {
       const fen = fenFromArgs(args);
       if (state?.screen !== 'training' || state?.mode !== 'guided') {
         return this.__cotRawEvaluate ? this.__cotRawEvaluate(...args) : null;
       }
-      return line0(await packForFen(fen));
+      return line0(await packForFen(fen, false));
     }
     async function brokerTopMoves(...args) {
       const fen = fenFromArgs(args);
@@ -88,7 +118,7 @@ try {
       if (state?.screen !== 'training' || state?.mode !== 'guided') {
         return this.__cotRawTopMoves ? this.__cotRawTopMoves(...args) : [];
       }
-      const pack = await packForFen(fen);
+      const pack = await packForFen(fen, false);
       return (pack?.lines || []).map(x => x?.uci).filter(Boolean).slice(0, count);
     }
 
@@ -111,7 +141,7 @@ try {
     if (evalEngine) {
       evalEngine.__cotRawEvaluate = evalEngine.evaluate?.bind(evalEngine) || null;
       evalEngine.evaluate = async function(fen, depth = DEPTH) {
-        if (state?.screen === 'training' && state?.mode === 'guided') return line0(await packForFen(fen));
+        if (state?.screen === 'training' && state?.mode === 'guided') return line0(await packForFen(fen, false));
         return this.__cotRawEvaluate ? this.__cotRawEvaluate(fen, depth) : null;
       };
     }
@@ -120,16 +150,16 @@ try {
       qualityEngine.__cotRawBestMove = qualityEngine.bestMove?.bind(qualityEngine) || null;
       qualityEngine.__cotRawTopMoves = qualityEngine.topMoves?.bind(qualityEngine) || null;
       qualityEngine.evaluate = async function(fen, depth = DEPTH) {
-        if (state?.screen === 'training' && state?.mode === 'guided') return line0(await packForFen(fen));
+        if (state?.screen === 'training' && state?.mode === 'guided') return line0(await packForFen(fen, false));
         return this.__cotRawEvaluate ? this.__cotRawEvaluate(fen, depth) : null;
       };
       qualityEngine.bestMove = async function(fen, depth = DEPTH) {
-        if (state?.screen === 'training' && state?.mode === 'guided') return bestUci(await packForFen(fen));
+        if (state?.screen === 'training' && state?.mode === 'guided') return bestUci(await packForFen(fen, false));
         return this.__cotRawBestMove ? this.__cotRawBestMove(fen, depth) : null;
       };
       qualityEngine.topMoves = async function(fen, count = 1, depth = DEPTH) {
         if (state?.screen === 'training' && state?.mode === 'guided') {
-          const pack = await packForFen(fen);
+          const pack = await packForFen(fen, false);
           return (pack?.lines || []).map(x => x?.uci).filter(Boolean).slice(0, Math.max(1, Number(count) || 1));
         }
         return this.__cotRawTopMoves ? this.__cotRawTopMoves(fen, count, depth) : [];
@@ -154,14 +184,16 @@ try {
           }
         } catch {}
         const fen = state?.chess?.fen?.() || '';
-        const uci = bestUci(await packForFen(fen));
+        const pack = await packForFen(fen, true);
+        const uci = bestUci(pack);
+        if (uci) prefetchReply(fen, uci);
         return uci ? { from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] || null } : null;
       };
     }
 
     globalThis.__COT_GUIDED_SEARCH_PACK__ = packForFen;
     globalThis.__COT_GUIDED_SEARCH_CACHE__ = cache;
-    globalThis.__COT_GUIDED_ENGINE_POLICY__ = 'one-depth20-multipv1-search-per-fen';
+    globalThis.__COT_GUIDED_ENGINE_POLICY__ = 'one-depth20-multipv1-search-per-fen-plus-one-ply-prefetch';
   }
 } catch (err) {
   console.warn('Guided single-search broker could not attach', err);
