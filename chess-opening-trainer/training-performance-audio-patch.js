@@ -9,14 +9,14 @@ try{
     globalThis.__COT_GUIDED_STATUS_HARD_LOCK__=true;
     globalThis.__MOBILE_BOARD_LAYOUT_GUARD__=true;
 
-    // Report #44 root cause: the legacy current-position guard used a 350ms
-    // interval. In Practice/Rank evaluation is intentionally suppressed, so the
-    // null result never marked the FEN as handled and the interval retried forever.
-    // Own the guard here before the legacy block loads and make it FEN/render driven.
+    // Own current-position evaluation here before the legacy polling guard loads.
+    // IMPORTANT: resolve the dedicated eval engine lazily at call time. This patch is
+    // injected before the four-engine architecture, so capturing engineService here
+    // would accidentally serialize eval-bar searches on the coach worker.
     globalThis.__CURRENT_POSITION_EVAL_GUARD__=true;
     const guardedEval={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
     const neutralEval={evalCp:0,evalMate:null,evalDepth:0,evalPv:""};
-    let guardedEvalFen="",pendingEvalFen="",evalSeq=0;
+    let guardedEvalFen="",pendingEvalFen="",evalSeq=0,evalRetryTimer=null;
     const currentBoardFen=()=>{
       try{
         const g=(state?.game?.fen?state.game:(state?.chess?.fen?state.chess:(typeof game!=="undefined"&&game?.fen?game:null)));
@@ -35,19 +35,40 @@ try{
         });
       }
     }catch{}
-    const evalEngine=(()=>{try{return globalThis.__COT_EVAL_ENGINE_SERVICE__||engineService}catch{return null}})();
-    const rawEvaluate=evalEngine?.evaluate?.bind(evalEngine)||null;
+
+    const dedicatedEvalEngine=()=>{
+      try{return globalThis.__COT_EVAL_ENGINE_SERVICE__||null}catch{return null}
+    };
+    const coachPending=()=>{
+      try{return state?.screen==='training'&&state?.mode==='guided'&&
+        (state?.engineBusy||globalThis.__COT_COACH_DECISION_PENDING__)}catch{return false}
+    };
+    const retryEvalLater=fen=>{
+      if(evalRetryTimer)clearTimeout(evalRetryTimer);
+      evalRetryTimer=setTimeout(()=>{evalRetryTimer=null;publishCurrentFen(fen)},180);
+    };
+
     async function publishCurrentFen(fen){
       if(!fen||fen===guardedEvalFen||fen===pendingEvalFen)return;
-      // Practice and Rank deliberately have no evaluation bar. Mark this exact
-      // position handled without touching the engine, so there is nothing to retry.
+      // Practice and Rank deliberately have no evaluation bar.
       if(state?.screen!=="training"||state?.mode==="test"||state?.mode==="rank"){
         Object.assign(guardedEval,neutralEval);guardedEvalFen=fen;pendingEvalFen="";return;
       }
-      if(!rawEvaluate){guardedEvalFen=fen;return}
+      // Coach decision has absolute priority. Do not even start the eval worker until
+      // the next Top-1 move is ready.
+      if(coachPending()){
+        retryEvalLater(fen);
+        return;
+      }
+      const evalEngine=dedicatedEvalEngine();
+      if(!evalEngine?.evaluate){
+        // Four-engine architecture may still be installing during initial boot.
+        retryEvalLater(fen);
+        return;
+      }
       const seq=++evalSeq;pendingEvalFen=fen;
       try{
-        const result=await rawEvaluate(fen);
+        const result=await evalEngine.evaluate(fen,20);
         if(seq!==evalSeq||currentBoardFen()!==fen)return;
         if(!result){Object.assign(guardedEval,neutralEval);guardedEvalFen=fen;return}
         const turn=String(fen).split(/\s+/)[1]||"w",perspective=turn==="w"?1:-1;
