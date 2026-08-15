@@ -14,6 +14,7 @@ if(!main.includes(marker)){
   if(!patch.includes(marker))throw new Error('Training performance patch marker missing.');
   const at=main.indexOf(legacyMarker);
   if(at<0)throw new Error('Legacy wood/mobile patch anchor missing; refusing unsafe late injection.');
+  // Keep the performance patch before legacy observers so they remain disabled.
   main=`${main.slice(0,at)}\n${patch}\n\n${main.slice(at)}`;
 }
 
