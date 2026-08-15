@@ -12,6 +12,7 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     globalThis.__COT_TRIPLE_ENGINE_ARCHITECTURE__=true;
     if(!engineService || typeof engineService.constructor!=='function') return;
 
+    const TRAINING_DEPTH=20;
     const userEngine=engineService;
     const opponentEngine=new engineService.constructor();
     const evaluationEngine=new engineService.constructor();
@@ -21,6 +22,8 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     globalThis.__COT_OPPONENT_ENGINE_SERVICE__=opponentEngine;
     globalThis.__COT_EVAL_ENGINE_SERVICE__=evaluationEngine;
     globalThis.__COT_MOVE_QUALITY_ENGINE_SERVICE__=qualityEngine;
+    globalThis.__COT_TRAINING_DEPTH__=TRAINING_DEPTH;
+    globalThis.__COT_TRAINING_BEST_MOVE_ONLY__=true;
 
     const sideCode=()=>state?.side==='black'?'b':'w';
     const fenFromArgs=(args)=>{
@@ -36,6 +39,15 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       const turn=String(fen||'').split(/\s+/)[1]||'';
       return turn && turn!==sideCode()?opponentEngine:userEngine;
     };
+    const forceTrainingStrength=(name,args)=>{
+      const next=[...args];
+      if(name==='bestMove') next[1]=TRAINING_DEPTH;
+      else if(name==='topMoves'){
+        next[1]=1;
+        next[2]=TRAINING_DEPTH;
+      }else if(name==='evaluate') next[1]=TRAINING_DEPTH;
+      return next;
+    };
     const trace=(role,name,fen,result)=>{
       try{if(typeof issueTracePush==='function') issueTracePush({type:name,engineRole:role,fen,result})}catch{}
     };
@@ -47,10 +59,11 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       userEngine[name]=async(...args)=>{
         const fen=fenFromArgs(args);
         const selected=engineForFen(fen);
+        const strongArgs=forceTrainingStrength(name,args);
         if(selected===opponentEngine){
-          const result=await opponentCall(...args);trace('opponent',name,fen,result);return result;
+          const result=await opponentCall(...strongArgs);trace('opponent-max-strength',name,fen,result);return result;
         }
-        return userCall(...args);
+        const result=await userCall(...strongArgs);trace('coach-max-strength',name,fen,result);return result;
       };
     }
 
@@ -106,10 +119,31 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
     };
 
     globalThis.__COT_ENGINE_ROLES__={
-      user:'training-side',
-      opponent:'opponent-side',
+      user:'training-side-max-strength-best-move',
+      opponent:'opponent-side-max-strength-best-move',
       evaluation:'evaluation-bar-only',
-      quality:'move-quality-only-cached'
+      quality:'move-quality-only-cached-depth-20'
     };
   }catch(err){console.warn('Four-engine architecture could not attach',err)}
 })();
+
+// Product rule: D4/C6 define the repertoire entry point. After that entry point,
+// Guided coaching must never prefer a weaker repertoire candidate over Stockfish's top move.
+// The first opponent reply used to identify a selected training branch remains scenario setup;
+// every engine-generated continuation inside that branch is Top-1 only.
+try{
+  if(typeof bestRepertoireMove==='function'){
+    bestRepertoireMove=async function maxStrengthBestRepertoireMove(){
+      try{
+        const anchor=typeof repertoireAnchorForFen==='function'
+          ? repertoireAnchorForFen(state.chess,state.side)
+          : null;
+        if(anchor){
+          return {from:anchor.slice(0,2),to:anchor.slice(2,4),promotion:anchor[4]||null};
+        }
+      }catch{}
+      const best=await bestMove();
+      return best?{from:best.slice(0,2),to:best.slice(2,4),promotion:best[4]||null}:null;
+    };
+  }
+}catch(err){console.warn('Max-strength Guided best-move override could not attach',err)}
