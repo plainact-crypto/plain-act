@@ -16,7 +16,7 @@ test('eval and move-quality reuse Guided broker instead of starting new searches
   assert.match(broker,/evalEngine\.evaluate = async function/);
   assert.match(broker,/qualityEngine\.evaluate = async function/);
   assert.match(broker,/qualityEngine\.bestMove = async function/);
-  assert.match(broker,/packForFen\(fen\)/);
+  assert.match(broker,/packForFen\(fen, false\)/);
 });
 
 test('production performance injector appends the broker',()=>{
