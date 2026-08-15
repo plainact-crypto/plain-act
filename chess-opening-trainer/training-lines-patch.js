@@ -33,7 +33,41 @@ try{
     function divergenceRows(lines){const rows=[];const max=Math.max(0,...lines.map(line=>(line.moves||[]).length));for(let ply=1;ply<max;ply++){const choices=new Map();for(const line of lines){const step=line.moves?.[ply];if(!step)continue;const key=`${step.actor}:${step.from}${step.to}${step.promotion||''}`;if(!choices.has(key))choices.set(key,{step,count:0});choices.get(key).count++}if(choices.size>1 || (ply===2&&choices.size)) rows.push({ply,choices:[...choices.values()]})}return rows.slice(0,8)}
 
     saveCompletedGuidedLine=function(){originalSaveCompletedGuidedLine();if(!state.profileEmail||state.mode!=="guided")return;const profile=loadProfile();const lesson=ensureLevelProgress(profile,state.side,state.sessionLength).lessons[state.variationIndex];const lines=normalizeLessonLines(lesson);const selected=Math.max(0,Math.min(Number(lesson.selectedLineIndex||0),Math.max(0,lines.length-1)));if(lines[selected])normalizeLineProgress(lines[selected],lesson,selected);syncBranchSummary(lesson);saveProfile(profile)};
-    startPracticeTest=async function(index){const profile=loadProfile();const lesson=ensureLevelProgress(profile,state.side,state.sessionLength).lessons[index];normalizeLessonLines(lesson);syncBranchSummary(lesson);saveProfile(profile);return originalStartPracticeTest(index)};
+
+    startPracticeTest=async function(index){
+      const replaying=state?.screen==="training"&&state?.mode==="test"&&state?.complete;
+      if(replaying){
+        try{state.board?.destroy?.()}catch{}
+        try{document.querySelector('#cotBoardRebuildMask')?.remove()}catch{}
+        state.board=null;
+        state.complete=false;
+        state.hintVisible=false;
+        state.guideMove=null;
+        // Leave the previous test render key before re-entering Practice. This ensures
+        // the duplicate-render stability guard cannot suppress the fresh board mount.
+        state.screen="course";
+        try{render()}catch{}
+        await Promise.resolve();
+      }
+      const profile=loadProfile();
+      const lesson=ensureLevelProgress(profile,state.side,state.sessionLength).lessons[index];
+      normalizeLessonLines(lesson);syncBranchSummary(lesson);saveProfile(profile);
+      const result=await originalStartPracticeTest(index);
+      // Report #52 safety net: state may reset correctly while the visual board fails
+      // to mount. One fresh render after a frame is safe because the screen key changed.
+      if(replaying){
+        requestAnimationFrame(()=>{
+          try{
+            if(state?.screen!=="training"||state?.mode!=="test")return;
+            const board=document.querySelector('#board');
+            const live=board?.querySelector?.('.cm-chessboard');
+            if(!board||!live){render()}
+          }catch{}
+        });
+      }
+      return result;
+    };
+
     startNewTraining=async function(index,confirmed=false){if(!confirmed && (activeLesson(index)?.lines||[]).length){state.variationIndex=index;state.screen="lineExplorer";render();return}state.exploreStrongUserAlternative=true;return originalStartNewTraining(index)};
     bestRepertoireMove=async function(){if(!state.exploreStrongUserAlternative||state.mode!=="guided")return originalBestRepertoireMove();const lesson=activeLesson();const used=new Set(normalizeLessonLines(lesson).flatMap(line=>(line.moves||[]).filter(step=>step.actor==="user").map(step=>`${step.from}${step.to}${step.promotion||""}`)));const ranked=[];for(const candidate of repertoireCandidates()) ranked.push(await evaluateCandidate(candidate));ranked.sort((a,b)=>b.score-a.score);const best=ranked[0];const alternative=ranked.find(result=>{const move=result.candidate;const uci=`${move.from}${move.to}${move.promotion||""}`;return !used.has(uci)&&best.score-result.score<=35});state.exploreStrongUserAlternative=false;return (alternative||best)?.candidate||originalBestRepertoireMove()};
 
