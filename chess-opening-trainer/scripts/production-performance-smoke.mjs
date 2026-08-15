@@ -60,7 +60,6 @@ try{
     assert(!report.html2canvasRequested,`${url}: mobile Report Issue still starts html2canvas`);
     await page.locator('#cancelIssueReport').click().catch(()=>page.locator('#issueReportModal').evaluate(el=>el.remove()));
 
-    // Real zero-progress Continue action must open a real Depth 10 training board.
     const launchStart=Date.now();
     await page.locator('#cotPrimaryNext').click();
     await page.locator('#board').waitFor({state:'visible',timeout:15000});
@@ -75,27 +74,43 @@ try{
         live:Boolean(root&&board&&rect&&rect.width>240&&rect.height>240),
         depth10:/\b0\s*\/\s*10\b/.test(text),
         depth5:/\b0\s*\/\s*5\b/.test(text)||/\bDepth\s*5\b/i.test(text),
+        d4Player:/\bD4 Player\b/.test(text),
         hasExit:!!document.querySelector('#exit'),
         flow:document.documentElement.dataset.cotFlow||''
       };
     });
     assert(training.live,`${url}: Continue Training did not reach a live mobile chessboard (${JSON.stringify(training)})`);
     assert(training.depth10&&!training.depth5,`${url}: first training session is not Depth 10 (${JSON.stringify(training)})`);
+    assert(training.d4Player,`${url}: White training title is not D4 Player (${JSON.stringify(training)})`);
     assert(training.hasExit,`${url}: training controls missing Exit`);
     assert(training.flow==='training',`${url}: training flow marker not active (${training.flow})`);
 
-    // Back/Exit must return to the Depth 10 course without stale training DOM.
     await page.locator('#exit').click({timeout:3000});
     await page.locator('.variation-grid,.course-head').first().waitFor({state:'visible',timeout:4000});
     const exitState=await page.evaluate(()=>{
       const text=document.body.innerText||'';
-      return {training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head'),depth5:/\bDepth\s*5\b/i.test(text),flow:document.documentElement.dataset.cotFlow||''};
+      const titles=[...document.querySelectorAll('.variation-move')].map(el=>(el.textContent||'').trim());
+      return {
+        training:!!document.querySelector('.training'),
+        course:!!document.querySelector('.variation-grid,.course-head'),
+        depth5:/\bDepth\s*5\b/i.test(text),
+        d4Player:/\bD4 Player\b/.test(text),
+        count:titles.length,
+        unique:new Set(titles).size,
+        hasD5:titles.includes('1.d4 …d5'),
+        hasE5:titles.includes('1.d4 …e5'),
+        titles,
+        flow:document.documentElement.dataset.cotFlow||''
+      };
     });
     assert(!exitState.training&&exitState.course&&!exitState.depth5,`${url}: Exit returned to stale/Depth-5 UI (${JSON.stringify(exitState)})`);
+    assert(exitState.d4Player,`${url}: course title is not D4 Player (${JSON.stringify(exitState)})`);
+    assert(exitState.count===20&&exitState.unique===20,`${url}: D4 Player does not expose 20 distinct opponent first replies (${JSON.stringify(exitState)})`);
+    assert(exitState.hasD5&&exitState.hasE5,`${url}: D4 Player missing required ...d5/...e5 branches (${JSON.stringify(exitState)})`);
 
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
-    console.log(`PASS depth-10-production-mobile ${url} report=${reportMs}ms launch=${launchMs}ms exit=course`);
+    console.log(`PASS d4-player-depth10-production-mobile ${url} replies=${exitState.count} d5=${exitState.hasD5} e5=${exitState.hasE5} report=${reportMs}ms launch=${launchMs}ms`);
     await context.close();
   }
 }finally{await browser.close()}
