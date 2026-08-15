@@ -20,7 +20,7 @@ test("completed lines remain replayable and branch CTA explores a new line",()=>
 });
 
 test("Practice replay cannot suppress render when only an empty board container exists",()=>{
-  assert.match(stabilityPatch,/hasLiveBoard=\(\)=>!!document\.querySelector\('#board \\.cm-chessboard'\)/);
+  assert.match(stabilityPatch,/hasLiveBoard=\(\)=>!!document\.querySelector\('#board \.cm-chessboard'\)/);
   assert.match(stabilityPatch,/key===lastKey && hasLiveBoard\(\)/);
   assert.doesNotMatch(stabilityPatch,/key===lastKey && document\.querySelector\('#board'\)/);
 });
