@@ -52,6 +52,19 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       try{if(typeof issueTracePush==='function') issueTracePush({type:name,engineRole:role,fen,result})}catch{}
     };
 
+    // A position may trigger several renders/callers before the first search resolves.
+    // Reuse one Top-1 Depth-20 search instead of starting duplicate coach searches.
+    const decisionCache=new Map();
+    const cachedDecision=async(key,call)=>{
+      if(!key) return call();
+      if(!decisionCache.has(key)){
+        const p=Promise.resolve().then(call).catch(err=>{decisionCache.delete(key);throw err});
+        decisionCache.set(key,p);
+        if(decisionCache.size>48) decisionCache.delete(decisionCache.keys().next().value);
+      }
+      return decisionCache.get(key);
+    };
+
     for(const name of ['bestMove','topMoves','evaluate']){
       if(typeof userEngine[name]!=='function'||typeof opponentEngine[name]!=='function') continue;
       const userCall=userEngine[name].bind(userEngine);
@@ -60,10 +73,16 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
         const fen=fenFromArgs(args);
         const selected=engineForFen(fen);
         const strongArgs=forceTrainingStrength(name,args);
-        if(selected===opponentEngine){
-          const result=await opponentCall(...strongArgs);trace('opponent-max-strength',name,fen,result);return result;
+        const role=selected===opponentEngine?'opponent-max-strength':'coach-max-strength';
+        const invoke=async()=>{
+          const result=selected===opponentEngine?await opponentCall(...strongArgs):await userCall(...strongArgs);
+          trace(role,name,fen,result);
+          return result;
+        };
+        if(name==='bestMove'&&state?.screen==='training'&&state?.mode==='guided'){
+          return cachedDecision(`${role}|${fen}|${TRAINING_DEPTH}`,invoke);
         }
-        const result=await userCall(...strongArgs);trace('coach-max-strength',name,fen,result);return result;
+        return invoke();
       };
     }
 
@@ -75,10 +94,10 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
         if(name==='evaluate'&&state?.screen==='training'&&state?.mode!=='guided'){
           trace('evaluation-suppressed',name,fen,null);return null;
         }
-        // Report #54: while Guided is still calculating the next move, the eval bar
-        // must not compete with the coach for CPU. Coach stays full Depth 20; eval
-        // resumes after the move decision is ready.
-        if(name==='evaluate'&&state?.screen==='training'&&state?.mode==='guided'&&state?.engineBusy&&!state?.guideMove){
+        // The coach always wins CPU priority. Never start a decorative evaluation
+        // while a Guided move decision is pending.
+        if(name==='evaluate'&&state?.screen==='training'&&state?.mode==='guided'&&
+          (state?.engineBusy||globalThis.__COT_COACH_DECISION_PENDING__)){
           trace('evaluation-deferred-for-coach',name,fen,null);return null;
         }
         const strongArgs=forceTrainingStrength(name,args);
@@ -86,50 +105,61 @@ globalThis.__COT_GUIDED_POLISH_30__=true;
       };
     }
 
-    // Live move-quality searches are cached by FEN. The old grader asks evaluate/bestMove/topMoves
-    // repeatedly for the same position; this layer makes those calls reuse one Stockfish search
-    // instead of building a backlog several moves long.
+    // Move-quality is useful feedback, but it must never delay the next coaching move.
+    // Wait briefly and then wait for the coach to become idle before doing background work.
     const qualityCache=new Map();
     const rawSearch=qualityEngine.search.bind(qualityEngine);
-    const getPack=async(fen,depth=20,multiPv=3)=>{
+    const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+    const waitForCoach=async()=>{
+      if(state?.screen!=='training'||state?.mode!=='guided') return;
+      await sleep(280);
+      let guard=0;
+      while((state?.engineBusy||globalThis.__COT_COACH_DECISION_PENDING__)&&guard++<100){
+        await sleep(80);
+      }
+    };
+    const getPack=async(fen,depth=20,multiPv=1)=>{
       const safeDepth=Math.min(20,Math.max(8,Number(depth)||20));
-      const count=Math.max(3,Number(multiPv)||1);
-      const key=fen;
+      const count=Math.max(1,Number(multiPv)||1);
+      const key=`${fen}|${safeDepth}|${count}`;
       if(!qualityCache.has(key)){
-        const promise=rawSearch({fen,depth:safeDepth,multiPv:count}).then(result=>{
+        const promise=(async()=>{
+          await waitForCoach();
+          const result=await rawSearch({fen,depth:safeDepth,multiPv:count});
           trace('move-quality-search','search',fen,result);
           return result;
-        });
+        })();
         qualityCache.set(key,promise);
-        if(qualityCache.size>24) qualityCache.delete(qualityCache.keys().next().value);
+        if(qualityCache.size>32) qualityCache.delete(qualityCache.keys().next().value);
       }
       return qualityCache.get(key);
     };
 
     qualityEngine.evaluate=async(fen,depth=20)=>{
-      const pack=await getPack(fen,depth,3);
+      const pack=await getPack(fen,depth,1);
       const result=pack?.lines?.[0]||null;
       trace('move-quality','evaluate',fen,result);
       return result;
     };
     qualityEngine.bestMove=async(fen,depth=20)=>{
-      const pack=await getPack(fen,depth,3);
+      const pack=await getPack(fen,depth,1);
       const result=pack?.bestmove||pack?.lines?.[0]?.uci||null;
       trace('move-quality','bestMove',fen,result);
       return result;
     };
     qualityEngine.topMoves=async(fen,count=3,depth=20)=>{
-      const pack=await getPack(fen,depth,Math.max(3,count));
-      const result=(pack?.lines||[]).map(x=>x.uci).filter(Boolean).slice(0,count);
+      const wanted=Math.max(1,Number(count)||1);
+      const pack=await getPack(fen,depth,wanted);
+      const result=(pack?.lines||[]).map(x=>x.uci).filter(Boolean).slice(0,wanted);
       trace('move-quality','topMoves',fen,result);
       return result;
     };
 
     globalThis.__COT_ENGINE_ROLES__={
-      user:'training-side-max-strength-best-move-depth-20',
-      opponent:'opponent-side-max-strength-best-move-depth-20',
-      evaluation:'evaluation-bar-depth-20-coach-priority',
-      quality:'move-quality-only-cached-depth-20'
+      user:'training-side-max-strength-best-move-depth-20-priority',
+      opponent:'opponent-side-max-strength-best-move-depth-20-priority',
+      evaluation:'evaluation-bar-depth-20-deferred-behind-coach',
+      quality:'move-quality-deferred-cached-single-pv'
     };
   }catch(err){console.warn('Four-engine architecture could not attach',err)}
 })();
@@ -160,6 +190,20 @@ try{
     globalThis.__COT_GUIDED_NORMAL_MOVE_POLICY__='D4/C6-entry-only-then-stockfish-top1-depth20';
   }
 }catch(err){console.warn('Max-strength Guided best-move override could not attach',err)}
+
+// Mark the exact interval in which the user is waiting for the coach decision.
+// Background evaluators inspect this flag and stay idle until the decision is ready.
+try{
+  if(typeof prepareUserTurn==='function'&&!globalThis.__COT_COACH_PRIORITY_WRAPPED__){
+    globalThis.__COT_COACH_PRIORITY_WRAPPED__=true;
+    const originalPrepareUserTurn=prepareUserTurn;
+    prepareUserTurn=async function(...args){
+      globalThis.__COT_COACH_DECISION_PENDING__=true;
+      try{return await originalPrepareUserTurn(...args)}
+      finally{globalThis.__COT_COACH_DECISION_PENDING__=false}
+    };
+  }
+}catch(err){console.warn('Coach decision priority wrapper could not attach',err)}
 
 // Practice Hint product rule:
 // Practice Test keeps hints available for the whole attempt. Any hint makes that attempt
