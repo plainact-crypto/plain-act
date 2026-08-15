@@ -7,6 +7,7 @@ try{
     const originalSaveCompletedGuidedLine=saveCompletedGuidedLine;
     const originalStartNewTraining=startNewTraining;
     const originalStartPracticeTest=startPracticeTest;
+    const originalBestRepertoireMove=bestRepertoireMove;
 
     function activeLesson(index=state.variationIndex){
       const profile=loadProfile();
@@ -88,7 +89,25 @@ try{
       if(!confirmed && (activeLesson(index)?.lines||[]).length){
         state.variationIndex=index; state.screen="lineExplorer"; render(); return;
       }
+      state.exploreStrongUserAlternative=true;
       return originalStartNewTraining(index);
+    };
+
+    bestRepertoireMove=async function(){
+      if(!state.exploreStrongUserAlternative||state.mode!=="guided")return originalBestRepertoireMove();
+      const lesson=activeLesson();
+      const used=new Set(normalizeLessonLines(lesson).flatMap(line=>(line.moves||[]).filter(step=>step.actor==="user").map(step=>`${step.from}${step.to}${step.promotion||""}`)));
+      const ranked=[];
+      for(const candidate of repertoireCandidates()) ranked.push(await evaluateCandidate(candidate));
+      ranked.sort((a,b)=>b.score-a.score);
+      const best=ranked[0];
+      const alternative=ranked.find(result=>{
+        const move=result.candidate;
+        const uci=`${move.from}${move.to}${move.promotion||""}`;
+        return !used.has(uci)&&best.score-result.score<=35;
+      });
+      state.exploreStrongUserAlternative=false;
+      return (alternative||best)?.candidate||originalBestRepertoireMove();
     };
 
     const originalFinishSession=finishSession;
