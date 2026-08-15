@@ -1,6 +1,6 @@
 # Chess Opening Trainer — P0 Roadmap
 
-Updated: 2026-08-14
+Updated: 2026-08-15
 
 ## Current P0 sequence
 
@@ -75,8 +75,8 @@ Updated: 2026-08-14
 
 - [x] **Beta Readiness blocker closed — 2026-08-14**
   - Benchmarked the activation patterns used by Chess.com Lessons/Study Plan and Chessable/MoveTrainer: reduce choice overload, expose one next lesson/action, show a visible learning path, and keep progress/review status persistent.
-  - First-time onboarding is intentionally short: choose the first repertoire (London System / Caro-Kann), see the full path, then start the first Guided Training from one primary CTA.
-  - Product journey is explicit across the activation experience: **Learn → Practice → Pass → Rank → Next Level**.
+  - First-time onboarding is intentionally short: choose the first repertoire (**D4 Player / C6 Player**), see the full path, then start the first Guided Training from one primary CTA.
+  - Product journey is explicit across the activation experience: **Learn → Practice → Pass → Rank → Next Depth**.
   - Dashboard now exposes one **Your next best action / Continue Training** action rather than forcing a new user to infer what to do next.
   - White and Black opening cards expose completed variations, progression/mastery label, next variation/action, current Practice pass requirement/progress, Rank Test unlock/status, and Opening Elo.
   - Empty-state behavior for a brand-new profile points directly to Variation 1 at the first depth instead of showing unexplained zero-state metrics only.
@@ -103,6 +103,26 @@ Updated: 2026-08-14
   - Real Chromium mobile verification at **390×844** passed on both GitHub Pages and Cloudflare Pages.
   - The production gate forces three consecutive app renders, samples the CTA/hub position for 30 animation frames, requires a single activation hub, requires detailed progress to stay collapsed, and requires the CTA to precede visible base `0/30` / `0/20` stats when present.
   - Verified result on both production origins: primary CTA top = **161px**; measured CTA vertical spread after repeated renders = **0.00px**.
+
+## D4 Player / C6 Player repertoire model
+
+- [x] **Depth 5 retired — formal training now starts at Depth 10**
+  - User-facing progression is **10 → 15 → 20 → 25 → 30**.
+  - New-user Continue Training starts a real Depth 10 board.
+  - Legacy Depth 5 data may remain stored for compatibility but is not exposed as a formal training stage.
+  - Engine analysis depth was intentionally **not changed** in this step; engine-depth tuning remains a separate task after product-flow verification.
+
+- [x] **Report #51 — D4 Player first-reply coverage corrected — 2026-08-15**
+  - Product naming is now **D4 Player** for White and **C6 Player** for Black across training and onboarding.
+  - White training still anchors the user on **1.d4**, but the 20 course variations are now defined correctly: **one distinct legal Black first reply after 1.d4 per variation**.
+  - The canonical D4 Player branch set contains all 20 legal replies, including `...d5`, `...Nf6`, `...e6`, `...c5`, `...c6`, `...f5`, `...g6`, `...b6`, `...d6`, `...Nc6`, `...e5`, and the remaining legal pawn/knight replies.
+  - Course cards expose human-readable branch titles such as **1.d4 …d5**, **1.d4 …e5**, and **1.d4 …Nf6** rather than opaque/raw move identifiers.
+  - Root cause: legacy `firstMoves` arrays with 20 entries were treated as complete purely because their length was 20, so old/random first-move sets could survive without representing the actual 20 replies after d4.
+  - Migration now validates the exact canonical reply set. Existing lesson data is remapped by matching move so valid saved progress is preserved; missing branches receive clean progress records.
+  - Production gate requires exactly **20 unique D4 Player first-reply cards** and explicitly requires `1.d4 …d5` and `1.d4 …e5`.
+  - Verified on both GitHub Pages and Cloudflare Pages at mobile viewport: `replies=20`, `d5=true`, `e5=true`; Depth 10 live-board flow also passed.
+  - Final verified implementation commit: `fbd9cb1b9d41b9a17625ceb7645a7bc65e494caa`.
+  - Supabase Report #51 status: **resolved**.
 
 ## Active production regression cluster — Reports #38–#49
 
