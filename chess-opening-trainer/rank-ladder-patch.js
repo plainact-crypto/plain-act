@@ -115,7 +115,7 @@ try {
       const depth=courseDepth();
       const target=Number(state.rankTargetElo||1800);
       const metrics=resultMetrics();
-      const passed=metrics.outcome!=='loss'&&metrics.accuracy>=PASS_ACCURACY&&metrics.blunders===0;
+      const passed=metrics.outcome!=='loss'&&metrics.accuracy>=PASS_ACCURACY&&metrics.mistakes===0&&metrics.blunders===0;
 
       // Restore the real training depth while the existing P0 persistence logic writes
       // Rank history / Opening Elo. The 99-move value is only for the live one-game loop.
