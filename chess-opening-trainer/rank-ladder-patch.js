@@ -139,6 +139,8 @@ try {
     }
 
     function fixRankCopy(){
+      // Report #61: course copy never needs a full DOM scan during a live game.
+      if(state?.screen!=='course')return;
       document.querySelectorAll('p,.sub,small,button').forEach(el=>{
         const raw=String(el.textContent||'').replace(/\s+/g,' ').trim();
         if(/Complete .*variation|Practice passes to unlock|Rank Ladder unlocked|Locked/i.test(raw)&&/rank|variation|practice|locked/i.test(raw)){
@@ -156,13 +158,14 @@ try {
           status.insertAdjacentElement('afterend',badge);
         }
       }
-      queueMicrotask(addRankLadderResult);
+      if(state?.complete)queueMicrotask(addRankLadderResult);
       return out;
     };
 
     render=function(...args){
       const out=baseRenderRankLadder(...args);
-      queueMicrotask(()=>{try{fixRankCopy();addRankLadderResult()}catch{}});
+      if(state?.screen==='course')queueMicrotask(()=>{try{fixRankCopy()}catch{}});
+      if(state?.mode==='rank'&&state?.complete)queueMicrotask(()=>{try{addRankLadderResult()}catch{}});
       return out;
     };
 
@@ -170,6 +173,6 @@ try {
     style.textContent=`.cot-rank-target{margin:8px 0;padding:8px 10px;border:1px solid #354455;border-radius:10px;background:#0d151d;color:#c8ff5a;font-size:12px;font-weight:900}.cot-rank-ladder-result{margin-top:14px;padding:14px;border:1px solid #354455;border-radius:13px;background:#0c141b;color:#dfe8ed}.cot-rank-ladder-result h3{margin:4px 0 8px;color:#fff}.cot-rank-ladder-result p{margin:5px 0;color:#aebbc5}.cot-rank-ladder-kicker{color:#c8ff5a;font-size:10px;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.cot-rank-ladder-next{margin-top:10px;padding-top:9px;border-top:1px solid #293642}`;
     document.head.appendChild(style);
 
-    globalThis.__COT_RANK_LADDER_RULES__={levels:[...RANK_LEVELS],firstRank:1800,gamesPerAttempt:1,unlockRequirement:'none',passAccuracy:PASS_ACCURACY,fullGame:true,maxRank:3000,ladderScope:'global-user-rank'};
+    globalThis.__COT_RANK_LADDER_RULES__={levels:[...RANK_LEVELS],firstRank:1800,gamesPerAttempt:1,unlockRequirement:'none',passAccuracy:PASS_ACCURACY,fullGame:true,maxRank:3000,ladderScope:'global-user-rank',liveRenderCopyScan:false};
   }
 }catch(err){console.warn('Global Rank ladder could not attach',err)}
