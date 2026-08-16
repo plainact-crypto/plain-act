@@ -8,13 +8,14 @@
     "reset-user-progress": "node scripts/reset-user-progress.mjs",
     "inject-performance": "node scripts/inject-training-performance.mjs",
     "inject-activation": "node scripts/inject-activation.mjs",
+    "inject-activation-funnel-fix": "node scripts/inject-activation-funnel-fix.mjs",
     "inject-regression-root-fix": "node scripts/inject-regression-root-fix.mjs",
     "remove-depth-5": "node scripts/remove-depth-5.mjs",
     "migrate-player-repertoire": "node scripts/migrate-player-repertoire.mjs",
     "inject-training-lines": "node scripts/inject-training-lines.mjs",
-    "dev": "npm run copy-assets && npm run reset-user-progress && npm run inject-performance && npm run inject-activation && npm run inject-regression-root-fix && npm run remove-depth-5 && npm run migrate-player-repertoire && npm run inject-training-lines && vite",
-    "build": "npm run copy-assets && npm run reset-user-progress && npm run inject-performance && npm run inject-activation && npm run inject-regression-root-fix && npm run remove-depth-5 && npm run migrate-player-repertoire && npm run inject-training-lines && vite build",
-    "test": "node --test tests/*.test.js && node --check training-lines-patch.js && node --check variation-depth-progression-patch.js && node --check rank-ladder-patch.js && node --check scripts/inject-training-lines.mjs && node --check training-performance-audio-patch.js && node --check scripts/inject-training-performance.mjs && node --check activation-onboarding-v2.js && node --check scripts/inject-activation.mjs && node --check scripts/reset-user-progress.mjs && node --check regression-root-fix.js && node --check scripts/inject-regression-root-fix.mjs && node --check scripts/remove-depth-5.mjs && node --check scripts/migrate-player-repertoire.mjs",
+    "dev": "npm run copy-assets && npm run reset-user-progress && npm run inject-performance && npm run inject-activation && npm run inject-activation-funnel-fix && npm run inject-regression-root-fix && npm run remove-depth-5 && npm run migrate-player-repertoire && npm run inject-training-lines && vite",
+    "build": "npm run copy-assets && npm run reset-user-progress && npm run inject-performance && npm run inject-activation && npm run inject-activation-funnel-fix && npm run inject-regression-root-fix && npm run remove-depth-5 && npm run migrate-player-repertoire && npm run inject-training-lines && vite build",
+    "test": "node --test tests/*.test.js && node --check training-lines-patch.js && node --check variation-depth-progression-patch.js && node --check rank-ladder-patch.js && node --check scripts/inject-training-lines.mjs && node --check training-performance-audio-patch.js && node --check scripts/inject-training-performance.mjs && node --check activation-onboarding-v2.js && node --check activation-funnel-fix.js && node --check scripts/inject-activation.mjs && node --check scripts/inject-activation-funnel-fix.mjs && node --check scripts/reset-user-progress.mjs && node --check regression-root-fix.js && node --check scripts/inject-regression-root-fix.mjs && node --check scripts/remove-depth-5.mjs && node --check scripts/migrate-player-repertoire.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
