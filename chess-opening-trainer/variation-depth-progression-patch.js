@@ -3,6 +3,8 @@
 // variation is 5/5 in the previous depth, and only those same qualified variations
 // are trainable inside the deeper course. Rank unlock requires one COMPLETE line:
 // 10 -> 15 -> 20 -> 25 -> 30 all at 5/5, then a natural game end.
+// A deeper depth MUST replay the exact saved move sequence from the previous depth
+// before adding the next five trainee moves. Changing depth never regenerates the prefix.
 try {
   if (!globalThis.__COT_VARIATION_DEPTH_PROGRESSION__) {
     globalThis.__COT_VARIATION_DEPTH_PROGRESSION__ = true;
@@ -14,6 +16,8 @@ try {
     const originalStartPracticeTest = startPracticeTest;
     const originalFinishSessionDepthProgression = finishSession;
     const originalRenderDepthProgression = render;
+    const originalDepthBestRepertoireMove = bestRepertoireMove;
+    const originalDepthBestMove = bestMove;
 
     function profileNow(){ try { return loadProfile(); } catch { return null; } }
     function lessonFromProfile(profile,side,depth,index){
@@ -25,11 +29,16 @@ try {
       const profile=profileNow(); if(!profile) return [];
       try { return ensureLevelProgress(profile,side,depth)?.lessons || []; } catch { return []; }
     }
+    function selectedLine(lesson){
+      if(!lesson)return null;
+      const lines=Array.isArray(lesson.lines)?lesson.lines:[];
+      if(!lines.length)return null;
+      const selected=Math.max(0,Math.min(Number(lesson.selectedLineIndex||0),lines.length-1));
+      return lines[selected]||null;
+    }
     function selectedLinePasses(lesson){
       if(!lesson) return 0;
-      const lines=Array.isArray(lesson.lines)?lesson.lines:[];
-      const selected=Math.max(0,Math.min(Number(lesson.selectedLineIndex||0),Math.max(0,lines.length-1)));
-      const line=lines[selected];
+      const line=selectedLine(lesson);
       const linePasses=Number(line?.practice?.passes);
       if(Number.isFinite(linePasses)) return Math.max(0,Math.min(PASS_TARGET,linePasses));
       return Math.max(0,Math.min(PASS_TARGET,Number(lesson.passes||0)));
@@ -95,6 +104,57 @@ try {
       return true;
     }
 
+    function stepUci(step){return step?`${step.from||''}${step.to||''}${step.promotion||''}`:''}
+    function moveUci(move){return move?`${move.from||''}${move.to||''}${move.promotion||''}`:''}
+    function legalUci(uci){
+      try{return !!uci&&state.chess.moves({verbose:true}).some(move=>moveUci(move)===uci)}catch{return false}
+    }
+    function inheritedPrefixLine(){
+      const depth=Number(state?.sessionLength||10);
+      if(state?.screen!=='training'||state?.mode!=='guided'||!DEPTHS.includes(depth)||depth===10)return null;
+      const prev=previousDepth(depth);if(!prev)return null;
+      const lesson=lessonAt(state.side,prev,Number(state.variationIndex||0));
+      if(selectedLinePasses(lesson)<PASS_TARGET)return null;
+      const line=selectedLine(lesson);
+      return Array.isArray(line?.moves)&&line.moves.length?line:null;
+    }
+    function inheritedPrefixStep(actor){
+      const line=inheritedPrefixLine();if(!line)return null;
+      const moves=line.moves;
+      let hist=[];
+      try{hist=state.chess.history({verbose:true})||[]}catch{return null}
+      // If anything already diverged, never force a stale continuation into a different position.
+      for(let i=0;i<hist.length&&i<moves.length;i++){
+        if(moveUci(hist[i])!==stepUci(moves[i]))return null;
+      }
+      if(hist.length>=moves.length)return null;
+      const step=moves[hist.length];
+      if(!step||step.actor!==actor)return null;
+      return legalUci(stepUci(step))?step:null;
+    }
+
+    // Trainee guidance at a deeper depth must replay the exact saved trainee move.
+    bestRepertoireMove=async function(...args){
+      const inherited=inheritedPrefixStep('user');
+      if(inherited){
+        const uci=stepUci(inherited);
+        globalThis.__COT_LAST_GUIDED_DECISION__={type:'inherited-line-prefix',uci,fromDepth:previousDepth(state.sessionLength),toDepth:Number(state.sessionLength),fen:state?.chess?.fen?.()||''};
+        return {from:inherited.from,to:inherited.to,promotion:inherited.promotion||null};
+      }
+      return originalDepthBestRepertoireMove(...args);
+    };
+
+    // Opponent replies in that prefix must also be identical to the saved parent line.
+    bestMove=async function(...args){
+      const inherited=inheritedPrefixStep('engine');
+      if(inherited){
+        const uci=stepUci(inherited);
+        globalThis.__COT_LAST_GUIDED_DECISION__={type:'inherited-line-prefix',uci,fromDepth:previousDepth(state.sessionLength),toDepth:Number(state.sessionLength),fen:state?.chess?.fen?.()||''};
+        return uci;
+      }
+      return originalDepthBestMove(...args);
+    };
+
     globalThis.__COT_VARIATION_DEPTH_RULES__={
       depths:[...DEPTHS],
       passTarget:PASS_TARGET,
@@ -102,6 +162,8 @@ try {
       depthUnlock:'any-previous-depth-variation-at-5-of-5',
       unlockScope:'same-variation-only',
       replayPreviousMoves:true,
+      inheritedPrefix:'exact-saved-previous-depth-line',
+      extension:'after-prefix-add-next-five-trainee-moves',
       finalDepth:'30-then-game-end',
       rankUnlock:'same-variation-5of5-at-10-15-20-25-30-plus-natural-game-end'
     };
