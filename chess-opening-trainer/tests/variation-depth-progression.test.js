@@ -13,6 +13,23 @@ test('Depth progression starts at 10 and advances by same variation after five v
   assert.match(patch,/unlockScope:'same-variation-only'/);
 });
 
+test('Only Depth 10 is initially open; deeper course unlocks after any prior-depth variation reaches 5/5',()=>{
+  assert.match(patch,/function depthUnlocked\(side,depth\)/);
+  assert.match(patch,/if\(depth===10\) return true/);
+  assert.match(patch,/lessonsAt\(side,prev\)\.some\(lesson=>selectedLinePasses\(lesson\)>=PASS_TARGET\)/);
+  assert.match(patch,/depthUnlock:'any-previous-depth-variation-at-5-of-5'/);
+  assert.match(patch,/cot-course-depth-locked/);
+  assert.match(patch,/data-cot-depth-locked/);
+  assert.match(patch,/Finish at least one Depth/);
+});
+
+test('Inside an unlocked deeper depth only the same qualified variation is trainable',()=>{
+  assert.match(patch,/function variationUnlocked\(side,depth,index\)/);
+  assert.match(patch,/selectedLinePasses\(lessonAt\(side,prev,index\)\)>=PASS_TARGET/);
+  assert.match(patch,/gateVariationCards/);
+  assert.match(patch,/Pass this same variation at Depth/);
+});
+
 test('Passing a depth offers Continue This Line to the next depth',()=>{
   assert.match(patch,/Continue This Line · Depth \$\{next\}/);
   assert.match(patch,/continueSameVariation\(next\|\|99\)/);
