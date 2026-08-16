@@ -1,43 +1,60 @@
 // One-game Rank ladder for Chess Opening Trainer.
-// Unlocks after one completed variation at the active depth and tests one full game
-// against progressively stronger opponents: 1800 -> 2000 -> 2200 -> 2500 -> 2700 -> 3000.
+// Unlocks only after ONE complete variation line has passed 5/5 at Depths
+// 10,15,20,25,30 and then reached a natural game end.
+// Each Rank attempt is one full game against progressively stronger opponents:
+// 1800 -> 2000 -> 2200 -> 2500 -> 2700 -> 3000.
 try {
   if (!globalThis.__COT_ONE_GAME_RANK_LADDER__) {
     globalThis.__COT_ONE_GAME_RANK_LADDER__ = true;
 
     const RANK_LEVELS = [1800,2000,2200,2500,2700,3000];
+    const TRAINING_DEPTHS = [10,15,20,25,30];
     const PASS_ACCURACY = 85;
     const FULL_GAME_MOVE_CAP = 99;
     const baseStartRankTest = startRankTest;
     const baseFinishRankTest = finishRankTest;
     const baseRenderTraining = renderTraining;
+    const baseRenderRankLadder = render;
     const baseBestMove = bestMove;
 
     const userColor=()=>state?.side==='white'?'w':'b';
     const profileNow=()=>{try{return loadProfile()}catch{return null}};
     const courseDepth=()=>Number(state?.rankCourseDepth||state?.sessionLength||10);
-    const currentLevelProgress=()=>{try{return ensureLevelProgress(profileNow(),state.side,courseDepth())}catch{return null}};
-    const completedAtDepth=()=>{try{return completedVariationsForLevel(currentLevelProgress())}catch{return 0}};
 
-    function ensureLadder(profile,side,depth){
+    function fullLineCount(profile,side){
+      if(!profile)return 0;
+      let count=0;
+      for(const depth of TRAINING_DEPTHS){
+        try{count=Math.max(count,Number(ensureLevelProgress(profile,side,depth)?.rankFullLineCompletedCount||0))}catch{}
+      }
+      return count;
+    }
+
+    function ensureLadder(profile,side){
       profile.rankLadder=profile.rankLadder||{};
-      profile.rankLadder[side]=profile.rankLadder[side]||{};
-      const key=String(depth);
-      const existing=profile.rankLadder[side][key]||{};
+      const old=profile.rankLadder[side];
+      let existing=old&&Number.isFinite(Number(old.bestPassedElo))?old:null;
+      if(!existing&&old&&typeof old==='object'){
+        const legacy=Object.values(old).filter(x=>x&&typeof x==='object');
+        const bestPassedElo=Math.max(0,...legacy.map(x=>Number(x.bestPassedElo||0)));
+        const attempts=legacy.reduce((n,x)=>n+Number(x.attempts||0),0);
+        const passes=legacy.reduce((n,x)=>n+Number(x.passes||0),0);
+        existing={bestPassedElo,attempts,passes,lastResult:legacy.sort((a,b)=>String(b.lastResult?.at||'').localeCompare(String(a.lastResult?.at||'')))[0]?.lastResult||null};
+      }
+      existing=existing||{};
       const best=Number(existing.bestPassedElo||0);
-      const nextIndex=Math.max(0,RANK_LEVELS.findIndex(x=>x>best));
-      const resolvedIndex=nextIndex<0?RANK_LEVELS.length-1:nextIndex;
-      return profile.rankLadder[side][key]={
+      const next=RANK_LEVELS.find(x=>x>best)||RANK_LEVELS.at(-1);
+      return profile.rankLadder[side]={
         bestPassedElo:best,
-        currentElo:Number(existing.currentElo||RANK_LEVELS[resolvedIndex]),
+        currentElo:Number(existing.currentElo||next),
         attempts:Number(existing.attempts||0),
         passes:Number(existing.passes||0),
         lastResult:existing.lastResult||null
       };
     }
 
-    function targetFor(profile,side,depth){
-      const ladder=ensureLadder(profile,side,depth);
+    function targetFor(profile,side){
+      const ladder=ensureLadder(profile,side);
       const best=Number(ladder.bestPassedElo||0);
       return RANK_LEVELS.find(x=>x>best)||RANK_LEVELS.at(-1);
     }
@@ -64,17 +81,15 @@ try {
     startRankTest=async function(...args){
       const depth=Number(state?.sessionLength||10);
       const profile=profileNow();
-      const lp=profile?ensureLevelProgress(profile,state.side,depth):null;
-      const completed=lp?completedVariationsForLevel(lp):0;
-      if(completed<1){
-        state.status='Complete at least one variation at 5/5 Practice before taking this Rank Test.';
+      if(fullLineCount(profile,state.side)<1){
+        state.status='Complete one full variation line first: 5/5 at Depths 10, 15, 20, 25 and 30, then finish the game.';
         state.statusError=false;
         try{render()}catch{}
         return;
       }
 
       state.rankCourseDepth=depth;
-      state.rankTargetElo=targetFor(profile,state.side,depth);
+      state.rankTargetElo=targetFor(profile,state.side);
       state.rankLadderResult=null;
       const out=await baseStartRankTest(...args);
 
@@ -103,11 +118,11 @@ try {
     }
 
     function recommendation(metrics,passed){
-      if(passed)return 'Rank cleared. Continue training more variations, or challenge the next Rank level.';
-      if(metrics.outcome==='loss')return 'You lost the game. Add another variation at this depth or Practice your current line again before retrying this Rank.';
+      if(passed)return 'Rank cleared. Challenge the next Rank level, or keep expanding your repertoire.';
+      if(metrics.outcome==='loss')return 'You lost the game. Complete another full variation line or Practice your current lines more before retrying this Rank.';
       if(metrics.blunders>0)return 'Review your mistakes, Practice the weak line again, then retry this Rank.';
-      if(metrics.mistakes>0)return 'Practice this line again or learn one more variation before retrying the Rank Test.';
-      return 'Your game was close, but the accuracy target was not reached. Train another variation or add more Practice before retrying.';
+      if(metrics.mistakes>0)return 'Practice your current lines again or complete another full variation line before retrying the Rank Test.';
+      return 'Your game was close, but the accuracy target was not reached. Add more Practice or complete another full variation line before retrying.';
     }
 
     finishRankTest=function(...args){
@@ -126,7 +141,7 @@ try {
 
       try{
         const profile=profileNow();
-        const ladder=ensureLadder(profile,state.side,depth);
+        const ladder=ensureLadder(profile,state.side);
         ladder.attempts++;
         if(passed){
           ladder.passes++;
@@ -153,6 +168,17 @@ try {
       host.appendChild(box);
     }
 
+    function fixRankUnlockCopy(){
+      const profile=profileNow();
+      const unlocked=fullLineCount(profile,state?.side==='black'?'black':'white')>=1;
+      document.querySelectorAll('p,.sub,small').forEach(el=>{
+        const text=String(el.textContent||'').replace(/\s+/g,' ').trim();
+        if(/Complete\s+1\s+different variations? at 5\/5 valid Practice passes to unlock it/i.test(text)){
+          el.textContent=unlocked?'Full variation line completed. Rank Ladder unlocked.':'Complete one full variation line: 5/5 at Depths 10 → 15 → 20 → 25 → 30, then finish the game.';
+        }
+      });
+    }
+
     renderTraining=function(...args){
       const isRank=state?.mode==='rank';
       const savedLength=state?.sessionLength;
@@ -170,10 +196,24 @@ try {
       return out;
     };
 
+    render=function(...args){
+      const out=baseRenderRankLadder(...args);
+      queueMicrotask(()=>{try{fixRankUnlockCopy();addRankLadderResult()}catch{}});
+      return out;
+    };
+
     const style=document.createElement('style');
     style.textContent=`.cot-rank-target{margin:8px 0;padding:8px 10px;border:1px solid #354455;border-radius:10px;background:#0d151d;color:#c8ff5a;font-size:12px;font-weight:900}.cot-rank-ladder-result{margin-top:14px;padding:14px;border:1px solid #354455;border-radius:13px;background:#0c141b;color:#dfe8ed}.cot-rank-ladder-result h3{margin:4px 0 8px;color:#fff}.cot-rank-ladder-result p{margin:5px 0;color:#aebbc5}.cot-rank-ladder-kicker{color:#c8ff5a;font-size:10px;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.cot-rank-ladder-next{margin-top:10px;padding-top:9px;border-top:1px solid #293642}`;
     document.head.appendChild(style);
 
-    globalThis.__COT_RANK_LADDER_RULES__={levels:[...RANK_LEVELS],gamesPerAttempt:1,unlockCompletedVariations:1,passAccuracy:PASS_ACCURACY,fullGame:true,maxRank:3000};
+    globalThis.__COT_RANK_LADDER_RULES__={
+      levels:[...RANK_LEVELS],
+      gamesPerAttempt:1,
+      unlockRequirement:'one-full-variation-line-5of5-at-10-15-20-25-30-plus-natural-game-end',
+      passAccuracy:PASS_ACCURACY,
+      fullGame:true,
+      maxRank:3000,
+      ladderScope:'opening-side-global'
+    };
   }
 } catch(err){console.warn('One-game Rank ladder could not attach',err)}
