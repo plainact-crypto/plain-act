@@ -1,83 +1,59 @@
-// One-game Rank ladder for Chess Opening Trainer.
-// Unlocks only after ONE complete variation line has passed 5/5 at Depths
-// 10,15,20,25,30 and then reached a natural game end.
-// Each Rank attempt is one full game against progressively stronger opponents:
+// Global one-game Rank ladder for Chess Opening Trainer.
+// Rank is independent from training progress and opening side.
+// Every player starts at 1800 and advances through:
 // 1800 -> 2000 -> 2200 -> 2500 -> 2700 -> 3000.
 try {
   if (!globalThis.__COT_ONE_GAME_RANK_LADDER__) {
     globalThis.__COT_ONE_GAME_RANK_LADDER__ = true;
 
-    const RANK_LEVELS = [1800,2000,2200,2500,2700,3000];
-    const TRAINING_DEPTHS = [10,15,20,25,30];
-    const PASS_ACCURACY = 85;
-    const FULL_GAME_MOVE_CAP = 99;
-    const baseStartRankTest = startRankTest;
-    const baseFinishRankTest = finishRankTest;
-    const baseRenderTraining = renderTraining;
-    const baseRenderRankLadder = render;
-    const baseBestMove = bestMove;
+    const RANK_LEVELS=[1800,2000,2200,2500,2700,3000];
+    const PASS_ACCURACY=85;
+    const FULL_GAME_MOVE_CAP=99;
+    const baseStartRankTest=startRankTest;
+    const baseFinishRankTest=finishRankTest;
+    const baseRenderTraining=renderTraining;
+    const baseRenderRankLadder=render;
+    const baseBestMove=bestMove;
 
-    const userColor=()=>state?.side==='white'?'w':'b';
+    const userColor=()=>state?.side==='black'?'b':'w';
     const profileNow=()=>{try{return loadProfile()}catch{return null}};
-    const courseDepth=()=>Number(state?.rankCourseDepth||state?.sessionLength||10);
+    const courseDepth=()=>Number(state?.rankCourseDepth||10);
 
-    function fullLineCount(profile,side){
-      if(!profile)return 0;
-      let count=0;
-      for(const depth of TRAINING_DEPTHS){
-        try{count=Math.max(count,Number(ensureLevelProgress(profile,side,depth)?.rankFullLineCompletedCount||0))}catch{}
-      }
-      return count;
-    }
-
-    function ensureLegacyRankGateOpen(profile,side){
-      // The base Rank P0 flow still has a per-depth rankUnlocked gate. Once the
-      // side-global full-line requirement is satisfied, keep that legacy gate in
-      // sync so Start Rank Test can actually enter the one-game ladder.
-      if(!profile||fullLineCount(profile,side)<1)return false;
-      let changed=false;
-      for(const depth of TRAINING_DEPTHS){
-        try{
-          const lp=ensureLevelProgress(profile,side,depth);
-          if(lp && lp.rankUnlocked!==true){lp.rankUnlocked=true;changed=true;}
-        }catch{}
-      }
-      if(changed){try{saveProfile(profile)}catch{}}
-      return true;
-    }
-
-    function ensureLadder(profile,side){
+    function ensureLadder(profile){
+      if(!profile)return {bestPassedElo:0,currentElo:1800,attempts:0,passes:0,lastResult:null};
       profile.rankLadder=profile.rankLadder||{};
-      const old=profile.rankLadder[side];
-      let existing=old&&Number.isFinite(Number(old.bestPassedElo))?old:null;
-      if(!existing&&old&&typeof old==='object'){
-        const legacy=Object.values(old).filter(x=>x&&typeof x==='object');
-        const bestPassedElo=Math.max(0,...legacy.map(x=>Number(x.bestPassedElo||0)));
-        const attempts=legacy.reduce((n,x)=>n+Number(x.attempts||0),0);
-        const passes=legacy.reduce((n,x)=>n+Number(x.passes||0),0);
-        existing={bestPassedElo,attempts,passes,lastResult:legacy.sort((a,b)=>String(b.lastResult?.at||'').localeCompare(String(a.lastResult?.at||'')))[0]?.lastResult||null};
+      let existing=profile.rankLadder.global||null;
+      if(!existing){
+        // One-time migration: preserve the best historical result from either old side ladder.
+        const candidates=['white','black'].map(k=>profile.rankLadder?.[k]).filter(x=>x&&typeof x==='object');
+        const bestPassedElo=Math.max(0,...candidates.map(x=>Number(x.bestPassedElo||0)));
+        const attempts=candidates.reduce((n,x)=>n+Number(x.attempts||0),0);
+        const passes=candidates.reduce((n,x)=>n+Number(x.passes||0),0);
+        const lastResult=candidates.map(x=>x.lastResult).filter(Boolean).sort((a,b)=>String(b?.at||'').localeCompare(String(a?.at||'')))[0]||null;
+        existing={bestPassedElo,attempts,passes,lastResult};
       }
-      existing=existing||{};
       const best=Number(existing.bestPassedElo||0);
       const next=RANK_LEVELS.find(x=>x>best)||RANK_LEVELS.at(-1);
-      return profile.rankLadder[side]={
+      profile.rankLadder.global={
         bestPassedElo:best,
-        currentElo:Number(existing.currentElo||next),
+        currentElo:Number(existing.currentElo||next||1800),
         attempts:Number(existing.attempts||0),
         passes:Number(existing.passes||0),
         lastResult:existing.lastResult||null
       };
+      return profile.rankLadder.global;
     }
 
-    function targetFor(profile,side){
-      const ladder=ensureLadder(profile,side);
+    function targetFor(profile){
+      const ladder=ensureLadder(profile);
       const best=Number(ladder.bestPassedElo||0);
       return RANK_LEVELS.find(x=>x>best)||RANK_LEVELS.at(-1);
     }
 
     function setEngineStrength(enabled,elo){
       try{
-        const worker=engineService?.worker;
+        const actualOpponent=globalThis.__COT_OPPONENT_ENGINE_SERVICE__||engineService;
+        const worker=actualOpponent?.worker;
         if(!worker?.postMessage)return;
         worker.postMessage(`setoption name UCI_LimitStrength value ${enabled?'true':'false'}`);
         if(enabled)worker.postMessage(`setoption name UCI_Elo value ${Math.max(1320,Math.min(3190,Number(elo)||1800))}`);
@@ -85,38 +61,21 @@ try {
       }catch{}
     }
 
-    // Analysis/benchmark searches remain full-strength. Only the opponent move search is Elo-limited.
     bestMove=async function(...args){
       const isRankOpponent=state?.mode==='rank'&&state?.screen==='training'&&!state?.complete&&state?.chess?.turn?.()!==userColor()&&Number(state?.rankTargetElo)>0;
       if(!isRankOpponent)return baseBestMove(...args);
       setEngineStrength(true,state.rankTargetElo);
-      try{return await baseBestMove(...args)}
-      finally{setEngineStrength(false,state.rankTargetElo)}
+      try{return await baseBestMove(...args)}finally{setEngineStrength(false,state.rankTargetElo)}
     };
 
     startRankTest=async function(...args){
-      const depth=Number(state?.sessionLength||10);
       const profile=profileNow();
-      if(fullLineCount(profile,state.side)<1){
-        state.status='Complete one full variation line first: 5/5 at Depths 10, 15, 20, 25 and 30, then finish the game.';
-        state.statusError=false;
-        try{render()}catch{}
-        return;
-      }
-
-      // Side-global full-line completion is the authoritative unlock. Synchronize
-      // the older per-depth gate before delegating to the existing P0 start flow.
-      ensureLegacyRankGateOpen(profile,state.side);
-
-      state.rankCourseDepth=depth;
-      state.rankTargetElo=targetFor(profile,state.side);
+      state.rankCourseDepth=10; // internal legacy compatibility only; not a gameplay target.
+      state.rankTargetElo=targetFor(profile);
       state.rankLadderResult=null;
       const out=await baseStartRankTest(...args);
-
-      // Rank Test is exactly one game. Keep only the first prepared round and let it
-      // continue until game over (99 user moves is only a safety cap for pathological games).
       if(Array.isArray(state.rankRounds)&&state.rankRounds.length>1)state.rankRounds=state.rankRounds.slice(0,1);
-      state.sessionLength=FULL_GAME_MOVE_CAP;
+      if(state?.mode==='rank'&&state?.screen==='training')state.sessionLength=FULL_GAME_MOVE_CAP;
       try{render()}catch{}
       return out;
     };
@@ -138,37 +97,29 @@ try {
     }
 
     function recommendation(metrics,passed){
-      if(passed)return 'Rank cleared. Challenge the next Rank level, or keep expanding your repertoire.';
-      if(metrics.outcome==='loss')return 'You lost the game. Complete another full variation line or Practice your current lines more before retrying this Rank.';
-      if(metrics.blunders>0)return 'Review your mistakes, Practice the weak line again, then retry this Rank.';
-      if(metrics.mistakes>0)return 'Practice your current lines again or complete another full variation line before retrying the Rank Test.';
-      return 'Your game was close, but the accuracy target was not reached. Add more Practice or complete another full variation line before retrying.';
+      if(passed)return 'Rank cleared. Challenge the next Rank level.';
+      if(metrics.outcome==='loss')return 'Review the game report and retry this Rank when ready.';
+      if(metrics.blunders>0)return 'Review the blunders in this game, then retry this Rank.';
+      if(metrics.mistakes>0)return 'Review the mistakes in this game, then retry this Rank.';
+      return 'Review the game report and retry this Rank when ready.';
     }
 
     finishRankTest=function(...args){
       if(state?.mode!=='rank')return baseFinishRankTest(...args);
-      const depth=courseDepth();
       const target=Number(state.rankTargetElo||1800);
       const metrics=resultMetrics();
       const passed=metrics.outcome!=='loss'&&metrics.accuracy>=PASS_ACCURACY&&metrics.mistakes===0&&metrics.blunders===0;
-
-      // Restore the real training depth while the existing P0 persistence logic writes
-      // Rank history / Opening Elo. The 99-move value is only for the live one-game loop.
       const liveLength=state.sessionLength;
-      state.sessionLength=depth;
+      state.sessionLength=courseDepth();
       const out=baseFinishRankTest(...args);
       state.sessionLength=liveLength;
-
       try{
         const profile=profileNow();
-        const ladder=ensureLadder(profile,state.side);
+        const ladder=ensureLadder(profile);
         ladder.attempts++;
-        if(passed){
-          ladder.passes++;
-          ladder.bestPassedElo=Math.max(Number(ladder.bestPassedElo||0),target);
-        }
+        if(passed){ladder.passes++;ladder.bestPassedElo=Math.max(Number(ladder.bestPassedElo||0),target)}
         ladder.currentElo=passed?(RANK_LEVELS.find(x=>x>ladder.bestPassedElo)||RANK_LEVELS.at(-1)):target;
-        ladder.lastResult={at:new Date().toISOString(),targetElo:target,passed,accuracy:metrics.accuracy,outcome:metrics.outcome,mistakes:metrics.mistakes,blunders:metrics.blunders};
+        ladder.lastResult={at:new Date().toISOString(),targetElo:target,passed,accuracy:metrics.accuracy,outcome:metrics.outcome,mistakes:metrics.mistakes,blunders:metrics.blunders,color:state.side==='black'?'black':'white'};
         saveProfile(profile);
         state.rankLadderResult={...ladder.lastResult,nextElo:ladder.currentElo,bestPassedElo:ladder.bestPassedElo,recommendation:recommendation(metrics,passed)};
       }catch(err){console.warn('Rank ladder result could not be saved',err)}
@@ -182,34 +133,26 @@ try {
       const host=document.querySelector('.complete-card,.rank-result,.results-card,main');
       if(!host||host.querySelector('#cotRankLadderResult'))return;
       const box=document.createElement('section');
-      box.id='cotRankLadderResult';
-      box.className='cot-rank-ladder-result';
-      box.innerHTML=`<div class="cot-rank-ladder-kicker">Rank Ladder · ${r.targetElo}</div><h3>${r.passed?'Rank cleared ✓':'More training recommended'}</h3><p>${Math.round(r.accuracy)}% accuracy · ${r.outcome} · ${r.mistakes} mistakes · ${r.blunders} blunders</p><p>${r.recommendation}</p><div class="cot-rank-ladder-next">${r.passed&&r.targetElo<3000?`Next challenge: <b>${r.nextElo}</b>`:r.passed?'Maximum Rank challenge cleared: <b>3000</b>':`Retry target: <b>${r.targetElo}</b>`}</div>`;
+      box.id='cotRankLadderResult';box.className='cot-rank-ladder-result';
+      box.innerHTML=`<div class="cot-rank-ladder-kicker">Rank Ladder · ${r.targetElo}</div><h3>${r.passed?'Rank cleared ✓':'Rank not cleared'}</h3><p>${Math.round(r.accuracy)}% accuracy · ${r.outcome} · ${r.mistakes} mistakes · ${r.blunders} blunders</p><p>${r.recommendation}</p><div class="cot-rank-ladder-next">${r.passed&&r.targetElo<3000?`Next challenge: <b>${r.nextElo}</b>`:r.passed?'Maximum Rank challenge cleared: <b>3000</b>':`Retry target: <b>${r.targetElo}</b>`}</div>`;
       host.appendChild(box);
     }
 
-    function fixRankUnlockCopy(){
-      const profile=profileNow();
-      const unlocked=fullLineCount(profile,state?.side==='black'?'black':'white')>=1;
-      if(unlocked)ensureLegacyRankGateOpen(profile,state?.side==='black'?'black':'white');
-      document.querySelectorAll('p,.sub,small').forEach(el=>{
-        const text=String(el.textContent||'').replace(/\s+/g,' ').trim();
-        if(/Complete\s+1\s+different variations? at 5\/5 valid Practice passes to unlock it/i.test(text)){
-          el.textContent=unlocked?'Full variation line completed. Rank Ladder unlocked.':'Complete one full variation line: 5/5 at Depths 10 → 15 → 20 → 25 → 30, then finish the game.';
+    function fixRankCopy(){
+      document.querySelectorAll('p,.sub,small,button').forEach(el=>{
+        const raw=String(el.textContent||'').replace(/\s+/g,' ').trim();
+        if(/Complete .*variation|Practice passes to unlock|Rank Ladder unlocked|Locked/i.test(raw)&&/rank|variation|practice|locked/i.test(raw)){
+          if(/variation|practice|locked/i.test(raw))el.textContent='Rank Test is available to every player · Starts at 1800.';
         }
       });
     }
 
     renderTraining=function(...args){
-      const isRank=state?.mode==='rank';
-      const savedLength=state?.sessionLength;
-      if(isRank&&state.rankCourseDepth)state.sessionLength=state.rankCourseDepth;
       const out=baseRenderTraining(...args);
-      if(isRank&&savedLength!==undefined)state.sessionLength=savedLength;
-      if(isRank&&!state.complete){
+      if(state?.mode==='rank'&&!state.complete){
         const status=document.querySelector('.status');
         if(status&&!document.querySelector('#cotRankTarget')){
-          const badge=document.createElement('div');badge.id='cotRankTarget';badge.className='cot-rank-target';badge.textContent=`One game · Opponent Rank ${state.rankTargetElo||1800}`;
+          const badge=document.createElement('div');badge.id='cotRankTarget';badge.className='cot-rank-target';badge.textContent=`Full game · Opponent Rank ${state.rankTargetElo||1800}`;
           status.insertAdjacentElement('afterend',badge);
         }
       }
@@ -219,7 +162,7 @@ try {
 
     render=function(...args){
       const out=baseRenderRankLadder(...args);
-      queueMicrotask(()=>{try{fixRankUnlockCopy();addRankLadderResult()}catch{}});
+      queueMicrotask(()=>{try{fixRankCopy();addRankLadderResult()}catch{}});
       return out;
     };
 
@@ -227,14 +170,6 @@ try {
     style.textContent=`.cot-rank-target{margin:8px 0;padding:8px 10px;border:1px solid #354455;border-radius:10px;background:#0d151d;color:#c8ff5a;font-size:12px;font-weight:900}.cot-rank-ladder-result{margin-top:14px;padding:14px;border:1px solid #354455;border-radius:13px;background:#0c141b;color:#dfe8ed}.cot-rank-ladder-result h3{margin:4px 0 8px;color:#fff}.cot-rank-ladder-result p{margin:5px 0;color:#aebbc5}.cot-rank-ladder-kicker{color:#c8ff5a;font-size:10px;font-weight:950;letter-spacing:.13em;text-transform:uppercase}.cot-rank-ladder-next{margin-top:10px;padding-top:9px;border-top:1px solid #293642}`;
     document.head.appendChild(style);
 
-    globalThis.__COT_RANK_LADDER_RULES__={
-      levels:[...RANK_LEVELS],
-      gamesPerAttempt:1,
-      unlockRequirement:'one-full-variation-line-5of5-at-10-15-20-25-30-plus-natural-game-end',
-      passAccuracy:PASS_ACCURACY,
-      fullGame:true,
-      maxRank:3000,
-      ladderScope:'opening-side-global'
-    };
+    globalThis.__COT_RANK_LADDER_RULES__={levels:[...RANK_LEVELS],firstRank:1800,gamesPerAttempt:1,unlockRequirement:'none',passAccuracy:PASS_ACCURACY,fullGame:true,maxRank:3000,ladderScope:'global-user-rank'};
   }
-} catch(err){console.warn('One-game Rank ladder could not attach',err)}
+}catch(err){console.warn('Global Rank ladder could not attach',err)}
