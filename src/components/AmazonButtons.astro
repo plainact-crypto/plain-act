@@ -2,7 +2,30 @@
 const { book } = Astro.props;
 ---
 <div class="button-row" aria-label="Amazon format links">
-  <a class="button" href={book.amazon.kindle}>Kindle</a>
-  <a class="button secondary" href={book.amazon.paperback}>Paperback</a>
-  <a class="button secondary" href={book.amazon.hardcover}>Hardcover</a>
+  <a class="button" href={book.amazon.kindle} data-amazon-format="kindle">Buy Kindle on Amazon</a>
+  <a class="button secondary" href={book.amazon.paperback} data-amazon-format="paperback">Buy Paperback on Amazon</a>
+  <a class="button secondary" href={book.amazon.hardcover} data-amazon-format="hardcover">Buy Hardcover on Amazon</a>
 </div>
+
+<script is:inline>
+  document.querySelectorAll('[data-amazon-format]').forEach((link) => {
+    link.addEventListener('click', () => {
+      const format = link.getAttribute('data-amazon-format') || 'unknown';
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', 'amazon_outbound_click', {
+          book: 'the-first-30-days-as-a-new-manager',
+          format,
+          destination: 'amazon'
+        });
+      }
+      if (Array.isArray(window.dataLayer)) {
+        window.dataLayer.push({
+          event: 'amazon_outbound_click',
+          book: 'the-first-30-days-as-a-new-manager',
+          format,
+          destination: 'amazon'
+        });
+      }
+    });
+  });
+</script>
