@@ -30,6 +30,17 @@ test('Inside an unlocked deeper depth only the same qualified variation is train
   assert.match(patch,/Pass this same variation at Depth/);
 });
 
+test('A deeper depth replays the exact saved parent line before extending it',()=>{
+  assert.match(patch,/inheritedPrefix:'exact-saved-previous-depth-line'/);
+  assert.match(patch,/extension:'after-prefix-add-next-five-trainee-moves'/);
+  assert.match(patch,/function inheritedPrefixLine\(\)/);
+  assert.match(patch,/function inheritedPrefixStep\(actor\)/);
+  assert.match(patch,/const inherited=inheritedPrefixStep\('user'\)/);
+  assert.match(patch,/const inherited=inheritedPrefixStep\('engine'\)/);
+  assert.match(patch,/type:'inherited-line-prefix'/);
+  assert.match(patch,/moveUci\(hist\[i\]\)!==stepUci\(moves\[i\]\)/);
+});
+
 test('Passing a depth offers Continue This Line to the next depth',()=>{
   assert.match(patch,/Continue This Line · Depth \$\{next\}/);
   assert.match(patch,/continueSameVariation\(next\|\|GAME_END_DEPTH\)/);
