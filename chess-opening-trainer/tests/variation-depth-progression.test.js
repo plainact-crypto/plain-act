@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 const patch=await readFile(new URL('../variation-depth-progression-patch.js',import.meta.url),'utf8');
 const injector=await readFile(new URL('../scripts/inject-training-lines.mjs',import.meta.url),'utf8');
+const gameEndFix=await readFile(new URL('../game-end-continuation-fix.js',import.meta.url),'utf8');
 
 test('Depth progression starts at 10 and advances by same variation after five valid passes',()=>{
   assert.match(patch,/const DEPTHS = \[10,15,20,25,30\]/);
@@ -69,6 +70,22 @@ test('Depth 30 continues the same line toward a natural game end',()=>{
   assert.match(patch,/state\?\.chess\?\.isGameOver/);
 });
 
+test('Game-end continuation replays the exact saved Depth 30 line before Top-1 extension',()=>{
+  assert.match(gameEndFix,/const SOURCE_DEPTH = 30/);
+  assert.match(gameEndFix,/game-end-inherited-depth30-prefix/);
+  assert.match(gameEndFix,/variationIndex:Number\(state\.variationIndex\|\|0\)/);
+  assert.match(gameEndFix,/afterPrefix:'stockfish-top1'/);
+  assert.match(gameEndFix,/sameVariation:true/);
+  assert.match(gameEndFix,/exactSavedDepth30Prefix:true/);
+});
+
+test('Internal game-end safety target is hidden from the player UI',()=>{
+  assert.match(gameEndFix,/Level\\s\*99/);
+  assert.match(gameEndFix,/continue to game end/);
+  assert.match(gameEndFix,/userFacingTarget:'natural-game-end'/);
+  assert.match(gameEndFix,/internalSafetyTargetHidden:true/);
+});
+
 test('Rank marker requires 5/5 at every formal depth plus natural game end',()=>{
   assert.match(patch,/function allFormalDepthsPassed\(profile,side,index\)/);
   assert.match(patch,/DEPTHS\.every\(depth=>selectedLinePasses/);
@@ -84,8 +101,9 @@ test('Locked depth is enforced for Guided and Practice entry',()=>{
   assert.match(patch,/Complete this variation at Depth/);
 });
 
-test('Progression patch is injected after strict Guided policy',()=>{
+test('Progression and game-end fix are injected after strict Guided policy',()=>{
   const strict=injector.indexOf('__COT_GUIDED_STRICT_BEST_FINAL__');
   const progression=injector.indexOf('__COT_VARIATION_DEPTH_PROGRESSION__');
-  assert.ok(strict>=0 && progression>strict);
+  const gameEnd=injector.indexOf('__COT_GAME_END_CONTINUATION_FIX__');
+  assert.ok(strict>=0 && progression>strict && gameEnd>progression);
 });
