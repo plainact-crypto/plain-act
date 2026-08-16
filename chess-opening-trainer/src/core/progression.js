@@ -1,6 +1,7 @@
 export const PRACTICE_PASSES_PER_VARIATION=5;
 export const MASTERY_VARIATION_STEP=5;
 export const MASTERY_VARIATION_CAP=30;
+export const RANK_UNLOCK_VARIATIONS=1;
 
 const LEVELS=[10,15,20,25,30];
 const LABELS=["New","Developing","Practiced","Proficient","Advanced","Expert","Mastered"];
@@ -112,8 +113,8 @@ export function rankUnlockProgress(levelProgress){
   const completed=completedVariationsForLevel(levelProgress);
   return {
     completed,
-    required:MASTERY_VARIATION_STEP,
-    unlocked:completed>=MASTERY_VARIATION_STEP
+    required:RANK_UNLOCK_VARIATIONS,
+    unlocked:completed>=RANK_UNLOCK_VARIATIONS
   };
 }
 
