@@ -8,14 +8,21 @@ const injector=await readFile(new URL('../scripts/inject-training-lines.mjs',imp
 test('Depth progression starts at 10 and advances by same variation after five valid passes',()=>{
   assert.match(patch,/const DEPTHS = \[10,15,20,25,30\]/);
   assert.match(patch,/const PASS_TARGET = 5/);
-  assert.match(patch,/if\(depth===10\) return true/);
+  assert.match(patch,/if\(depth===10\)return true/);
   assert.match(patch,/selectedLinePasses\(lessonAt\(side,prev,index\)\)>=PASS_TARGET/);
   assert.match(patch,/unlockScope:'same-variation-only'/);
 });
 
+test('Only Depth 10 creates new variations; deeper depths are continuation-only',()=>{
+  assert.match(patch,/variationCreation:'depth-10-only'/);
+  assert.match(patch,/if\(depth>10&&DEPTHS\.includes\(depth\)\)return originalStartNewTraining\(index,true\)/);
+  assert.match(patch,/Continue Variation \$\{index\+1\}/);
+  assert.match(patch,/cot-hidden-depth-action/);
+  assert.match(patch,/Qualified from Depth \$\{previousDepth\(depth\)\} · continue this line/);
+});
+
 test('Only Depth 10 is initially open; deeper course unlocks after any prior-depth variation reaches 5/5',()=>{
   assert.match(patch,/function depthUnlocked\(side,depth\)/);
-  assert.match(patch,/if\(depth===10\) return true/);
   assert.match(patch,/lessonsAt\(side,prev\)\.some\(lesson=>selectedLinePasses\(lesson\)>=PASS_TARGET\)/);
   assert.match(patch,/depthUnlock:'any-previous-depth-variation-at-5-of-5'/);
   assert.match(patch,/cot-course-depth-locked/);
@@ -27,7 +34,14 @@ test('Inside an unlocked deeper depth only the same qualified variation is train
   assert.match(patch,/function variationUnlocked\(side,depth,index\)/);
   assert.match(patch,/selectedLinePasses\(lessonAt\(side,prev,index\)\)>=PASS_TARGET/);
   assert.match(patch,/gateVariationCards/);
-  assert.match(patch,/Pass this same variation at Depth/);
+  assert.match(patch,/Complete this variation at Depth/);
+});
+
+test('Practice in a deeper depth is unavailable until its Guided continuation is saved',()=>{
+  assert.match(patch,/function currentDepthHasSavedLine\(side,depth,index\)/);
+  assert.match(patch,/!currentDepthHasSavedLine\(state\.side,depth,index\)/);
+  assert.match(patch,/Continue Variation \$\{index\+1\} in Guided Training first/);
+  assert.match(patch,/practiceButton\.classList\.toggle\('cot-hidden-depth-action',!hasCurrentLine\)/);
 });
 
 test('A deeper depth replays the exact saved parent line before extending it',()=>{
@@ -67,7 +81,7 @@ test('Rank marker requires 5/5 at every formal depth plus natural game end',()=>
 test('Locked depth is enforced for Guided and Practice entry',()=>{
   assert.match(patch,/startNewTraining=async function/);
   assert.match(patch,/startPracticeTest=async function/);
-  assert.match(patch,/Pass this same variation at Depth/);
+  assert.match(patch,/Complete this variation at Depth/);
 });
 
 test('Progression patch is injected after strict Guided policy',()=>{
