@@ -13,6 +13,15 @@ These are product progression titles. They are not FIDE titles or over-the-board
 - After passing Depth 30 at 5/5, the same variation can be continued beyond move 30 until the game naturally finishes.
 - Progress in one variation never unlocks a deeper stage for a different variation.
 
+## Rank Test ladder
+
+- Rank Test unlocks at the active depth after **at least one variation reaches 5/5 valid Practice**.
+- One Rank Test attempt is **one game only**, never a bundle of several games or rounds.
+- Opponent strength progresses through **1800 → 2000 → 2200 → 2500 → 2700 → 3000**.
+- Rank opponent strength is separate from the full-strength engine analysis used to score the user's moves.
+- A cleared Rank level advances the next challenge; a failed level remains the retry target.
+- A Rank result recommends a concrete next action when the player loses or makes material mistakes: review mistakes, Practice the weak line again, or add another variation before retrying.
+
 ## Foundation
 
 - One variation-depth stage is **Completed** after 5 valid Practice successes.
