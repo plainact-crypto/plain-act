@@ -20,7 +20,7 @@ const oldLifecycle = `  let scheduled=false,lastMode='';
   new MutationObserver(schedule).observe(document.documentElement,{childList:true,subtree:true});
   track('landing_view',{},true);if(uid()){returned();setTimeout(refresh,250)}`;
 const newLifecycle = `  let scheduled=false,lastMode='';
-  function refresh(){scheduled=false;if(document.querySelector('#cloudAuthGate'))track('landing_view',{},true);if(!uid())return;showOnboarding();renderHub();sessionNext();let mode='';try{mode=\`${'${state?.screen||\'\'}:${state?.mode||\'\'}'}\`}catch{}if(mode!==lastMode){lastMode=mode;milestones()}}
+  function refresh(){scheduled=false;if(document.querySelector('#cloudAuthGate'))track('landing_view',{},true);if(!uid())return;document.querySelector('#cotOnboarding')?.remove();renderHub();sessionNext();let mode='';try{mode=\`${'${state?.screen||\'\'}:${state?.mode||\'\'}'}\`}catch{}if(mode!==lastMode){lastMode=mode;milestones()}}
   function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(refresh)}
   try{if(typeof render==='function'&&!globalThis.__COT_ACTIVATION_RENDER_HOOK__){globalThis.__COT_ACTIVATION_RENDER_HOOK__=true;const baseRender=render;render=function(...args){const out=baseRender.apply(this,args);schedule();return out}}}catch{}
   track('landing_view',{},true);if(uid())returned();`;
@@ -39,4 +39,4 @@ patch = patch.replace(cssAnchor, hierarchyCss);
 
 if (/new MutationObserver\(schedule\)/.test(patch)) throw new Error('Activation V2 global observer regression remains after transform.');
 await appendFile(mainPath, `\n\n${patch}\n`, 'utf8');
-console.log('Activation onboarding V2 injected with mobile stability regression fix.');
+console.log('Activation V2 injected with onboarding skipped and dashboard-first reset flow.');
