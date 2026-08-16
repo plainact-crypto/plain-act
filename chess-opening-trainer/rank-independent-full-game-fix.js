@@ -29,6 +29,8 @@ try {
     const originalUserBestMove=userEngine?.bestMove?.bind(userEngine);
     const originalUserEvaluate=userEngine?.evaluate?.bind(userEngine);
     const analysisCache=new Map();
+    let opponentStrengthKey='';
+    let staticRankUiSession='';
 
     const isLiveRank=()=>state?.mode==='rank'&&state?.screen==='training'&&!state?.complete;
     const userColor=()=>state?.side==='black'?'b':'w';
@@ -64,6 +66,9 @@ try {
         const worker=opponentEngine?.worker;
         if(!worker?.postMessage)return;
         const target=Math.max(1320,Math.min(3190,Number(state?.rankTargetElo)||1800));
+        const nextKey=enabled?`on:${target}`:'off';
+        if(opponentStrengthKey===nextKey)return;
+        opponentStrengthKey=nextKey;
         worker.postMessage(`setoption name UCI_LimitStrength value ${enabled?'true':'false'}`);
         if(enabled)worker.postMessage(`setoption name UCI_Elo value ${target}`);
         worker.postMessage('isready');
@@ -76,8 +81,11 @@ try {
         const fen=fenFromArgs(args);
         const turn=String(fen||'').split(/\s+/)[1]||state?.chess?.turn?.();
         if(turn===userColor())return bestUci(await rankAnalysisPack(fen));
+        // Report #61: configure the dedicated opponent engine once per Rank/Elo,
+        // not before and after every move. Analysis remains on its separate full-
+        // strength Depth-20 service, so this removes latency without lowering quality.
         setActualOpponentStrength(true);
-        try{return await originalUserBestMove(...args)}finally{setActualOpponentStrength(false)}
+        return originalUserBestMove(...args);
       };
       userEngine.evaluate=async function(...args){
         if(!isLiveRank())return originalUserEvaluate(...args);
@@ -99,6 +107,8 @@ try {
       state.rankBeforeScore=null;
       state.sessionLength=LIVE_FULL_GAME_LENGTH;
       analysisCache.clear();
+      opponentStrengthKey='';
+      staticRankUiSession='';
       try{state.board?.setPosition?.(state.chess.fen(),false)}catch{}
       globalThis.__COT_RANK_GAME_START__={fen:state?.chess?.fen?.()||'',expectedFen:initialFen(),rankColor:state?.side||'white',independent:true,naturalGameEndOnly:true};
     }
@@ -111,6 +121,7 @@ try {
 
     function closeColorPicker(){document.querySelector('#cotRankColorPicker')?.remove()}
     function restoreTrainingSide(){
+      setActualOpponentStrength(false);
       if(state?.rankTrainingSideBeforeChoice){state.side=state.rankTrainingSideBeforeChoice}
       state.rankChosenColor=null;
       state.rankTrainingSideBeforeChoice=null;
@@ -133,6 +144,7 @@ try {
           state.sessionLength=LIVE_FULL_GAME_LENGTH;
           state.rankFresh=true;
           state.rankFreshBranchPending=false;
+          setActualOpponentStrength(true);
           try{render()}catch{}
         }
       },{once:true}));
@@ -152,6 +164,7 @@ try {
         state.sessionLength=LIVE_FULL_GAME_LENGTH;
         state.rankFresh=true;
         state.rankFreshBranchPending=false;
+        setActualOpponentStrength(true);
         try{render()}catch{}
       }
       return out;
@@ -189,27 +202,41 @@ try {
       return originalRankScoreContinue(...args);
     };
 
-    function cleanRankLiveUi(){
-      if(!isLiveRank())return;
-      const moveCount=Number(state?.userMovesDone||0);
-      document.querySelectorAll('body *').forEach(el=>{
+    function cleanRankStaticTextOnce(){
+      const session=`${state?.rankTargetElo||1800}|${state?.side||'white'}|${state?.rankRoundIndex||0}`;
+      if(staticRankUiSession===session)return;
+      staticRankUiSession=session;
+      // One bounded scan at session entry only. Never repeat this across moves.
+      document.querySelectorAll('.training-head,.training-meta,.status,.sub,small,[data-session-progress]').forEach(el=>{
         if(el.children?.length)return;
         const raw=String(el.textContent||'').trim();
-        if(/^\d+\s*\/\s*(10|15|20|25|30|99|9007199254740991)$/.test(raw))el.textContent=`${moveCount} moves played · Full game`;
+        if(/^\d+\s*\/\s*(10|15|20|25|30|99|9007199254740991)$/.test(raw))el.textContent=`${Number(state?.userMovesDone||0)} moves played · Full game`;
         if(/Rank round\s+1\/1/i.test(raw))el.textContent=raw.replace(/Rank round\s+1\/1\s*·?/i,'Full game ·');
         if(/^D4 Player$/i.test(raw)||/^C6 Player$/i.test(raw))el.textContent='Rank Test';
       });
+    }
+
+    function cleanRankLiveUi(){
+      if(!isLiveRank())return;
+      cleanRankStaticTextOnce();
+      const moveCount=Number(state?.userMovesDone||0);
+      const progressText=document.querySelector('[data-session-progress],.session-progress,.move-progress');
+      if(progressText&&!progressText.children?.length){
+        const raw=String(progressText.textContent||'').trim();
+        if(/^\d+\s*\/\s*(10|15|20|25|30|99|9007199254740991)$/.test(raw)||/moves played\s*·\s*Full game/i.test(raw))progressText.textContent=`${moveCount} moves played · Full game`;
+      }
       const progress=document.querySelector('progress');
       if(progress){progress.removeAttribute('max');progress.removeAttribute('value')}
       const exit=document.querySelector('#exit');
       if(exit&&!exit.dataset.cotRankRestore){exit.dataset.cotRankRestore='1';exit.addEventListener('click',restoreTrainingSide,{capture:true})}
     }
 
-    renderTraining=function(...args){const out=originalRankRenderTraining(...args);queueMicrotask(cleanRankLiveUi);return out};
+    renderTraining=function(...args){const out=originalRankRenderTraining(...args);if(isLiveRank())queueMicrotask(cleanRankLiveUi);return out};
     render=function(...args){
       const out=originalGlobalRender(...args);
       queueMicrotask(()=>{
         try{
+          if(state?.mode==='rank'&&state?.complete)setActualOpponentStrength(false);
           if(state?.screen==='course'&&state?.mode!=='rank'&&state?.rankTrainingSideBeforeChoice)restoreTrainingSide();
         }catch{}
       });
@@ -234,7 +261,8 @@ try {
       report:'existing-rank-full-report-after-game-over',
       opponentMovesFirstWhenUserIsBlack:true,
       benchmark:{depth:RANK_ANALYSIS_DEPTH,multiPv:1,sharedSearchPerFen:true,fullStrength:true},
-      opponentStrength:'actual-opponent-engine-rank-elo'
+      opponentStrength:'actual-opponent-engine-rank-elo',
+      performance:{fullBodyScanPerMove:false,opponentStrengthConfiguredPerSession:true,analysisDepthReduced:false}
     };
   }
 }catch(err){console.warn('Independent full-game Rank fix could not attach',err)}
