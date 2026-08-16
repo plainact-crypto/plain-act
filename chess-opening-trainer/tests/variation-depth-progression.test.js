@@ -32,14 +32,25 @@ test('Inside an unlocked deeper depth only the same qualified variation is train
 
 test('Passing a depth offers Continue This Line to the next depth',()=>{
   assert.match(patch,/Continue This Line · Depth \$\{next\}/);
-  assert.match(patch,/continueSameVariation\(next\|\|99\)/);
+  assert.match(patch,/continueSameVariation\(next\|\|GAME_END_DEPTH\)/);
   assert.match(patch,/state\.variationIndex/);
   assert.match(patch,/state\.sessionLength=targetDepth/);
 });
 
-test('Depth 30 continues the same line toward game end',()=>{
+test('Depth 30 continues the same line toward a natural game end',()=>{
   assert.match(patch,/finalDepth:'30-then-game-end'/);
   assert.match(patch,/Continue This Line · Play to Game End/);
+  assert.match(patch,/const GAME_END_DEPTH = 99/);
+  assert.match(patch,/state\?\.chess\?\.isGameOver/);
+});
+
+test('Rank marker requires 5/5 at every formal depth plus natural game end',()=>{
+  assert.match(patch,/function allFormalDepthsPassed\(profile,side,index\)/);
+  assert.match(patch,/DEPTHS\.every\(depth=>selectedLinePasses/);
+  assert.match(patch,/markFullLineGameEnd/);
+  assert.match(patch,/naturalGameEnd:true/);
+  assert.match(patch,/rankFullLineCompletedCount/);
+  assert.match(patch,/same-variation-5of5-at-10-15-20-25-30-plus-natural-game-end/);
 });
 
 test('Locked depth is enforced for Guided and Practice entry',()=>{
