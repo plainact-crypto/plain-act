@@ -1,7 +1,6 @@
 export const PRACTICE_PASSES_PER_VARIATION=5;
 export const MASTERY_VARIATION_STEP=5;
 export const MASTERY_VARIATION_CAP=30;
-export const RANK_UNLOCK_VARIATIONS=1;
 
 const LEVELS=[10,15,20,25,30];
 const LABELS=["New","Developing","Practiced","Proficient","Advanced","Expert","Mastered"];
@@ -109,12 +108,15 @@ export function openingProgress(profile,side){
   };
 }
 
+// Rank is not unlocked by one 5/5 stage. The variation-depth progression layer
+// writes rankFullLineCompletedCount only after a single variation has passed
+// 10/15/20/25/30 at 5/5 and then reached a natural game end.
 export function rankUnlockProgress(levelProgress){
-  const completed=completedVariationsForLevel(levelProgress);
+  const completed=Math.max(0,finite(levelProgress?.rankFullLineCompletedCount,0));
   return {
     completed,
-    required:RANK_UNLOCK_VARIATIONS,
-    unlocked:completed>=RANK_UNLOCK_VARIATIONS
+    required:1,
+    unlocked:completed>=1
   };
 }
 
