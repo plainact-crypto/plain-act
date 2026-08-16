@@ -30,6 +30,22 @@ try {
       return count;
     }
 
+    function ensureLegacyRankGateOpen(profile,side){
+      // The base Rank P0 flow still has a per-depth rankUnlocked gate. Once the
+      // side-global full-line requirement is satisfied, keep that legacy gate in
+      // sync so Start Rank Test can actually enter the one-game ladder.
+      if(!profile||fullLineCount(profile,side)<1)return false;
+      let changed=false;
+      for(const depth of TRAINING_DEPTHS){
+        try{
+          const lp=ensureLevelProgress(profile,side,depth);
+          if(lp && lp.rankUnlocked!==true){lp.rankUnlocked=true;changed=true;}
+        }catch{}
+      }
+      if(changed){try{saveProfile(profile)}catch{}}
+      return true;
+    }
+
     function ensureLadder(profile,side){
       profile.rankLadder=profile.rankLadder||{};
       const old=profile.rankLadder[side];
@@ -87,6 +103,10 @@ try {
         try{render()}catch{}
         return;
       }
+
+      // Side-global full-line completion is the authoritative unlock. Synchronize
+      // the older per-depth gate before delegating to the existing P0 start flow.
+      ensureLegacyRankGateOpen(profile,state.side);
 
       state.rankCourseDepth=depth;
       state.rankTargetElo=targetFor(profile,state.side);
@@ -171,6 +191,7 @@ try {
     function fixRankUnlockCopy(){
       const profile=profileNow();
       const unlocked=fullLineCount(profile,state?.side==='black'?'black':'white')>=1;
+      if(unlocked)ensureLegacyRankGateOpen(profile,state?.side==='black'?'black':'white');
       document.querySelectorAll('p,.sub,small').forEach(el=>{
         const text=String(el.textContent||'').replace(/\s+/g,' ').trim();
         if(/Complete\s+1\s+different variations? at 5\/5 valid Practice passes to unlock it/i.test(text)){
