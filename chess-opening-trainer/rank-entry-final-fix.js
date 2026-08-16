@@ -71,7 +71,10 @@ try {
 
     function cleanCourseUi(){
       try{
-        if(state?.screen==='course'&&Number(state?.sessionLength)===INTERNAL_GAME_CAP)state.sessionLength=LEGACY_DEPTH;
+        // Report #61: this cleanup is course-only. A full body scan on every live
+        // Rank render caused input/animation jank even though no course copy changed.
+        if(state?.screen!=='course')return;
+        if(Number(state?.sessionLength)===INTERNAL_GAME_CAP)state.sessionLength=LEGACY_DEPTH;
         document.querySelectorAll('body *').forEach(el=>{
           if(el.children?.length)return;
           const raw=String(el.textContent||'');
@@ -83,8 +86,8 @@ try {
       }catch{}
     }
 
-    render=function(...args){const out=previousRender(...args);queueMicrotask(cleanCourseUi);return out};
-    queueMicrotask(cleanCourseUi);
+    render=function(...args){const out=previousRender(...args);if(state?.screen==='course')queueMicrotask(cleanCourseUi);return out};
+    if(state?.screen==='course')queueMicrotask(cleanCourseUi);
 
     globalThis.__COT_RANK_ENTRY_RULES__={
       authoritativeUnlock:'none-every-player-can-enter',
@@ -92,7 +95,8 @@ try {
       gamesPerRankAttempt:1,
       legacyFiveRoundBootstrap:'temporary-memory-only',
       syntheticProgressPersisted:false,
-      hideInternal99:true
+      hideInternal99:true,
+      liveRenderBodyScan:false
     };
   }
 }catch(err){console.warn('Final Rank entry fix could not attach',err)}
