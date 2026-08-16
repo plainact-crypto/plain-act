@@ -5,6 +5,7 @@ import { readFile } from 'node:fs/promises';
 const patch=await readFile(new URL('../variation-depth-progression-patch.js',import.meta.url),'utf8');
 const injector=await readFile(new URL('../scripts/inject-training-lines.mjs',import.meta.url),'utf8');
 const gameEndFix=await readFile(new URL('../game-end-continuation-fix.js',import.meta.url),'utf8');
+const continuationGuard=await readFile(new URL('../exact-continuation-prefix-guard.js',import.meta.url),'utf8');
 
 test('Depth progression starts at 10 and advances by same variation after five valid passes',()=>{
   assert.match(patch,/const DEPTHS = \[10,15,20,25,30\]/);
@@ -56,6 +57,21 @@ test('A deeper depth replays the exact saved parent line before extending it',()
   assert.match(patch,/moveUci\(hist\[i\]\)!==stepUci\(moves\[i\]\)/);
 });
 
+test('Final continuation guard selects a qualified 5/5 line, not a stale selected line',()=>{
+  assert.match(continuationGuard,/function qualifiedLine\(lesson\)/);
+  assert.match(continuationGuard,/rawLinePasses\(selectedLine\)>=PASS_TARGET/);
+  assert.match(continuationGuard,/lines\.filter\(line=>rawLinePasses\(line\)>=PASS_TARGET\)/);
+  assert.match(continuationGuard,/lesson\?\.passes\|\|0/);
+  assert.match(continuationGuard,/scope:'same-variation-qualified-parent-line'/);
+});
+
+test('Final continuation guard covers both trainee and opponent moves',()=>{
+  assert.match(continuationGuard,/exactPrefixStep\('user'\)/);
+  assert.match(continuationGuard,/exactPrefixStep\('engine'\)/);
+  assert.match(continuationGuard,/wrapEngineService\(globalThis\.__COT_OPPONENT_ENGINE_SERVICE__/);
+  assert.match(continuationGuard,/type:'exact-continuation-prefix'/);
+});
+
 test('Passing a depth offers Continue This Line to the next depth',()=>{
   assert.match(patch,/Continue This Line · Depth \$\{next\}/);
   assert.match(patch,/continueSameVariation\(next\|\|GAME_END_DEPTH\)/);
@@ -77,6 +93,7 @@ test('Game-end continuation replays the exact saved Depth 30 line before Top-1 e
   assert.match(gameEndFix,/afterPrefix:'stockfish-top1'/);
   assert.match(gameEndFix,/sameVariation:true/);
   assert.match(gameEndFix,/exactSavedDepth30Prefix:true/);
+  assert.match(continuationGuard,/if\(depth===GAME_END_DEPTH\)return 30/);
 });
 
 test('Internal game-end safety target is hidden from the player UI',()=>{
@@ -101,9 +118,10 @@ test('Locked depth is enforced for Guided and Practice entry',()=>{
   assert.match(patch,/Complete this variation at Depth/);
 });
 
-test('Progression and game-end fix are injected after strict Guided policy',()=>{
+test('Continuation guard is injected after progression and game-end patches',()=>{
   const strict=injector.indexOf('__COT_GUIDED_STRICT_BEST_FINAL__');
   const progression=injector.indexOf('__COT_VARIATION_DEPTH_PROGRESSION__');
   const gameEnd=injector.indexOf('__COT_GAME_END_CONTINUATION_FIX__');
-  assert.ok(strict>=0 && progression>strict && gameEnd>progression);
+  const guard=injector.indexOf('__COT_EXACT_CONTINUATION_PREFIX_GUARD__');
+  assert.ok(strict>=0 && progression>strict && gameEnd>progression && guard>gameEnd);
 });
