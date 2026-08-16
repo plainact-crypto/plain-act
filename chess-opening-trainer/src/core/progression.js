@@ -2,7 +2,7 @@ export const PRACTICE_PASSES_PER_VARIATION=5;
 export const MASTERY_VARIATION_STEP=5;
 export const MASTERY_VARIATION_CAP=30;
 
-const LEVELS=[5,10,15,20,25,30];
+const LEVELS=[10,15,20,25,30];
 const LABELS=["New","Developing","Practiced","Proficient","Advanced","Expert","Mastered"];
 export const PRESTIGE_TIERS=[
   {key:"opening-cm",title:"Opening CM",practiceSuccesses:180,consistency:80,rankTests:1,rankPerformance:75},
