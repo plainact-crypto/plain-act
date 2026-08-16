@@ -15,12 +15,15 @@ These are product progression titles. They are not FIDE titles or over-the-board
 
 ## Rank Test ladder
 
-- Rank Test unlocks at the active depth after **at least one variation reaches 5/5 valid Practice**.
+- Rank Test stays locked until **one complete variation line** has finished the entire path: **Depth 10 = 5/5 → 15 = 5/5 → 20 = 5/5 → 25 = 5/5 → 30 = 5/5 → natural Game End**.
+- Completing only one Depth stage is not enough to unlock Rank.
+- The full-line requirement is for the **same variation identity** from Depth 10 through Game End.
 - One Rank Test attempt is **one game only**, never a bundle of several games or rounds.
+- The Rank ladder is global per opening side, not duplicated separately for every Depth.
 - Opponent strength progresses through **1800 → 2000 → 2200 → 2500 → 2700 → 3000**.
 - Rank opponent strength is separate from the full-strength engine analysis used to score the user's moves.
 - A cleared Rank level advances the next challenge; a failed level remains the retry target.
-- A Rank result recommends a concrete next action when the player loses or makes material mistakes: review mistakes, Practice the weak line again, or add another variation before retrying.
+- A Rank result recommends a concrete next action when the player loses or makes material mistakes: review mistakes, Practice the weak line again, or complete another full variation line before retrying.
 
 ## Foundation
 
