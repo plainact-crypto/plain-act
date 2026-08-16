@@ -25,7 +25,7 @@ test("a variation requires five valid Practice passes",()=>{
 });
 
 test("progress advances every five distinct completed variations",()=>{
-  const profile={progress:{white:{"5":level(5),"10":level(5),"15":level(5)}}};
+  const profile={progress:{white:{"10":level(5),"15":level(5),"20":level(5)}}};
   const progress=openingProgress(profile,"white");
   assert.equal(progress.capped,15);
   assert.equal(progress.level,3);
@@ -34,7 +34,7 @@ test("progress advances every five distinct completed variations",()=>{
 });
 
 test("opening mastery is capped at thirty completed variations",()=>{
-  const profile={progress:{white:{"5":level(20),"10":level(20)}}};
+  const profile={progress:{white:{"10":level(20),"15":level(20)}}};
   const progress=openingProgress(profile,"white");
   assert.equal(progress.completed,40);
   assert.equal(progress.capped,30);
@@ -55,7 +55,7 @@ function prestigeProfile({successes,attempts,rankTests,rankPerformance}){
     attempts:index===0?attempts-29:1
   }));
   return {
-    progress:{white:{"5":{lessons}}},
+    progress:{white:{"10":{lessons}}},
     rankHistory:Array.from({length:rankTests},()=>({side:"white",weightedAccuracy:rankPerformance}))
   };
 }
