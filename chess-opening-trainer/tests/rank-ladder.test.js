@@ -13,10 +13,17 @@ test('Rank ladder is one game and spans 1800 to 3000',()=>{
   assert.match(patch,/state\.rankRounds=state\.rankRounds\.slice\(0,1\)/);
 });
 
-test('Rank unlock requires one completed 5\/5 variation at current depth',()=>{
-  assert.match(patch,/if\(completed<1\)/);
-  assert.match(patch,/Complete at least one variation at 5\/5 Practice/);
-  assert.match(patch,/unlockCompletedVariations:1/);
+test('Rank unlock requires one complete variation line through every depth and game end',()=>{
+  assert.match(patch,/const TRAINING_DEPTHS = \[10,15,20,25,30\]/);
+  assert.match(patch,/fullLineCount\(profile,state\.side\)<1/);
+  assert.match(patch,/5\/5 at Depths 10, 15, 20, 25 and 30, then finish the game/);
+  assert.match(patch,/one-full-variation-line-5of5-at-10-15-20-25-30-plus-natural-game-end/);
+});
+
+test('Rank ladder progression is global per opening side, not duplicated per depth',()=>{
+  assert.match(patch,/function ensureLadder\(profile,side\)/);
+  assert.match(patch,/profile\.rankLadder\[side\]=\{/);
+  assert.match(patch,/ladderScope:'opening-side-global'/);
 });
 
 test('Opponent strength is separated from full-strength benchmark analysis',()=>{
@@ -27,10 +34,10 @@ test('Opponent strength is separated from full-strength benchmark analysis',()=>
 });
 
 test('Rank result recommends more training after loss or large errors',()=>{
-  assert.match(patch,/You lost the game\. Add another variation/);
+  assert.match(patch,/You lost the game\. Complete another full variation line/);
   assert.match(patch,/Review your mistakes, Practice the weak line again/);
-  assert.match(patch,/Practice this line again or learn one more variation/);
-  assert.match(patch,/Rank cleared\. Continue training more variations/);
+  assert.match(patch,/Practice your current lines again or complete another full variation line/);
+  assert.match(patch,/Rank cleared\. Challenge the next Rank level/);
 });
 
 test('Rank ladder is injected last after depth progression',()=>{
