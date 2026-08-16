@@ -1,22 +1,26 @@
 // Per-variation depth progression for D4 Player / C6 Player.
 // Depth 10 is the only entry course. A deeper course opens only when at least one
 // variation is 5/5 in the previous depth, and only those same qualified variations
-// are trainable inside the deeper course.
+// are trainable inside the deeper course. Rank unlock requires one COMPLETE line:
+// 10 -> 15 -> 20 -> 25 -> 30 all at 5/5, then a natural game end.
 try {
   if (!globalThis.__COT_VARIATION_DEPTH_PROGRESSION__) {
     globalThis.__COT_VARIATION_DEPTH_PROGRESSION__ = true;
 
     const DEPTHS = [10,15,20,25,30];
     const PASS_TARGET = 5;
+    const GAME_END_DEPTH = 99;
     const originalStartNewTraining = startNewTraining;
     const originalStartPracticeTest = startPracticeTest;
+    const originalFinishSessionDepthProgression = finishSession;
     const originalRenderDepthProgression = render;
 
     function profileNow(){ try { return loadProfile(); } catch { return null; } }
-    function lessonAt(side, depth, index){
-      const profile=profileNow(); if(!profile) return null;
-      try { return ensureLevelProgress(profile,side,depth)?.lessons?.[index] || null; } catch { return null; }
+    function lessonFromProfile(profile,side,depth,index){
+      if(!profile)return null;
+      try{return ensureLevelProgress(profile,side,depth)?.lessons?.[index]||null}catch{return null}
     }
+    function lessonAt(side, depth, index){ return lessonFromProfile(profileNow(),side,depth,index); }
     function lessonsAt(side,depth){
       const profile=profileNow(); if(!profile) return [];
       try { return ensureLevelProgress(profile,side,depth)?.lessons || []; } catch { return []; }
@@ -49,6 +53,47 @@ try {
       const lesson=lessonAt(side,depth,index);
       return {passes:selectedLinePasses(lesson),unlocked:variationUnlocked(side,depth,index)};
     }
+    function allFormalDepthsPassed(profile,side,index){
+      return DEPTHS.every(depth=>selectedLinePasses(lessonFromProfile(profile,side,depth,index))>=PASS_TARGET);
+    }
+    function fullLineRecord(profile,side,index){
+      return profile?.fullLineCompletions?.[side]?.[String(index)]||null;
+    }
+    function fullLineCompleted(profile,side,index){
+      return allFormalDepthsPassed(profile,side,index)&&Boolean(fullLineRecord(profile,side,index)?.completed);
+    }
+    function fullLineCompletedCount(profile,side){
+      let count=0;
+      for(let index=0;index<20;index++)if(fullLineCompleted(profile,side,index))count++;
+      return count;
+    }
+    function syncRankMetadata(profile,side){
+      if(!profile)return 0;
+      const count=fullLineCompletedCount(profile,side);
+      for(const depth of DEPTHS){
+        const lp=ensureLevelProgress(profile,side,depth);
+        lp.rankFullLineCompletedCount=count;
+        lp.rankUnlocked=count>=1;
+      }
+      return count;
+    }
+    function markFullLineGameEnd(side,index){
+      const profile=profileNow();
+      if(!profile||!allFormalDepthsPassed(profile,side,index))return false;
+      profile.fullLineCompletions=profile.fullLineCompletions||{};
+      profile.fullLineCompletions[side]=profile.fullLineCompletions[side]||{};
+      profile.fullLineCompletions[side][String(index)]={
+        completed:true,
+        completedAt:new Date().toISOString(),
+        variationIndex:index,
+        requiredDepths:[...DEPTHS],
+        passesPerDepth:PASS_TARGET,
+        naturalGameEnd:true
+      };
+      syncRankMetadata(profile,side);
+      saveProfile(profile);
+      return true;
+    }
 
     globalThis.__COT_VARIATION_DEPTH_RULES__={
       depths:[...DEPTHS],
@@ -57,10 +102,13 @@ try {
       depthUnlock:'any-previous-depth-variation-at-5-of-5',
       unlockScope:'same-variation-only',
       replayPreviousMoves:true,
-      finalDepth:'30-then-game-end'
+      finalDepth:'30-then-game-end',
+      rankUnlock:'same-variation-5of5-at-10-15-20-25-30-plus-natural-game-end'
     };
     globalThis.__COT_DEPTH_UNLOCKED__=depthUnlocked;
     globalThis.__COT_VARIATION_DEPTH_UNLOCKED__=variationUnlocked;
+    globalThis.__COT_FULL_LINE_COMPLETED__=(side,index)=>fullLineCompleted(profileNow(),side,index);
+    globalThis.__COT_FULL_LINE_COMPLETED_COUNT__=(side)=>fullLineCompletedCount(profileNow(),side);
 
     function lockedMessage(depth){
       const prev=previousDepth(depth);
@@ -90,7 +138,11 @@ try {
     async function continueSameVariation(targetDepth){
       const index=Number(state.variationIndex||0);
       const side=state.side;
-      if(targetDepth!==99 && !variationUnlocked(side,targetDepth,index)) return;
+      if(targetDepth!==GAME_END_DEPTH && !variationUnlocked(side,targetDepth,index)) return;
+      if(targetDepth===GAME_END_DEPTH){
+        const profile=profileNow();
+        if(!profile||!allFormalDepthsPassed(profile,side,index))return;
+      }
       state.complete=false;
       state.mode='guided';
       state.screen='course';
@@ -99,6 +151,26 @@ try {
       await Promise.resolve();
       return originalStartNewTraining(index,true);
     }
+
+    // The final continuation only counts when the chess game itself reaches a natural
+    // terminal state. Reaching the 99-move safety cap without game over never unlocks Rank.
+    finishSession=function(...args){
+      const side=state?.side;
+      const index=Number(state?.variationIndex||0);
+      const gameEndContinuation=state?.mode==='guided'&&Number(state?.sessionLength)===GAME_END_DEPTH;
+      let naturalGameEnd=false;
+      if(gameEndContinuation){try{naturalGameEnd=Boolean(state?.chess?.isGameOver?.())}catch{naturalGameEnd=false}}
+      const out=originalFinishSessionDepthProgression(...args);
+      if(gameEndContinuation&&naturalGameEnd){
+        try{
+          if(markFullLineGameEnd(side,index)){
+            state.cotFullLineCompleted=true;
+            state.status='Full variation line complete — Rank Test unlocked.';
+          }
+        }catch(err){console.warn('Full-line completion could not be recorded',err)}
+      }
+      return out;
+    };
 
     function addContinueButton(){
       if(state?.screen!=='training'||state?.mode!=='test'||!state?.complete) return;
@@ -115,7 +187,7 @@ try {
       button.textContent=next?`Continue This Line · Depth ${next}`:'Continue This Line · Play to Game End';
       const menu=card.querySelector('#menu');
       if(menu) card.insertBefore(button,menu); else card.appendChild(button);
-      button.addEventListener('click',()=>continueSameVariation(next||99));
+      button.addEventListener('click',()=>continueSameVariation(next||GAME_END_DEPTH));
     }
 
     function depthFromText(text){
