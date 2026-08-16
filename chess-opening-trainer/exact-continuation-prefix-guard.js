@@ -1,5 +1,6 @@
-// Final continuation guard: a deeper Guided depth must replay the exact saved parent line.
-// This attaches after all engine/training patches and also guards the opponent engine service.
+// Final continuation guard: a deeper Guided depth must replay the exact qualified
+// parent line from the SAME variation. This attaches after all engine/training patches
+// and also guards the opponent engine service.
 try {
   if (!globalThis.__COT_EXACT_CONTINUATION_PREFIX_GUARD__) {
     globalThis.__COT_EXACT_CONTINUATION_PREFIX_GUARD__ = true;
@@ -14,17 +15,24 @@ try {
     function lessonAt(side,depth,index){
       try{return ensureLevelProgress(profileNow(),side,depth)?.lessons?.[index]||null}catch{return null}
     }
-    function selectedLine(lesson){
+    function rawLinePasses(line){
+      const p=Number(line?.practice?.passes);
+      return Number.isFinite(p)?Math.max(0,Math.min(PASS_TARGET,p)):0;
+    }
+    function qualifiedLine(lesson){
       const lines=Array.isArray(lesson?.lines)?lesson.lines:[];
       if(!lines.length)return null;
-      const i=Math.max(0,Math.min(Number(lesson?.selectedLineIndex||0),lines.length-1));
-      return lines[i]||null;
-    }
-    function linePasses(lesson){
-      const line=selectedLine(lesson);
-      const p=Number(line?.practice?.passes);
-      if(Number.isFinite(p))return Math.max(0,Math.min(PASS_TARGET,p));
-      return Math.max(0,Math.min(PASS_TARGET,Number(lesson?.passes||0)));
+      const selected=Math.max(0,Math.min(Number(lesson?.selectedLineIndex||0),lines.length-1));
+      const selectedLine=lines[selected]||null;
+      if(selectedLine&&rawLinePasses(selectedLine)>=PASS_TARGET)return selectedLine;
+      const passed=lines.filter(line=>rawLinePasses(line)>=PASS_TARGET);
+      if(passed.length){
+        passed.sort((a,b)=>String(b?.createdAt||'').localeCompare(String(a?.createdAt||'')));
+        return passed[0];
+      }
+      // Legacy/recovery data can carry the pass total on the lesson itself.
+      if(Number(lesson?.passes||0)>=PASS_TARGET)return selectedLine;
+      return null;
     }
     function parentDepthForSession(){
       const depth=Number(state?.sessionLength||0);
@@ -42,20 +50,16 @@ try {
       const parentDepth=parentDepthForSession();
       if(!parentDepth)return null;
       const index=Number(state?.variationIndex||0);
-      const lesson=lessonAt(state.side,parentDepth,index);
-      if(parentDepth!==30 && linePasses(lesson)<PASS_TARGET)return null;
-      if(parentDepth===30 && Number(state?.sessionLength)!==GAME_END_DEPTH && linePasses(lesson)<PASS_TARGET)return null;
-      const line=selectedLine(lesson);
-      return Array.isArray(line?.moves)&&line.moves.length?line:null;
+      return qualifiedLine(lessonAt(state.side,parentDepth,index));
     }
     function exactPrefixStep(actor){
       const line=parentLine();
-      if(!line)return null;
+      if(!line||!Array.isArray(line.moves)||!line.moves.length)return null;
       let hist=[];
       try{hist=state.chess.history({verbose:true})||[]}catch{return null}
       for(let i=0;i<hist.length&&i<line.moves.length;i++){
         if(moveUci(hist[i])!==stepUci(line.moves[i])){
-          globalThis.__COT_CONTINUATION_PREFIX_MISMATCH__={variationIndex:Number(state?.variationIndex||0),sessionLength:Number(state?.sessionLength||0),ply:i+1,expected:stepUci(line.moves[i]),actual:moveUci(hist[i])};
+          globalThis.__COT_CONTINUATION_PREFIX_MISMATCH__={variationIndex:Number(state?.variationIndex||0),sessionLength:Number(state?.sessionLength||0),fromDepth:parentDepthForSession(),ply:i+1,expected:stepUci(line.moves[i]),actual:moveUci(hist[i])};
           return null;
         }
       }
@@ -98,7 +102,9 @@ try {
     globalThis.__COT_CONTINUATION_PREFIX_POLICY__={
       depths:[15,20,25,30],
       gameEndParentDepth:30,
-      scope:'same-variation-exact-saved-parent-line',
+      scope:'same-variation-qualified-parent-line',
+      qualifiedPasses:PASS_TARGET,
+      exactSavedPrefix:true,
       actors:['user','engine'],
       engineServiceGuard:true
     };
