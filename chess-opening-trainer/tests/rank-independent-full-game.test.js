@@ -28,6 +28,21 @@ test('Black-side Rank player receives the opponent White move first',()=>{
   assert.match(patch,/opponentMovesFirstWhenUserIsBlack:true/);
 });
 
+test('Rank benchmark keeps Depth 20 but shares one analysis search per FEN',()=>{
+  assert.match(patch,/const RANK_ANALYSIS_DEPTH = 20/);
+  assert.match(patch,/rawAnalysisSearch\(\{fen,depth:RANK_ANALYSIS_DEPTH,multiPv:1\}\)/);
+  assert.match(patch,/analysisCache=new Map\(\)/);
+  assert.match(patch,/sharedSearchPerFen:true/);
+  assert.match(patch,/fullStrength:true/);
+});
+
+test('Rank Elo is applied to the actual opponent engine service',()=>{
+  assert.match(patch,/__COT_OPPONENT_ENGINE_SERVICE__/);
+  assert.match(patch,/setoption name UCI_LimitStrength/);
+  assert.match(patch,/setoption name UCI_Elo/);
+  assert.match(patch,/opponentStrength:'actual-opponent-engine-rank-elo'/);
+});
+
 test('final independent Rank contract is injected after the legacy entry bridge',()=>{
   const entry=injector.indexOf('__COT_RANK_ENTRY_FINAL_FIX__');
   const independent=injector.indexOf('__COT_RANK_INDEPENDENT_FULL_GAME__');
