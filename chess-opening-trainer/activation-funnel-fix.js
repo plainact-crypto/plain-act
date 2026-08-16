@@ -14,6 +14,20 @@
     catch { return undefined; }
   };
 
+  function pendingSignup() {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); }
+    catch { return null; }
+  }
+
+  function recordCompletion(identity, props = {}) {
+    const key = String(identity || 'anonymous');
+    const dedupe = `${COMPLETE_KEY}${key}`;
+    if (localStorage.getItem(dedupe)) return;
+    localStorage.setItem(dedupe, new Date().toISOString());
+    track('signup_completed', props, false);
+    localStorage.removeItem(PENDING_KEY);
+  }
+
   function markPending(source) {
     const gate = document.querySelector('#cloudAuthGate');
     const create = gate?.querySelector('#su')?.classList.contains('active');
@@ -24,8 +38,7 @@
   }
 
   function completeIfProven() {
-    let pending = null;
-    try { pending = JSON.parse(localStorage.getItem(PENDING_KEY) || 'null'); } catch {}
+    const pending = pendingSignup();
     if (!pending) return;
 
     const s = session();
@@ -34,17 +47,35 @@
     const confirmedBySession = Boolean(s?.user?.id && s?.access_token);
     if (!confirmedByResponse && !confirmedBySession) return;
 
-    const identity = s?.user?.id || pending.email || 'anonymous';
-    const dedupe = `${COMPLETE_KEY}${identity}`;
-    if (!localStorage.getItem(dedupe)) {
-      localStorage.setItem(dedupe, new Date().toISOString());
-      track('signup_completed', {
-        source: pending.source || 'auth_submit',
-        email_confirmation_required: !confirmedBySession
-      }, false);
-    }
-    localStorage.removeItem(PENDING_KEY);
+    recordCompletion(s?.user?.id || pending.email || 'anonymous', {
+      source: pending.source || 'auth_submit',
+      proof: confirmedBySession ? 'authenticated_session' : 'auth_ui_success',
+      email_confirmation_required: !confirmedBySession
+    });
   }
+
+  // The authoritative signup proof is a successful Supabase Auth signup response.
+  // Observe that response without changing auth behavior or storing credentials/PII in analytics.
+  const nativeFetch = globalThis.fetch.bind(globalThis);
+  globalThis.fetch = async (...args) => {
+    const response = await nativeFetch(...args);
+    try {
+      const url = String(args[0]?.url || args[0] || '');
+      if (response.ok && /\/auth\/v1\/signup(?:\?|$)/.test(url)) {
+        const payload = await response.clone().json().catch(() => null);
+        const pending = pendingSignup();
+        const userId = payload?.user?.id;
+        if (userId || pending) {
+          recordCompletion(userId || pending?.email || 'anonymous', {
+            source: pending?.source || 'auth_signup_response',
+            proof: 'supabase_signup_success',
+            email_confirmation_required: !payload?.access_token
+          });
+        }
+      }
+    } catch {}
+    return response;
+  };
 
   document.addEventListener('click', e => {
     if (e.target?.closest?.('#cloudAuthGate #go')) markPending('auth_submit');
