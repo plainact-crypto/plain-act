@@ -43,9 +43,9 @@ test("opening mastery is capped at thirty completed variations",()=>{
   assert.equal(progress.percent,100);
 });
 
-test("Rank Test unlocks from five different completed variations",()=>{
-  assert.deepEqual(rankUnlockProgress(level(4)),{completed:4,required:5,unlocked:false});
-  assert.deepEqual(rankUnlockProgress(level(5)),{completed:5,required:5,unlocked:true});
+test("Rank Test unlocks from one completed variation",()=>{
+  assert.deepEqual(rankUnlockProgress(level(0)),{completed:0,required:1,unlocked:false});
+  assert.deepEqual(rankUnlockProgress(level(1)),{completed:1,required:1,unlocked:true});
 });
 
 function prestigeProfile({successes,attempts,rankTests,rankPerformance}){
