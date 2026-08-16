@@ -2,16 +2,27 @@
 
 These are product progression titles. They are not FIDE titles or over-the-board chess ratings.
 
+## Training path
+
+- Formal training starts at **Depth 10** for both D4 Player and C6 Player.
+- All 20 variations are available at Depth 10.
+- Depth progression is **per variation**, not global across the opening.
+- A variation unlocks its own next depth only after **5 valid Practice successes** at the current depth.
+- The path for one variation is **10 → 15 → 20 → 25 → 30 → Game End**.
+- Moving to the next depth keeps the same variation identity and repeats the already learned prefix before adding the next five user moves.
+- After passing Depth 30 at 5/5, the same variation can be continued beyond move 30 until the game naturally finishes.
+- Progress in one variation never unlocks a deeper stage for a different variation.
+
 ## Foundation
 
-- One variation is **Completed** after 5 valid Practice successes.
-- Opening progress counts distinct completed variations across the six depth courses.
-- **Mastered** remains fixed at 30 distinct completed variations.
+- One variation-depth stage is **Completed** after 5 valid Practice successes.
+- Opening progress counts distinct completed variation-depth stages across Depths 10/15/20/25/30.
+- **Mastered** remains fixed at 30 distinct completed stages.
 - Raw sessions, Guided Training replays, invalid attempts, hinted attempts, and ordinary move count never advance prestige.
 
 ## Verified performance inputs
 
-- **Distinct completed variations:** variations with at least 5 valid Practice successes, capped at 30 for Mastery.
+- **Distinct completed variations:** variation-depth stages with at least 5 valid Practice successes, capped at 30 for Mastery.
 - **Verified Practice successes:** lifetime valid, unhinted, mistake-free Practice completions. Successes after a variation reaches 5/5 still count here.
 - **Practice consistency:** verified Practice successes divided by all completed Practice attempts. Invalid, hinted, or mistaken attempts remain in the denominator.
 - **Verified Rank Tests:** completed, persisted Rank Test results for the same opening side.
