@@ -18,7 +18,7 @@ const driveStart = source.indexOf('  function driveTo(a){', variationStart);
 const cardStart = source.indexOf('\n\n  function card(', driveStart);
 if (variationStart < 0 || driveStart < 0 || cardStart < 0) throw new Error('Activation navigation functions not found in final source.');
 
-const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4';
+const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v5';
   function clickVariation(i){
     const cards=[...document.querySelectorAll('.variation-card')].filter(visible);
     const card=cards[Number(i||0)];
@@ -39,7 +39,11 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4';
       state.complete=false;
       if(a.mode==='guided'&&typeof startNewTraining==='function'){
         document.documentElement.dataset.cotActivationEntry='guided-call';
+        state.screen='training';
+        state.mode='guided';
         await startNewTraining(state.variationIndex,true);
+        state.screen='training';
+        state.mode='guided';
         if(typeof render==='function')render();
         document.documentElement.dataset.cotFlow='training';
         document.documentElement.dataset.cotActivationEntry=document.querySelector('#board')?'guided-board':'guided-rendered-no-board';
@@ -47,7 +51,11 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4';
       }
       if(a.mode==='test'&&typeof startPracticeTest==='function'){
         document.documentElement.dataset.cotActivationEntry='practice-call';
+        state.screen='training';
+        state.mode='practice';
         await startPracticeTest(state.variationIndex);
+        state.screen='training';
+        state.mode='practice';
         if(typeof render==='function')render();
         document.documentElement.dataset.cotActivationEntry='practice-rendered';
         return;
@@ -70,7 +78,7 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4';
     let i=0,tries=0;const tick=()=>{if(i>=steps.length)return;let ok=false;try{ok=steps[i]()}catch{}if(ok){i++;tries=0;setTimeout(tick,130)}else if(++tries<8)setTimeout(tick,180);else{i++;tries=0;setTimeout(tick,120)}};setTimeout(tick,80);
   }
   if(!globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__){
-    globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v2';
+    globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v3';
     document.addEventListener('click',event=>{
       const target=event.target?.closest?.('#cotPrimaryNext,[data-next-side]');
       if(!target||!target.closest('.cot-activation-hub'))return;
@@ -91,8 +99,9 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4';
   }`;
 
 source = source.slice(0, variationStart) + replacement + source.slice(cardStart);
-if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4'")) throw new Error('Runtime activation hotfix marker missing.');
-if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v2'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v5'")) throw new Error('Runtime activation hotfix marker missing.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v3'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
+if (!source.includes("state.screen='training'")) throw new Error('Training screen state handoff missing after hotfix.');
 if (!source.includes('await startNewTraining(state.variationIndex,true)')) throw new Error('Awaited Guided Training entry missing after hotfix.');
 await writeFile(mainPath, source, 'utf8');
-console.log(`Activation final-source ownership after hotfix: driveTo=${source.split('function driveTo(a){').length-1} runtimeMarker=${source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4'")} delegate=${source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v2'")}`);
+console.log(`Activation final-source ownership after hotfix: driveTo=${source.split('function driveTo(a){').length-1} runtimeMarker=${source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v5'")} delegate=${source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v3')}`);
