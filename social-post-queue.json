@@ -1,28 +1,46 @@
 {
-  "schema_version": 1,
-  "channel": "linkedin_company",
-  "page": "Plain Act",
-  "posts": [
+  "items": [
     {
       "id": "PA-LI-001",
-      "status": "DRAFT",
-      "campaign": "first-month-pressure",
-      "text": "New managers often think the first month is about proving they deserved the promotion. That pressure usually creates the opposite result: too much explaining, too many promises, delayed feedback, and work pulled back after delegation.\n\nA steadier first month is simpler: observe before changing, make decisions clearly, give narrow feedback early, define the finish line when delegating, and protect enough capacity to actually manage.\n\nThe First 30 Days as a New Manager is a practical manual for that transition — authority, feedback, delegation, managing up, pushback, and decision timing without motivational hype.\n\nhttps://plainact-crypto.github.io/plain-act/books/the-first-30-days-as-a-new-manager/",
-      "linkedinUrl": ""
+      "text": "Your first month as a manager is not a test of how much you can personally carry.\n\nOne of the fastest ways to become the bottleneck is to delegate vaguely, get nervous, then take the work back.\n\nA cleaner handoff has four parts:\n• the outcome\n• the constraints\n• the checkpoint\n• the finish line\n\nWhen those are clear, you can manage without hovering — and your team can work without guessing.\n\nPlain Act is built for these pressure moments in the first 30 days: authority, feedback, delegation, managing up, pushback, and decision timing.\n\nThe practical manual: https://plainact-crypto.github.io/plain-act/books/the-first-30-days-as-a-new-manager/",
+      "status": "READY",
+      "linkedinUrl": "",
+      "mediaType": "text",
+      "mediaPath": "",
+      "mediaUrl": "",
+      "createdAt": "2026-08-17T12:06:10+03:00",
+      "campaign": "delegation-pressure",
+      "objective": "qualified_visit_and_book_interest",
+      "targetAudience": "first-time and newly promoted managers",
+      "cta": "Read the practical manual"
     },
     {
       "id": "PA-LI-002",
+      "text": "Delayed feedback gets heavier every day it waits. New managers often postpone it because they want to be fair, avoid tension, or find the perfect wording. The result is usually a bigger conversation than the original issue required.\n\nUseful feedback is narrower: what happened, why it matters, and what needs to change next.\n\nPlain Act focuses on management under pressure — not louder leadership language.\n\nRead the flagship manual: https://plainact-crypto.github.io/plain-act/books/the-first-30-days-as-a-new-manager/",
       "status": "DRAFT",
-      "campaign": "delegation-pressure",
-      "text": "A common new-manager mistake is not failing to delegate. It is delegating vaguely, getting nervous, then taking the work back.\n\nA cleaner handoff has four parts: the outcome, the constraints, the checkpoint, and the finish line. Once those are clear, hovering becomes less necessary.\n\nThat is the kind of management problem Plain Act is built around: small pressure moments where the wrong reaction quietly becomes a team pattern.\n\nThe First 30 Days as a New Manager: https://plainact-crypto.github.io/plain-act/books/the-first-30-days-as-a-new-manager/",
-      "linkedinUrl": ""
+      "linkedinUrl": "",
+      "mediaType": "text",
+      "mediaPath": "",
+      "mediaUrl": "",
+      "createdAt": "2026-08-17T12:06:10+03:00",
+      "campaign": "feedback-pressure",
+      "objective": "qualified_visit_and_book_interest",
+      "targetAudience": "first-time and newly promoted managers",
+      "cta": "Read the flagship manual"
     },
     {
       "id": "PA-LI-003",
+      "text": "New managers often think the first month is about proving they deserved the promotion. That pressure usually creates the opposite result: too much explaining, too many promises, delayed feedback, and work pulled back after delegation.\n\nA steadier first month is simpler: observe before changing, make decisions clearly, give narrow feedback early, define the finish line when delegating, and protect enough capacity to actually manage.\n\nThe First 30 Days as a New Manager is a practical manual for that transition — authority, feedback, delegation, managing up, pushback, and decision timing without motivational hype.\n\nhttps://plainact-crypto.github.io/plain-act/books/the-first-30-days-as-a-new-manager/",
       "status": "DRAFT",
-      "campaign": "feedback-pressure",
-      "text": "Delayed feedback gets heavier every day it waits. New managers often postpone it because they want to be fair, avoid tension, or find the perfect wording. The result is usually a bigger conversation than the original issue required.\n\nUseful feedback is narrower: what happened, why it matters, and what needs to change next.\n\nPlain Act focuses on management under pressure — not louder leadership language.\n\nRead the flagship manual: https://plainact-crypto.github.io/plain-act/books/the-first-30-days-as-a-new-manager/",
-      "linkedinUrl": ""
+      "linkedinUrl": "",
+      "mediaType": "text",
+      "mediaPath": "",
+      "mediaUrl": "",
+      "createdAt": "2026-08-17T12:06:10+03:00",
+      "campaign": "first-month-pressure",
+      "objective": "qualified_visit_and_book_interest",
+      "targetAudience": "first-time and newly promoted managers",
+      "cta": "Explore the practical manual"
     }
   ]
 }
