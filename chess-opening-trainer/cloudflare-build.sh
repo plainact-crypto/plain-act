@@ -103,7 +103,6 @@ new='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
 if old in s:
     s=s.replace(old,new,1)
 elif 'const rankProgress=rankUnlockProgress(lp);' not in s:
-    # The completed-count replacement above may already have changed the middle line.
     old2='''  const lp=ensureLevelProgress(p,state.side,state.sessionLength);
   const completed=completedVariationsForLevel(lp);
 
@@ -229,7 +228,9 @@ for patch_file, marker in [
     ('mobile-test-ux-patch.js','__MOBILE_TEST_UX_PATCH__'),
     ('rank-test-p0-patch.js','__RANK_TEST_P0_PATCH__'),
     ('wood-piece-sound-patch.js','__WOOD_PIECE_SOUND_PATCH__'),
-    ('training-lines-patch.js','__COT_INDEPENDENT_TRAINING_LINES__')
+    ('training-lines-patch.js','__COT_INDEPENDENT_TRAINING_LINES__'),
+    ('activation-onboarding-v2.js','__COT_ACTIVATION_V2__'),
+    ('activation-funnel-fix.js','__COT_ACTIVATION_FUNNEL_FIX__')
 ]:
     patch=Path(patch_file).read_text()
     if marker not in s:
