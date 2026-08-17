@@ -12,7 +12,7 @@ async function gotoReady(page,url){
       const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
       assert(r?.ok(),`${url} HTTP ${r?.status()}`);
       await page.waitForTimeout(700);
-      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__&&globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__==='direct-v4'));
+      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__&&globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__==='direct-v5'));
       if(ok)return;
       last=new Error(`${url}: current production activation-entry markers not deployed yet`);
     }catch(e){last=e}
@@ -49,7 +49,7 @@ try{
       return {depth5Control,textMentions:/\bDepth\s*5\b/i.test(text),guard:Boolean(globalThis.__COT_DEPTH_5_RETIRED__),entryHotfix:globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__||''};
     });
     assert(beforeTraining.guard,`${url}: Depth 5 retirement guard missing`);
-    assert(beforeTraining.entryHotfix==='direct-v4',`${url}: activation entry hotfix missing (${JSON.stringify(beforeTraining)})`);
+    assert(beforeTraining.entryHotfix==='direct-v5',`${url}: activation entry hotfix missing (${JSON.stringify(beforeTraining)})`);
     assert(!beforeTraining.depth5Control&&!beforeTraining.textMentions,`${url}: Depth 5 is still exposed before training (${JSON.stringify(beforeTraining)})`);
 
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
