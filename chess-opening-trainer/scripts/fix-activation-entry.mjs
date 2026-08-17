@@ -63,10 +63,31 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
     const depth=[new RegExp(\`(?:Depth|Level|Open)[^\\n]{0,18}\\b\${a.depth}\\b\`,'i'),new RegExp(\`\\b\${a.depth}\\s*moves?\`,'i')];
     const steps=[()=>clickText(side),()=>clickText(depth),()=>a.mode==='rank'?true:(launchVisibleVariation()||clickVariation(a.variation)),()=>a.mode==='rank'?clickText([/Rank Test/i,/Start Rank/i]):true];
     let i=0,tries=0;const tick=()=>{if(i>=steps.length)return;let ok=false;try{ok=steps[i]()}catch{}if(ok){i++;tries=0;setTimeout(tick,130)}else if(++tries<8)setTimeout(tick,180);else{i++;tries=0;setTimeout(tick,120)}};setTimeout(tick,80);
+  }
+  if(!globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__){
+    globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v1';
+    document.addEventListener('click',event=>{
+      const target=event.target?.closest?.('#cotPrimaryNext,[data-next-side]');
+      if(!target||!target.closest('.cot-activation-hub'))return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      document.documentElement.dataset.cotActivationEntry='delegated-click';
+      try{
+        const p=profile();
+        if(!p)throw new Error('Profile unavailable for activation entry');
+        const side=target.dataset.nextSide||focusSide(p);
+        driveTo(nextFor(p,side));
+      }catch(err){
+        document.documentElement.dataset.cotActivationEntry='delegate-error';
+        document.documentElement.dataset.cotActivationError=String(err?.message||err);
+        console.warn('Activation delegated entry failed',err);
+      }
+    },true);
   }`;
 
 source = source.slice(0, variationStart) + replacement + source.slice(cardStart);
 if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3'")) throw new Error('Runtime activation hotfix marker missing.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v1'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
 if (!source.includes('startNewTraining(state.variationIndex,true)')) throw new Error('Direct Guided Training entry missing after hotfix.');
 await writeFile(mainPath, source, 'utf8');
-console.log(`Activation final-source ownership after hotfix: driveTo=${source.split('function driveTo(a){').length-1} runtimeMarker=${source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3'")}`);
+console.log(`Activation final-source ownership after hotfix: driveTo=${source.split('function driveTo(a){').length-1} runtimeMarker=${source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3'")} delegate=${source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v1'")}`);
