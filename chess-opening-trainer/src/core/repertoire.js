@@ -20,6 +20,20 @@ export const REPERTOIRE_PRESETS={
 
 export const DEFAULT_REPERTOIRE_SELECTION={white:'london',black:'caroKann'};
 
+export function normalizeRepertoireSelection(selection={}){
+  const normalized={...DEFAULT_REPERTOIRE_SELECTION};
+  for(const side of ['white','black']){
+    const presetId=selection?.[side];
+    const preset=REPERTOIRE_PRESETS[presetId];
+    if(preset?.side===side) normalized[side]=presetId;
+  }
+  return normalized;
+}
+
+export function availableRepertoires(side){
+  return Object.values(REPERTOIRE_PRESETS).filter(preset=>preset.side===side);
+}
+
 // Legacy move-priority hints remain exported for existing training code. They are
 // preset content, not product-wide constraints.
 export const REPERTOIRE_MOVES={
@@ -50,7 +64,8 @@ function matchesAnchor(when,ctx){
 
 export function repertoireAnchorForFen(chess,side,selection=DEFAULT_REPERTOIRE_SELECTION){
   try{
-    const presetId=typeof selection==='string'?selection:selection?.[side];
+    const normalized=typeof selection==='string'?selection:normalizeRepertoireSelection(selection);
+    const presetId=typeof normalized==='string'?normalized:normalized?.[side];
     const preset=REPERTOIRE_PRESETS[presetId];
     if(!preset || preset.side!==side)return null;
     const parts=chess.fen().split(' ');
