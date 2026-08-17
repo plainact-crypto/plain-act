@@ -91,3 +91,5 @@ jobs:
         env:
           PRODUCTION_URLS: https://plainact-crypto.github.io/plain-act/chess-opening-trainer/,https://chess-opening-trainer-3jh.pages.dev
         run: node scripts/production-performance-smoke.mjs
+
+# Any push to main intentionally triggers this pipeline; Cloudflare Pages should also auto-deploy from its GitHub integration when connected to main.
