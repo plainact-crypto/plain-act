@@ -18,7 +18,7 @@ const driveStart = source.indexOf('  function driveTo(a){', variationStart);
 const cardStart = source.indexOf('\n\n  function card(', driveStart);
 if (variationStart < 0 || driveStart < 0 || cardStart < 0) throw new Error('Activation navigation functions not found in final source.');
 
-const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
+const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4';
   function clickVariation(i){
     const cards=[...document.querySelectorAll('.variation-card')].filter(visible);
     const card=cards[Number(i||0)];
@@ -26,7 +26,7 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
     if(visible(create)&&!create.disabled){create.click();return true}
     return false;
   }
-  function driveTo(a){
+  async function driveTo(a){
     document.documentElement.dataset.cotActivationEntry='clicked';
     localStorage.setItem(FOCUS_KEY,a.side);
     document.querySelector('#cotOnboarding')?.remove();
@@ -39,12 +39,17 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
       state.complete=false;
       if(a.mode==='guided'&&typeof startNewTraining==='function'){
         document.documentElement.dataset.cotActivationEntry='guided-call';
-        Promise.resolve(startNewTraining(state.variationIndex,true)).then(()=>{document.documentElement.dataset.cotActivationEntry='guided-resolved'}).catch(err=>{document.documentElement.dataset.cotActivationEntry='guided-rejected';document.documentElement.dataset.cotActivationError=String(err?.message||err);console.warn('Activation Guided entry failed',err)});
+        await startNewTraining(state.variationIndex,true);
+        if(typeof render==='function')render();
+        document.documentElement.dataset.cotFlow='training';
+        document.documentElement.dataset.cotActivationEntry=document.querySelector('#board')?'guided-board':'guided-rendered-no-board';
         return;
       }
       if(a.mode==='test'&&typeof startPracticeTest==='function'){
         document.documentElement.dataset.cotActivationEntry='practice-call';
-        Promise.resolve(startPracticeTest(state.variationIndex)).then(()=>{document.documentElement.dataset.cotActivationEntry='practice-resolved'}).catch(err=>{document.documentElement.dataset.cotActivationEntry='practice-rejected';document.documentElement.dataset.cotActivationError=String(err?.message||err)});
+        await startPracticeTest(state.variationIndex);
+        if(typeof render==='function')render();
+        document.documentElement.dataset.cotActivationEntry='practice-rendered';
         return;
       }
       document.documentElement.dataset.cotActivationEntry='direct-function-missing';
@@ -65,7 +70,7 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
     let i=0,tries=0;const tick=()=>{if(i>=steps.length)return;let ok=false;try{ok=steps[i]()}catch{}if(ok){i++;tries=0;setTimeout(tick,130)}else if(++tries<8)setTimeout(tick,180);else{i++;tries=0;setTimeout(tick,120)}};setTimeout(tick,80);
   }
   if(!globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__){
-    globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v1';
+    globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v2';
     document.addEventListener('click',event=>{
       const target=event.target?.closest?.('#cotPrimaryNext,[data-next-side]');
       if(!target||!target.closest('.cot-activation-hub'))return;
@@ -76,7 +81,7 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
         const p=profile();
         if(!p)throw new Error('Profile unavailable for activation entry');
         const side=target.dataset.nextSide||focusSide(p);
-        driveTo(nextFor(p,side));
+        Promise.resolve(driveTo(nextFor(p,side))).catch(err=>{document.documentElement.dataset.cotActivationEntry='delegate-error';document.documentElement.dataset.cotActivationError=String(err?.message||err);console.warn('Activation delegated entry failed',err)});
       }catch(err){
         document.documentElement.dataset.cotActivationEntry='delegate-error';
         document.documentElement.dataset.cotActivationError=String(err?.message||err);
@@ -86,8 +91,8 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3';
   }`;
 
 source = source.slice(0, variationStart) + replacement + source.slice(cardStart);
-if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3'")) throw new Error('Runtime activation hotfix marker missing.');
-if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v1'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
-if (!source.includes('startNewTraining(state.variationIndex,true)')) throw new Error('Direct Guided Training entry missing after hotfix.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4'")) throw new Error('Runtime activation hotfix marker missing.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v2'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
+if (!source.includes('await startNewTraining(state.variationIndex,true)')) throw new Error('Awaited Guided Training entry missing after hotfix.');
 await writeFile(mainPath, source, 'utf8');
-console.log(`Activation final-source ownership after hotfix: driveTo=${source.split('function driveTo(a){').length-1} runtimeMarker=${source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v3'")} delegate=${source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v1'")}`);
+console.log(`Activation final-source ownership after hotfix: driveTo=${source.split('function driveTo(a){').length-1} runtimeMarker=${source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v4'")} delegate=${source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v2'")}`);
