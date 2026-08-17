@@ -27,17 +27,28 @@ async function gotoWithRetry(page, url, markerRequired = true) {
 async function seedSignedIn(page) {
   await page.evaluate(({ fakeEmail, fakeUserId }) => {
     localStorage.clear(); sessionStorage.clear();
+    const now = new Date().toISOString();
+    const profile = {
+      email: fakeEmail,
+      createdAt: now,
+      updatedAt: now,
+      lines: [],
+      openingElo: { white: 800, black: 800 },
+      progress: { white: {}, black: {} },
+      rankHistory: []
+    };
     localStorage.setItem('chessTrainerCloudSession', JSON.stringify({ access_token: 'activation-smoke-invalid-token', user: { id: fakeUserId, email: fakeEmail } }));
     localStorage.setItem('chessTrainerProfileEmail', fakeEmail);
-    localStorage.setItem(`chessTrainerProfile:${fakeEmail}`, JSON.stringify({ email: fakeEmail, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), lines: [], openingElo: { white: 800, black: 800 }, progress: { white: {}, black: {} }, rankHistory: [] }));
+    // Support both the current production profile key and the older email-keyed
+    // fixture shape. This is synthetic UI state only; no real account is created.
+    localStorage.setItem('chessTrainerProfile', JSON.stringify(profile));
+    localStorage.setItem(`chessTrainerProfile:${fakeEmail}`, JSON.stringify(profile));
   }, { fakeEmail, fakeUserId });
 }
 async function settleSyntheticAuth(page) {
-  // Reload first so all production patches initialize normally. A deliberately
-  // invalid smoke token can be cleared by the real auth bootstrap during that
-  // reload, so seed the synthetic signed-in state only after bootstrap settles.
-  // This tests the dashboard journey without pretending the fake token is a
-  // valid Supabase credential or generating a real account.
+  // Let the real auth bootstrap settle first. Then seed only local UI state so
+  // the smoke can validate the signed-in dashboard without weakening auth or
+  // creating a real Supabase user.
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
   await seedSignedIn(page);
@@ -63,9 +74,6 @@ try {
       const publicOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(publicOverflow <= 2, `${url} ${viewport.name}: horizontal overflow ${publicOverflow}px on landing`);
 
-      // Current product intentionally skips the old onboarding modal and lands a
-      // signed-in user on a dashboard-first next-action hub. The smoke test must
-      // validate the shipped journey rather than require a retired modal.
       await settleSyntheticAuth(page);
       await page.locator('.cot-activation-hub').waitFor({ state: 'visible', timeout: 7000 });
       assert(!(await page.locator('#cotOnboarding').isVisible().catch(() => false)), `${url} ${viewport.name}: retired onboarding modal unexpectedly visible`);
