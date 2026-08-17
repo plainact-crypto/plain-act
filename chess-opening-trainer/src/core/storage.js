@@ -1,3 +1,5 @@
+import { normalizeRepertoireSelection } from './repertoire.js';
+
 const PROFILE_EMAIL_KEY="chessTrainerProfileEmail";
 const PROFILE_PREFIX="chessTrainerProfile:";
 
@@ -18,11 +20,22 @@ export function emptyProfile(email){
     email:normalizeEmail(email),
     createdAt:new Date().toISOString(),
     updatedAt:new Date().toISOString(),
+    repertoireSelection:normalizeRepertoireSelection(),
     lines:[],
     openingElo:{white:800,black:800},
     progress:{white:{},black:{}},
     rankHistory:[]
   };
+}
+
+export function setRepertoireSelection(profile,side,presetId){
+  if(!profile || !['white','black'].includes(side)) return null;
+  const next=normalizeRepertoireSelection({
+    ...(profile.repertoireSelection||{}),
+    [side]:presetId
+  });
+  profile.repertoireSelection=next;
+  return next[side];
 }
 
 export function normalizeLesson(lesson={}){
@@ -74,6 +87,7 @@ export function loadProfile(email){
     const raw=localStorage.getItem(profileKey(clean));
     const p=raw ? JSON.parse(raw) : emptyProfile(clean);
     p.email=clean;
+    p.repertoireSelection=normalizeRepertoireSelection(p.repertoireSelection);
     p.lines=Array.isArray(p.lines)?p.lines:[];
     p.openingElo=p.openingElo||{white:800,black:800};
     p.openingElo.white=Number(p.openingElo.white||800);
@@ -95,6 +109,7 @@ export function loadProfile(email){
 
 export function saveProfile(profile){
   if(!profile?.email) return;
+  profile.repertoireSelection=normalizeRepertoireSelection(profile.repertoireSelection);
   profile.updatedAt=new Date().toISOString();
   localStorage.setItem(profileKey(profile.email),JSON.stringify(profile));
 }
