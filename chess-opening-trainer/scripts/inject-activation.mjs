@@ -38,6 +38,25 @@ const newVariation = `  function clickVariation(i){const re=new RegExp(\`Variati
 if (!patch.includes(oldVariation)) throw new Error('Activation V2 variation navigation source changed; refusing unsafe injection.');
 patch = patch.replace(oldVariation, newVariation);
 
+const driveStart = patch.indexOf('  function driveTo(a){');
+const driveEnd = patch.indexOf('\n\n  function card(', driveStart);
+if (driveStart < 0 || driveEnd < 0) throw new Error('Activation V2 driveTo source changed; refusing unsafe injection.');
+const directDrive = `  function driveTo(a){
+    localStorage.setItem(FOCUS_KEY,a.side);document.querySelector('#cotOnboarding')?.remove();document.querySelector('#cloudAuthGate')?.remove();
+    try{
+      if(typeof state==='object'&&state){state.side=a.side;state.sessionLength=Number(a.depth||10);state.variationIndex=Number(a.variation||0);state.complete=false;state.screen='course'}
+      if(a.mode==='guided'&&typeof startNewTraining==='function'){Promise.resolve(startNewTraining(Number(a.variation||0),true)).catch(()=>{});return}
+      if(a.mode==='test'&&typeof startPracticeTest==='function'){Promise.resolve(startPracticeTest(Number(a.variation||0))).catch(()=>{});return}
+    }catch{}
+    try{render?.()}catch{}
+    const side=a.side==='white'?[/London System/i,/\\bWhite\\b/i]:[/Caro-?Kann/i,/\\bBlack\\b/i];
+    const depth=[new RegExp(\`(?:Depth|Level|Open)[^\\n]{0,18}\\b${'${a.depth}'}\\b\`,'i'),new RegExp(\`\\b${'${a.depth}'}\\s*moves?\`,'i')];
+    const mode=a.mode==='rank'?[/Rank Test/i,/Start Rank/i]:[/Guided Training/i,/Start Guided/i,/\\bLearn\\b/i,/\\bTrain\\b/i];
+    const steps=[()=>clickText(side),()=>clickText(depth),()=>a.mode==='rank'?true:clickVariation(a.variation),()=>clickText(mode)];
+    let i=0,tries=0;const tick=()=>{if(i>=steps.length)return;let ok=false;try{ok=steps[i]()}catch{}if(ok){i++;tries=0;setTimeout(tick,130)}else if(++tries<8)setTimeout(tick,180);else{i++;tries=0;setTimeout(tick,120)}};setTimeout(tick,80);
+  }`;
+patch = patch.slice(0,driveStart) + directDrive + patch.slice(driveEnd);
+
 const oldProgress = `<div class=\"cot-opening-progress\">${'${card(p,\'white\',focus===\'white\')}${card(p,\'black\',focus===\'black\')}'}</div>`;
 const newProgress = `<details class=\"cot-progress-details\"><summary>View opening progress</summary><div class=\"cot-opening-progress\">${'${card(p,\'white\',focus===\'white\')}${card(p,\'black\',focus===\'black\')}'}</div></details>`;
 if (!patch.includes(oldProgress)) throw new Error('Activation V2 opening progress source changed; refusing unsafe injection.');
@@ -49,4 +68,4 @@ if (!patch.includes(cssAnchor)) throw new Error('Activation V2 CSS anchor change
 patch = patch.replace(cssAnchor, hierarchyCss);
 if (/new MutationObserver\(schedule\)/.test(patch)) throw new Error('Activation V2 global observer regression remains after transform.');
 await appendFile(mainPath, `\n\n${patch}\n`, 'utf8');
-console.log('Activation V2 injected with Depth 5 retired, onboarding skipped, dashboard-first reset flow, and hub-safe training navigation.');
+console.log('Activation V2 injected with direct Guided/Practice entry, Depth 5 retired, onboarding skipped, dashboard-first reset flow, and hub-safe fallback navigation.');
