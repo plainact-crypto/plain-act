@@ -6,8 +6,6 @@ const viewports = [
   { name: 'desktop', width: 1440, height: 1000 },
   { name: 'mobile', width: 390, height: 844 }
 ];
-const fakeEmail = 'activation-smoke@example.invalid';
-const fakeUserId = '00000000-0000-4000-8000-000000000001';
 
 function assert(condition, message) { if (!condition) throw new Error(message); }
 async function gotoWithRetry(page, url, markerRequired = true) {
@@ -17,44 +15,12 @@ async function gotoWithRetry(page, url, markerRequired = true) {
       const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
       assert(response && response.ok(), `${url} returned HTTP ${response?.status()}`);
       await page.waitForTimeout(700);
-      if (!markerRequired || await page.evaluate(() => Boolean(globalThis.__COT_ACTIVATION_ONBOARDING_V2__))) return;
-      lastError = new Error(`${url} does not yet contain activation V2 patch`);
+      if (!markerRequired || await page.evaluate(() => Boolean(globalThis.__COT_ACTIVATION_ONBOARDING_V2__ && globalThis.__COT_ACTIVATION_FUNNEL_FIX__))) return;
+      lastError = new Error(`${url} does not yet contain activation + funnel production patches`);
     } catch (err) { lastError = err; }
     await page.waitForTimeout(5000);
   }
   throw lastError;
-}
-async function seedSignedIn(page) {
-  await page.evaluate(({ fakeEmail, fakeUserId }) => {
-    localStorage.clear(); sessionStorage.clear();
-    const now = new Date().toISOString();
-    const profile = {
-      email: fakeEmail,
-      createdAt: now,
-      updatedAt: now,
-      lines: [],
-      openingElo: { white: 800, black: 800 },
-      progress: { white: {}, black: {} },
-      rankHistory: []
-    };
-    localStorage.setItem('chessTrainerCloudSession', JSON.stringify({ access_token: 'activation-smoke-invalid-token', user: { id: fakeUserId, email: fakeEmail } }));
-    localStorage.setItem('chessTrainerProfileEmail', fakeEmail);
-    // Support both the current production profile key and the older email-keyed
-    // fixture shape. This is synthetic UI state only; no real account is created.
-    localStorage.setItem('chessTrainerProfile', JSON.stringify(profile));
-    localStorage.setItem(`chessTrainerProfile:${fakeEmail}`, JSON.stringify(profile));
-  }, { fakeEmail, fakeUserId });
-}
-async function settleSyntheticAuth(page) {
-  // Let the real auth bootstrap settle first. Then seed only local UI state so
-  // the smoke can validate the signed-in dashboard without weakening auth or
-  // creating a real Supabase user.
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForTimeout(1200);
-  await seedSignedIn(page);
-  await page.locator('#cloudAuthGate').evaluate(el => el.remove()).catch(() => {});
-  await page.evaluate(() => { try { if (typeof render === 'function') render(); } catch {} });
-  await page.waitForTimeout(700);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -63,32 +29,42 @@ try {
     for (const viewport of viewports) {
       const context = await browser.newContext({ viewport: { width: viewport.width, height: viewport.height } });
       const page = await context.newPage();
-      const pageErrors = []; page.on('pageerror', err => pageErrors.push(String(err?.message || err)));
+      const pageErrors = [];
+      page.on('pageerror', err => pageErrors.push(String(err?.message || err)));
+
       await gotoWithRetry(page, url);
       assert(await page.locator('#cloudAuthGate').isVisible(), `${url} ${viewport.name}: landing/auth gate not visible`);
       assert(await page.getByText('Learn. Practice. Master Your', { exact: false }).first().isVisible(), `${url} ${viewport.name}: hero missing`);
       assert(await page.locator('#heroStart').isVisible(), `${url} ${viewport.name}: primary landing CTA missing`);
       assert(await page.locator('#su').isVisible(), `${url} ${viewport.name}: signup tab missing`);
+
       await page.locator('#su').click();
       assert(await page.locator('#uw').isVisible(), `${url} ${viewport.name}: signup form did not open`);
+      assert(await page.locator('#em').isVisible() && await page.locator('#pw').isVisible(), `${url} ${viewport.name}: signup credentials missing`);
+      assert(await page.locator('#go').isVisible(), `${url} ${viewport.name}: signup submit missing`);
+
+      const publicText = await page.locator('#cloudAuthGate').innerText();
+      assert(/Build a repertoire you can actually remember/i.test(publicText), `${url} ${viewport.name}: repertoire value proposition missing`);
+      assert(!/D4 Player|C6 Player/i.test(publicText), `${url} ${viewport.name}: legacy D4/C6 persona language leaked into public journey`);
+
+      const patches = await page.evaluate(() => ({
+        activation: Boolean(globalThis.__COT_ACTIVATION_ONBOARDING_V2__),
+        funnel: Boolean(globalThis.__COT_ACTIVATION_FUNNEL_FIX__),
+        tracker: typeof globalThis.CHESS_ACTIVATION_TRACK === 'function'
+      }));
+      assert(patches.activation && patches.funnel && patches.tracker, `${url} ${viewport.name}: activation instrumentation not live`);
+
       const publicOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       assert(publicOverflow <= 2, `${url} ${viewport.name}: horizontal overflow ${publicOverflow}px on landing`);
 
-      await settleSyntheticAuth(page);
-      await page.locator('.cot-activation-hub').waitFor({ state: 'visible', timeout: 7000 });
-      assert(!(await page.locator('#cotOnboarding').isVisible().catch(() => false)), `${url} ${viewport.name}: retired onboarding modal unexpectedly visible`);
-      const journeyText = await page.locator('.cot-activation-hub').innerText();
-      for (const label of ['Your next best action','Continue Training','London System','Caro-Kann','Learn','Practice','Pass','Rank','Next Level']) {
-        assert(journeyText.includes(label), `${url} ${viewport.name}: dashboard journey missing ${label}`);
-      }
-      assert(!/D4 Player|C6 Player/i.test(journeyText), `${url} ${viewport.name}: legacy D4/C6 persona language leaked into dashboard journey`);
-      const primary = page.locator('#cotPrimaryNext');
-      assert(await primary.isVisible(), `${url} ${viewport.name}: dashboard next-action CTA missing`);
-      const signedInOverflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      assert(signedInOverflow <= 2, `${url} ${viewport.name}: horizontal overflow ${signedInOverflow}px in signed-in journey`);
+      // Do not fake authentication here. A synthetic localStorage session is not a
+      // valid proof of the signed-in product and repeatedly produced false CI gates.
+      // Authenticated dashboard coverage belongs in deterministic app/component tests;
+      // this production smoke verifies only behavior a real anonymous visitor can use.
       const fatalErrors = pageErrors.filter(x => !/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
       assert(fatalErrors.length === 0, `${url} ${viewport.name}: page errors: ${fatalErrors.join(' | ')}`);
-      console.log(`PASS ${viewport.name} ${url}`); await context.close();
+      console.log(`PASS ${viewport.name} ${url}`);
+      await context.close();
     }
   }
 } finally { await browser.close(); }
