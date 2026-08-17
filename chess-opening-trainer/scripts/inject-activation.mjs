@@ -10,6 +10,11 @@ if (main.includes(marker)) { console.log('Activation onboarding V2 patch already
 let patch = await readFile(patchPath, 'utf8');
 if (!patch.includes(marker)) throw new Error('Activation V2 patch marker missing.');
 
+const oldDepths = `  const DEPTHS=[5,10,15,20,25,30];`;
+const newDepths = `  const DEPTHS=[10,15,20,25,30];`;
+if (!patch.includes(oldDepths)) throw new Error('Activation V2 depth source changed; refusing unsafe injection.');
+patch = patch.replace(oldDepths, newDepths);
+
 const oldLifecycle = `  let scheduled=false,lastMode='';
   function refresh(){scheduled=false;if(document.querySelector('#cloudAuthGate'))track('landing_view',{},true);if(!uid())return;showOnboarding();renderHub();sessionNext();let mode='';try{mode=\`${'${state?.screen||\'\'}:${state?.mode||\'\'}'}\`}catch{}if(mode!==lastMode){lastMode=mode;milestones()}}
   function schedule(){if(scheduled)return;scheduled=true;setTimeout(refresh,40)}
@@ -44,4 +49,4 @@ if (!patch.includes(cssAnchor)) throw new Error('Activation V2 CSS anchor change
 patch = patch.replace(cssAnchor, hierarchyCss);
 if (/new MutationObserver\(schedule\)/.test(patch)) throw new Error('Activation V2 global observer regression remains after transform.');
 await appendFile(mainPath, `\n\n${patch}\n`, 'utf8');
-console.log('Activation V2 injected with onboarding skipped, dashboard-first reset flow, and hub-safe training navigation.');
+console.log('Activation V2 injected with Depth 5 retired, onboarding skipped, dashboard-first reset flow, and hub-safe training navigation.');
