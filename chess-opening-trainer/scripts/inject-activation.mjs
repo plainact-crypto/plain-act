@@ -27,6 +27,17 @@ const newLifecycle = `  let scheduled=false,lastMode='';
 if (!patch.includes(oldLifecycle)) throw new Error('Activation V2 lifecycle source changed; refusing unsafe injection.');
 patch = patch.replace(oldLifecycle, newLifecycle);
 
+// The activation hub contains labels such as "London System" and "Learn Variation 1".
+// driveTo() searches buttons by text to navigate the underlying app. If hub buttons are
+// included in that search, the first navigation step can click the same hub button again,
+// recursively restarting driveTo() instead of entering Guided Training. This is especially
+// reproducible on mobile where the hub is the dominant visible control. Only search the
+// underlying product UI for navigation targets.
+const oldButtons = `  const buttons=()=>[...document.querySelectorAll('button,[role="button"],a')].filter(visible);`;
+const newButtons = `  const buttons=()=>[...document.querySelectorAll('button,[role="button"],a')].filter(el=>visible(el)&&!el.closest('.cot-activation-hub'));`;
+if (!patch.includes(oldButtons)) throw new Error('Activation V2 navigation button source changed; refusing unsafe injection.');
+patch = patch.replace(oldButtons, newButtons);
+
 const oldProgress = `<div class=\"cot-opening-progress\">${'${card(p,\'white\',focus===\'white\')}${card(p,\'black\',focus===\'black\')}'}</div>`;
 const newProgress = `<details class=\"cot-progress-details\"><summary>View opening progress</summary><div class=\"cot-opening-progress\">${'${card(p,\'white\',focus===\'white\')}${card(p,\'black\',focus===\'black\')}'}</div></details>`;
 if (!patch.includes(oldProgress)) throw new Error('Activation V2 opening progress source changed; refusing unsafe injection.');
@@ -39,4 +50,4 @@ patch = patch.replace(cssAnchor, hierarchyCss);
 
 if (/new MutationObserver\(schedule\)/.test(patch)) throw new Error('Activation V2 global observer regression remains after transform.');
 await appendFile(mainPath, `\n\n${patch}\n`, 'utf8');
-console.log('Activation V2 injected with onboarding skipped and dashboard-first reset flow.');
+console.log('Activation V2 injected with onboarding skipped, dashboard-first reset flow, and hub-safe training navigation.');
