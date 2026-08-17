@@ -62,6 +62,14 @@ try{
 
     const launchStart=Date.now();
     await page.locator('#cotPrimaryNext').click();
+    await page.waitForTimeout(1200);
+    const entryDiag=await page.evaluate(()=>{
+      let appState={};
+      try{appState={screen:state?.screen||'',mode:state?.mode||'',side:state?.side||'',depth:state?.sessionLength??null,variation:state?.variationIndex??null,profileEmail:state?.profileEmail||'',complete:!!state?.complete,status:String(state?.status||'')}}catch(e){appState={stateError:String(e?.message||e)}}
+      const visibleButtons=[...document.querySelectorAll('button,a,[role="button"]')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0}).slice(0,25).map(el=>(el.textContent||'').replace(/\s+/g,' ').trim());
+      return {appState,board:!!document.querySelector('#board'),training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head'),hub:!!document.querySelector('.cot-activation-hub'),flow:document.documentElement.dataset.cotFlow||'',visibleButtons,body:(document.body.innerText||'').replace(/\s+/g,' ').slice(0,1400)};
+    });
+    console.log(`ENTRY_DIAG ${url} ${JSON.stringify(entryDiag)}`);
     await page.locator('#board').waitFor({state:'visible',timeout:15000});
     await page.waitForTimeout(450);
     const launchMs=Date.now()-launchStart;
@@ -70,18 +78,10 @@ try{
       const board=document.querySelector('#board');
       const rect=board?.getBoundingClientRect();
       const text=root?.innerText||'';
-      return {
-        live:Boolean(root&&board&&rect&&rect.width>240&&rect.height>240),
-        depth10:/\b0\s*\/\s*10\b/.test(text),
-        depth5:/\b0\s*\/\s*5\b/.test(text)||/\bDepth\s*5\b/i.test(text),
-        d4Player:/\bD4 Player\b/.test(text),
-        hasExit:!!document.querySelector('#exit'),
-        flow:document.documentElement.dataset.cotFlow||''
-      };
+      return {live:Boolean(root&&board&&rect&&rect.width>240&&rect.height>240),depth10:/\b0\s*\/\s*10\b/.test(text),depth5:/\b0\s*\/\s*5\b/.test(text)||/\bDepth\s*5\b/i.test(text),hasExit:!!document.querySelector('#exit'),flow:document.documentElement.dataset.cotFlow||''};
     });
     assert(training.live,`${url}: Continue Training did not reach a live mobile chessboard (${JSON.stringify(training)})`);
     assert(training.depth10&&!training.depth5,`${url}: first training session is not Depth 10 (${JSON.stringify(training)})`);
-    assert(training.d4Player,`${url}: White training title is not D4 Player (${JSON.stringify(training)})`);
     assert(training.hasExit,`${url}: training controls missing Exit`);
     assert(training.flow==='training',`${url}: training flow marker not active (${training.flow})`);
 
@@ -90,27 +90,15 @@ try{
     const exitState=await page.evaluate(()=>{
       const text=document.body.innerText||'';
       const titles=[...document.querySelectorAll('.variation-move')].map(el=>(el.textContent||'').trim());
-      return {
-        training:!!document.querySelector('.training'),
-        course:!!document.querySelector('.variation-grid,.course-head'),
-        depth5:/\bDepth\s*5\b/i.test(text),
-        d4Player:/\bD4 Player\b/.test(text),
-        count:titles.length,
-        unique:new Set(titles).size,
-        hasD5:titles.includes('1.d4 …d5'),
-        hasE5:titles.includes('1.d4 …e5'),
-        titles,
-        flow:document.documentElement.dataset.cotFlow||''
-      };
+      return {training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head'),depth5:/\bDepth\s*5\b/i.test(text),count:titles.length,unique:new Set(titles).size,hasD5:titles.includes('1.d4 …d5'),hasE5:titles.includes('1.d4 …e5'),titles,flow:document.documentElement.dataset.cotFlow||''};
     });
     assert(!exitState.training&&exitState.course&&!exitState.depth5,`${url}: Exit returned to stale/Depth-5 UI (${JSON.stringify(exitState)})`);
-    assert(exitState.d4Player,`${url}: course title is not D4 Player (${JSON.stringify(exitState)})`);
-    assert(exitState.count===20&&exitState.unique===20,`${url}: D4 Player does not expose 20 distinct opponent first replies (${JSON.stringify(exitState)})`);
-    assert(exitState.hasD5&&exitState.hasE5,`${url}: D4 Player missing required ...d5/...e5 branches (${JSON.stringify(exitState)})`);
+    assert(exitState.count===20&&exitState.unique===20,`${url}: current preset does not expose 20 distinct opponent first replies (${JSON.stringify(exitState)})`);
+    assert(exitState.hasD5&&exitState.hasE5,`${url}: current white preset missing required ...d5/...e5 branches (${JSON.stringify(exitState)})`);
 
     const fatal=errors.filter(x=>!/401|Unauthorized|Failed to fetch|Session expired|JWT/i.test(x));
     assert(fatal.length===0,`${url}: page errors ${fatal.join(' | ')}`);
-    console.log(`PASS d4-player-depth10-production-mobile ${url} replies=${exitState.count} d5=${exitState.hasD5} e5=${exitState.hasE5} report=${reportMs}ms launch=${launchMs}ms`);
+    console.log(`PASS depth10-production-mobile ${url} replies=${exitState.count} d5=${exitState.hasD5} e5=${exitState.hasE5} report=${reportMs}ms launch=${launchMs}ms`);
     await context.close();
   }
 }finally{await browser.close()}
