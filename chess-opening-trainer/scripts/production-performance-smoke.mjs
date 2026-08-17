@@ -12,9 +12,9 @@ async function gotoReady(page,url){
       const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
       assert(r?.ok(),`${url} HTTP ${r?.status()}`);
       await page.waitForTimeout(700);
-      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__));
+      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__&&globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__==='direct-v3'));
       if(ok)return;
-      last=new Error(`${url}: Depth 10 / reports #42-#49 production markers not deployed yet`);
+      last=new Error(`${url}: current production activation-entry markers not deployed yet`);
     }catch(e){last=e}
     await page.waitForTimeout(5000);
   }
@@ -26,7 +26,9 @@ try{
   for(const url of targets){
     const context=await browser.newContext({viewport:{width:390,height:844}});
     const page=await context.newPage();
-    const errors=[];page.on('pageerror',e=>errors.push(String(e?.message||e)));
+    const errors=[],consoleEvents=[];
+    page.on('pageerror',e=>errors.push(String(e?.message||e)));
+    page.on('console',m=>{const t=`${m.type()}: ${m.text()}`;if(/Activation|entry/i.test(t))consoleEvents.push(t)});
     await gotoReady(page,url);
 
     await page.evaluate(({fakeEmail,fakeUserId})=>{
@@ -44,9 +46,10 @@ try{
     const beforeTraining=await page.evaluate(()=>{
       const text=document.body.innerText||'';
       const depth5Control=[...document.querySelectorAll('[data-n],button,a')].some(el=>el.getAttribute('data-n')==='5'||/\bDepth\s*5\b/i.test(el.textContent||''));
-      return {depth5Control,textMentions:/\bDepth\s*5\b/i.test(text),guard:Boolean(globalThis.__COT_DEPTH_5_RETIRED__)};
+      return {depth5Control,textMentions:/\bDepth\s*5\b/i.test(text),guard:Boolean(globalThis.__COT_DEPTH_5_RETIRED__),entryHotfix:globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__||''};
     });
     assert(beforeTraining.guard,`${url}: Depth 5 retirement guard missing`);
+    assert(beforeTraining.entryHotfix==='direct-v3',`${url}: activation entry hotfix missing (${JSON.stringify(beforeTraining)})`);
     assert(!beforeTraining.depth5Control&&!beforeTraining.textMentions,`${url}: Depth 5 is still exposed before training (${JSON.stringify(beforeTraining)})`);
 
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
@@ -64,12 +67,10 @@ try{
     await page.locator('#cotPrimaryNext').click();
     await page.waitForTimeout(1200);
     const entryDiag=await page.evaluate(()=>{
-      let appState={};
-      try{appState={screen:state?.screen||'',mode:state?.mode||'',side:state?.side||'',depth:state?.sessionLength??null,variation:state?.variationIndex??null,profileEmail:state?.profileEmail||'',complete:!!state?.complete,status:String(state?.status||'')}}catch(e){appState={stateError:String(e?.message||e)}}
       const visibleButtons=[...document.querySelectorAll('button,a,[role="button"]')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0}).slice(0,25).map(el=>(el.textContent||'').replace(/\s+/g,' ').trim());
-      return {appState,board:!!document.querySelector('#board'),training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head'),hub:!!document.querySelector('.cot-activation-hub'),flow:document.documentElement.dataset.cotFlow||'',visibleButtons,body:(document.body.innerText||'').replace(/\s+/g,' ').slice(0,1400)};
+      return {hotfix:globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__||'',activationEntry:document.documentElement.dataset.cotActivationEntry||'',activationError:document.documentElement.dataset.cotActivationError||'',board:!!document.querySelector('#board'),training:!!document.querySelector('.training'),course:!!document.querySelector('.variation-grid,.course-head'),hub:!!document.querySelector('.cot-activation-hub'),flow:document.documentElement.dataset.cotFlow||'',visibleButtons,body:(document.body.innerText||'').replace(/\s+/g,' ').slice(0,1400)};
     });
-    console.log(`ENTRY_DIAG ${url} ${JSON.stringify(entryDiag)}`);
+    console.log(`ENTRY_DIAG ${url} ${JSON.stringify(entryDiag)} console=${JSON.stringify(consoleEvents)}`);
     await page.locator('#board').waitFor({state:'visible',timeout:15000});
     await page.waitForTimeout(450);
     const launchMs=Date.now()-launchStart;
