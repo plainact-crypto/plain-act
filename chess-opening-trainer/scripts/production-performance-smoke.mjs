@@ -12,7 +12,7 @@ async function gotoReady(page,url){
       const r=await page.goto(url,{waitUntil:'domcontentloaded',timeout:30000});
       assert(r?.ok(),`${url} HTTP ${r?.status()}`);
       await page.waitForTimeout(700);
-      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__&&globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__==='direct-v3'));
+      const ok=await page.evaluate(()=>Boolean(globalThis.__COT_TRAINING_PERFORMANCE_AUDIO_FIX__&&globalThis.__COT_ACTIVATION_ONBOARDING_V2__&&globalThis.__COT_REPORTS_42_47_ROOT_FIX__&&globalThis.__COT_PRACTICE_ENTRY_BOUNDARY_48_49__&&globalThis.__COT_DEPTH_5_RETIRED__&&globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__==='direct-v4'));
       if(ok)return;
       last=new Error(`${url}: current production activation-entry markers not deployed yet`);
     }catch(e){last=e}
@@ -49,7 +49,7 @@ try{
       return {depth5Control,textMentions:/\bDepth\s*5\b/i.test(text),guard:Boolean(globalThis.__COT_DEPTH_5_RETIRED__),entryHotfix:globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__||''};
     });
     assert(beforeTraining.guard,`${url}: Depth 5 retirement guard missing`);
-    assert(beforeTraining.entryHotfix==='direct-v3',`${url}: activation entry hotfix missing (${JSON.stringify(beforeTraining)})`);
+    assert(beforeTraining.entryHotfix==='direct-v4',`${url}: activation entry hotfix missing (${JSON.stringify(beforeTraining)})`);
     assert(!beforeTraining.depth5Control&&!beforeTraining.textMentions,`${url}: Depth 5 is still exposed before training (${JSON.stringify(beforeTraining)})`);
 
     const reportTrigger=page.getByRole('button',{name:/Report.*Issue/i}).first();
@@ -79,12 +79,13 @@ try{
       const board=document.querySelector('#board');
       const rect=board?.getBoundingClientRect();
       const text=root?.innerText||'';
-      return {live:Boolean(root&&board&&rect&&rect.width>240&&rect.height>240),depth10:/\b0\s*\/\s*10\b/.test(text),depth5:/\b0\s*\/\s*5\b/.test(text)||/\bDepth\s*5\b/i.test(text),hasExit:!!document.querySelector('#exit'),flow:document.documentElement.dataset.cotFlow||''};
+      return {live:Boolean(root&&board&&rect&&rect.width>240&&rect.height>240),depth10:/\b0\s*\/\s*10\b/.test(text),depth5:/\b0\s*\/\s*5\b/.test(text)||/\bDepth\s*5\b/i.test(text),hasExit:!!document.querySelector('#exit'),flow:document.documentElement.dataset.cotFlow||'',entry:document.documentElement.dataset.cotActivationEntry||''};
     });
     assert(training.live,`${url}: Continue Training did not reach a live mobile chessboard (${JSON.stringify(training)})`);
     assert(training.depth10&&!training.depth5,`${url}: first training session is not Depth 10 (${JSON.stringify(training)})`);
     assert(training.hasExit,`${url}: training controls missing Exit`);
     assert(training.flow==='training',`${url}: training flow marker not active (${training.flow})`);
+    assert(training.entry==='guided-board',`${url}: async guided entry did not verify rendered board (${JSON.stringify(training)})`);
 
     await page.locator('#exit').click({timeout:3000});
     await page.locator('.variation-grid,.course-head').first().waitFor({state:'visible',timeout:4000});
