@@ -33,11 +33,17 @@ async function seedSignedIn(page) {
   }, { fakeEmail, fakeUserId });
 }
 async function settleSyntheticAuth(page) {
+  // Reload first so all production patches initialize normally. A deliberately
+  // invalid smoke token can be cleared by the real auth bootstrap during that
+  // reload, so seed the synthetic signed-in state only after bootstrap settles.
+  // This tests the dashboard journey without pretending the fake token is a
+  // valid Supabase credential or generating a real account.
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(1200);
+  await seedSignedIn(page);
   await page.locator('#cloudAuthGate').evaluate(el => el.remove()).catch(() => {});
   await page.evaluate(() => { try { if (typeof render === 'function') render(); } catch {} });
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(700);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -60,7 +66,7 @@ try {
       // Current product intentionally skips the old onboarding modal and lands a
       // signed-in user on a dashboard-first next-action hub. The smoke test must
       // validate the shipped journey rather than require a retired modal.
-      await seedSignedIn(page); await settleSyntheticAuth(page);
+      await settleSyntheticAuth(page);
       await page.locator('.cot-activation-hub').waitFor({ state: 'visible', timeout: 7000 });
       assert(!(await page.locator('#cotOnboarding').isVisible().catch(() => false)), `${url} ${viewport.name}: retired onboarding modal unexpectedly visible`);
       const journeyText = await page.locator('.cot-activation-hub').innerText();
