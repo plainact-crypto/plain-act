@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+const bookUrl = '/plain-act/books/the-first-30-days-as-a-new-manager/';
+---
+<BaseLayout title="The New Manager Toolkit | Plain Act" description="A practical operating toolkit for first-time managers: feedback scripts, delegation briefs, 1:1 tools, decision logs and a first-30-days operating plan.">
+  <main class="toolkit">
+    <section class="hero">
+      <p class="kicker">PLAIN ACT · PRODUCT PREVIEW</p>
+      <h1>The New Manager Toolkit</h1>
+      <p class="lead">The book explains how to carry authority. The toolkit turns that guidance into documents you can use before the next difficult conversation, delegation, 1:1 or decision.</p>
+      <div class="actions"><a class="primary" href="#inside">See what’s inside</a><a href={bookUrl}>Start with the book</a></div>
+      <p class="note">Digital toolkit in preparation. No price or payment is being taken on this page yet.</p>
+    </section>
+
+    <section id="inside" class="section">
+      <p class="kicker">BUILT FOR THE MOMENTS THAT COST NEW MANAGERS TIME</p>
+      <h2>Seven working tools. No theory padding.</h2>
+      <div class="grid">
+        <article><span>01</span><h3>30-Day Manager Operating Plan</h3><p>Week-by-week priorities for observing, setting expectations, establishing cadence and making early decisions without trying to change everything at once.</p></article>
+        <article><span>02</span><h3>Difficult Feedback Builder</h3><p>A one-page preparation sheet built around: what happened → why it matters → what needs to change next, plus evidence and follow-up.</p></article>
+        <article><span>03</span><h3>Delegation Brief</h3><p>Define the outcome, guardrails, authority level, check-in point and definition of done before handing work over.</p></article>
+        <article><span>04</span><h3>1:1 Conversation Sheet</h3><p>A repeatable agenda for priorities, blockers, decisions, support and commitments—without turning the meeting into a status recital.</p></article>
+        <article><span>05</span><h3>Manager Conversation Scripts</h3><p>Short language starters for missed expectations, pushback, unclear ownership, boundary-setting, recognition and resetting work.</p></article>
+        <article><span>06</span><h3>Decision & Commitment Log</h3><p>Record what was decided, why, who owns the next move and when it will be revisited so verbal agreements do not evaporate.</p></article>
+        <article><span>07</span><h3>First-30-Days Checklists</h3><p>Printable pre-meeting and weekly review checklists that convert the Plain Act principles into visible operating habits.</p></article>
+      </div>
+    </section>
+
+    <section class="usecases">
+      <p class="kicker">ONE SYSTEM, TWO USE CASES</p>
+      <div class="twocol"><div><h2>For an individual manager</h2><p>Keep the tools beside you during the first month. Prepare conversations before they become emotional, delegate without taking work back, and leave meetings with explicit commitments.</p></div><div><h2>For teams and companies</h2><p>A future team-license pack will let organizations give newly promoted managers the same practical operating language and reusable worksheets. Organizational pricing and licensing are not yet live.</p></div></div>
+    </section>
+
+    <section class="cta">
+      <p class="kicker">AVAILABLE NOW</p><h2>Need the management system today?</h2><p><em>The First 30 Days as a New Manager</em> is already published. The toolkit is being built as the practical companion.</p><a class="primary" href={bookUrl}>View the book & editions</a>
+    </section>
+  </main>
+</BaseLayout>
+<style>
+.toolkit{background:#111315;color:#f5f2ea}.hero,.section,.usecases,.cta{width:min(1120px,calc(100% - 40px));margin:auto}.hero{padding:100px 0 80px}.kicker{font-size:12px;letter-spacing:.15em;font-weight:800;color:#d4ad67}.hero h1{font-size:clamp(48px,8vw,92px);line-height:.95;letter-spacing:-.055em;margin:14px 0 28px;max-width:900px}.lead{font-size:clamp(19px,2.2vw,28px);line-height:1.5;color:#c4c2bd;max-width:850px}.actions{display:flex;gap:14px;flex-wrap:wrap;margin:34px 0 16px}.actions a,.primary{display:inline-block;padding:15px 22px;border:1px solid #ddd6c9;text-decoration:none;color:#f5f2ea;font-weight:700}.actions .primary,.primary{background:#f0e9dc;color:#151719}.note{color:#8f918f;font-size:13px}.section{padding:70px 0;border-top:1px solid #303235}.section h2,.usecases h2,.cta h2{font-size:clamp(30px,4vw,50px);letter-spacing:-.03em}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.grid article{padding:28px;border:1px solid #343638;background:#181a1c}.grid span{color:#d4ad67;font-size:12px;font-weight:800}.grid h3{font-size:22px;margin:16px 0 10px}.grid p,.usecases p,.cta p{color:#b8b8b4;line-height:1.65}.usecases{padding:70px 0;border-top:1px solid #303235}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:48px}.cta{padding:70px 0 110px;border-top:1px solid #303235}.cta p{max-width:720px;font-size:18px;margin-bottom:28px}@media(max-width:720px){.hero{padding-top:70px}.grid,.twocol{grid-template-columns:1fr}}
+</style>
