@@ -11,17 +11,24 @@ const variationStart = source.indexOf('  function clickVariation(i){');
 const driveStart = source.indexOf('  function driveTo(a){', variationStart);
 const cardStart = source.indexOf('\n\n  function card(', driveStart);
 if (variationStart < 0 || driveStart < 0 || cardStart < 0) throw new Error('Activation navigation functions not found in final source.');
-const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v5';
+const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v6';
   function clickVariation(i){const cards=[...document.querySelectorAll('.variation-card')].filter(visible);const card=cards[Number(i||0)];const create=card?.querySelector('[data-new]');if(visible(create)&&!create.disabled){create.click();return true}return false}
   async function driveTo(a){
     document.documentElement.dataset.cotActivationEntry='clicked';localStorage.setItem(FOCUS_KEY,a.side);document.querySelector('#cotOnboarding')?.remove();document.querySelector('#cloudAuthGate')?.remove();
     try{
       document.documentElement.dataset.cotActivationEntry='direct-start';state.side=a.side;state.sessionLength=Math.max(10,Number(a.depth||10));state.variationIndex=Math.max(0,Number(a.variation||0));state.complete=false;
       if(a.mode==='guided'&&typeof startNewTraining==='function'){
-        document.documentElement.dataset.cotActivationEntry='guided-call';state.screen='training';state.mode='guided';await startNewTraining(state.variationIndex,true);state.screen='training';state.mode='guided';if(typeof render==='function')render();document.documentElement.dataset.cotFlow='training';document.documentElement.dataset.cotActivationEntry=document.querySelector('#board')?'guided-board':'guided-rendered-no-board';return;
+        document.documentElement.dataset.cotActivationEntry='guided-call';
+        // startNewTraining owns the Guided session state and initial render. Calling render()
+        // again immediately after it resolves can replace the freshly-mounted board with a
+        // dashboard/course render on mobile. Preserve the function's own state transition.
+        await startNewTraining(state.variationIndex,true);
+        document.documentElement.dataset.cotFlow='training';
+        document.documentElement.dataset.cotActivationEntry=document.querySelector('#board')?'guided-board':'guided-no-board';
+        return;
       }
       if(a.mode==='test'&&typeof startPracticeTest==='function'){
-        document.documentElement.dataset.cotActivationEntry='practice-call';state.screen='training';state.mode='practice';await startPracticeTest(state.variationIndex);state.screen='training';state.mode='practice';if(typeof render==='function')render();document.documentElement.dataset.cotActivationEntry='practice-rendered';return;
+        document.documentElement.dataset.cotActivationEntry='practice-call';await startPracticeTest(state.variationIndex);document.documentElement.dataset.cotActivationEntry=document.querySelector('#board')?'practice-board':'practice-no-board';return;
       }
       document.documentElement.dataset.cotActivationEntry='direct-function-missing';
     }catch(err){document.documentElement.dataset.cotActivationEntry='direct-error';document.documentElement.dataset.cotActivationError=String(err?.message||err);console.warn('Activation direct entry unavailable',err)}
@@ -30,11 +37,11 @@ const replacement = `  globalThis.__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v5';
     if(launchVisibleVariation())return;
     const side=a.side==='white'?[/London System/i,/\\bWhite\\b/i]:[/Caro-?Kann/i,/\\bBlack\\b/i];const depth=[new RegExp(\`(?:Depth|Level|Open)[^\\n]{0,18}\\b\${a.depth}\\b\`,'i'),new RegExp(\`\\b\${a.depth}\\s*moves?\`,'i')];const steps=[()=>clickText(side),()=>clickText(depth),()=>a.mode==='rank'?true:(launchVisibleVariation()||clickVariation(a.variation)),()=>a.mode==='rank'?clickText([/Rank Test/i,/Start Rank/i]):true];let i=0,tries=0;const tick=()=>{if(i>=steps.length)return;let ok=false;try{ok=steps[i]()}catch{}if(ok){i++;tries=0;setTimeout(tick,130)}else if(++tries<8)setTimeout(tick,180);else{i++;tries=0;setTimeout(tick,120)}};setTimeout(tick,80);
   }
-  if(!globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__){globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v3';document.addEventListener('click',event=>{const target=event.target?.closest?.('#cotPrimaryNext,[data-next-side]');if(!target||!target.closest('.cot-activation-hub'))return;event.preventDefault();event.stopImmediatePropagation();document.documentElement.dataset.cotActivationEntry='delegated-click';try{const p=profile();if(!p)throw new Error('Profile unavailable for activation entry');const side=target.dataset.nextSide||focusSide(p);Promise.resolve(driveTo(nextFor(p,side))).catch(err=>{document.documentElement.dataset.cotActivationEntry='delegate-error';document.documentElement.dataset.cotActivationError=String(err?.message||err)})}catch(err){document.documentElement.dataset.cotActivationEntry='delegate-error';document.documentElement.dataset.cotActivationError=String(err?.message||err)}},true)};`;
+  if(!globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__){globalThis.__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v4';document.addEventListener('click',event=>{const target=event.target?.closest?.('#cotPrimaryNext,[data-next-side]');if(!target||!target.closest('.cot-activation-hub'))return;event.preventDefault();event.stopImmediatePropagation();document.documentElement.dataset.cotActivationEntry='delegated-click';try{const p=profile();if(!p)throw new Error('Profile unavailable for activation entry');const side=target.dataset.nextSide||focusSide(p);Promise.resolve(driveTo(nextFor(p,side))).catch(err=>{document.documentElement.dataset.cotActivationEntry='delegate-error';document.documentElement.dataset.cotActivationError=String(err?.message||err)})}catch(err){document.documentElement.dataset.cotActivationEntry='delegate-error';document.documentElement.dataset.cotActivationError=String(err?.message||err)}},true)};`;
 source = source.slice(0, variationStart) + replacement + source.slice(cardStart);
-if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v5'")) throw new Error('Runtime activation hotfix marker missing.');
-if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v3'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
-if (!source.includes("state.screen='training'")) throw new Error('Training screen state handoff missing after hotfix.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_HOTFIX__='direct-v6'")) throw new Error('Runtime activation hotfix marker missing.');
+if (!source.includes("__COT_ACTIVATION_ENTRY_DELEGATE__='capture-v4'")) throw new Error('Persistent activation CTA delegate missing after hotfix.');
 if (!source.includes('await startNewTraining(state.variationIndex,true)')) throw new Error('Awaited Guided Training entry missing after hotfix.');
+if (source.includes("await startNewTraining(state.variationIndex,true);state.screen='training'")) throw new Error('Post-start Guided state overwrite regression remains.');
 await writeFile(mainPath, source, 'utf8');
-console.log(`Activation entry hotfix direct-v5 installed with explicit training screen state handoff.`);
+console.log(`Activation entry hotfix direct-v6 installed without post-start render/state overwrite.`);
