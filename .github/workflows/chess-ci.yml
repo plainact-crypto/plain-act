@@ -1,0 +1,40 @@
+name: Chess Trainer CI
+
+on:
+  pull_request:
+    paths:
+      - 'chess-opening-trainer/**'
+      - '.github/workflows/chess-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: chess-opening-trainer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: chess-opening-trainer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Test
+        run: npm test
+
+      - name: Production-patch build
+        run: bash cloudflare-build.sh
+
+      - name: Verify build artifact
+        run: test -f dist/index.html
