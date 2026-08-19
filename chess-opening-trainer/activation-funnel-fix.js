@@ -5,6 +5,7 @@
 
   const PENDING_KEY = 'cotActivationPendingSignup';
   const COMPLETE_KEY = 'cotActivationSignupComplete:';
+  const PROD_AUTH_REDIRECT = 'https://chess-opening-trainer-3jh.pages.dev/';
   const session = () => {
     try { return JSON.parse(localStorage.getItem('chessTrainerCloudSession') || 'null'); }
     catch { return null; }
@@ -54,13 +55,25 @@
     });
   }
 
-  // The authoritative signup proof is a successful Supabase Auth signup response.
-  // Observe that response without changing auth behavior or storing credentials/PII in analytics.
+  // Supabase falls back to the project's Site URL when a signup request does not
+  // include redirect_to. The hosted project previously inherited localhost:3000.
+  // Force the production app URL into the signup request so confirmation emails
+  // return users to the live trainer even if the dashboard Site URL is stale.
   const nativeFetch = globalThis.fetch.bind(globalThis);
   globalThis.fetch = async (...args) => {
-    const response = await nativeFetch(...args);
+    let requestArgs = args;
     try {
-      const url = String(args[0]?.url || args[0] || '');
+      const rawUrl = String(args[0]?.url || args[0] || '');
+      if (/\/auth\/v1\/signup(?:\?|$)/.test(rawUrl)) {
+        const url = new URL(rawUrl);
+        url.searchParams.set('redirect_to', PROD_AUTH_REDIRECT);
+        requestArgs = [url.toString(), ...args.slice(1)];
+      }
+    } catch {}
+
+    const response = await nativeFetch(...requestArgs);
+    try {
+      const url = String(requestArgs[0]?.url || requestArgs[0] || '');
       if (response.ok && /\/auth\/v1\/signup(?:\?|$)/.test(url)) {
         const payload = await response.clone().json().catch(() => null);
         const pending = pendingSignup();
