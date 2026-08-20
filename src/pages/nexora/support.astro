@@ -1,0 +1,73 @@
+---
+const documentationUrl = '/nexora/documentation/';
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXORA Commerce Support | NEXORA</title>
+  <meta name="description" content="Official support information for merchants using NEXORA Commerce." />
+  <link rel="canonical" href="https://plain-act.com/nexora/support/" />
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf3;background:#0b0f14;line-height:1.65}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#182332 0,#0b0f14 38rem);color:#e8edf3}a{color:#8ec8ff}main{width:min(980px,calc(100% - 32px));margin:auto;padding:56px 0 72px}.brand{font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;color:#9ca9b8}.hero{padding:28px 0 22px;border-bottom:1px solid #263241}.hero h1{font-size:clamp(2.15rem,6vw,4.8rem);line-height:1;margin:.35rem 0 1rem;letter-spacing:-.04em}.hero p{max-width:760px;color:#b7c1cd;font-size:1.08rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}.card,.section{border:1px solid #263241;background:rgba(17,23,31,.82);border-radius:18px;padding:24px}.section{margin-top:18px}.section h2,.card h2{margin-top:0;font-size:1.15rem}.section ul,.section ol{padding-left:1.35rem}.muted{color:#9ca9b8}.notice{border-left:3px solid #8ec8ff;padding-left:16px}.footer{margin-top:28px;padding-top:18px;border-top:1px solid #263241;color:#8f9aa8;font-size:.9rem}@media(max-width:700px){.grid{grid-template-columns:1fr}main{padding-top:36px}}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="brand">NEXORA Support</div>
+    <h1>NEXORA Commerce Support</h1>
+    <p>Official product support information for merchants using a valid copy of NEXORA Commerce.</p>
+  </header>
+
+  <div class="grid">
+    <section class="card">
+      <h2>How to get help</h2>
+      <p>Use the support or contact channel attached to your NEXORA Commerce purchase, order, or delivery record. If you purchased through a marketplace or sales platform, open your order and use the seller or theme-support option available there.</p>
+    </section>
+    <section class="card">
+      <h2>Documentation</h2>
+      <p>Start with the merchant documentation for installation, configuration, testing, updates, and troubleshooting.</p>
+      <p><a href={documentationUrl}>Open NEXORA Commerce Documentation →</a></p>
+    </section>
+  </div>
+
+  <section class="section">
+    <h2>Include this information</h2>
+    <ul>
+      <li>Your store URL.</li><li>NEXORA Commerce version number.</li><li>A short description of the issue and expected result.</li><li>The page or template affected.</li><li>Steps that reproduce the problem.</li><li>Screenshots or a short screen recording when useful.</li><li>Whether the issue also occurs on a clean duplicate of the theme without recent custom code changes.</li>
+    </ul>
+    <p class="notice">Do not send customer passwords, payment details, API secrets, private access tokens, or other sensitive credentials in a support request.</p>
+  </section>
+
+  <section class="section">
+    <h2>What theme support covers</h2>
+    <ul>
+      <li>Questions about installing and configuring NEXORA Commerce.</li><li>Help locating and using settings provided by the theme.</li><li>Reproducible defects in the supplied NEXORA Commerce theme code.</li><li>Guidance for determining whether an issue originates in the theme, Shopify configuration, or a third-party integration.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Outside standard theme support</h2>
+    <ul>
+      <li>Custom feature development or bespoke design work.</li><li>Debugging code added by a merchant, agency, or third party.</li><li>Third-party app support, except reasonable assistance identifying whether an integration conflict is involved.</li><li>Shopify account, billing, payment-provider, checkout-plan, domain, or platform incidents that require Shopify or another service provider.</li><li>Content entry, product catalog administration, or business operations unrelated to the theme itself.</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Before requesting support</h2>
+    <ol>
+      <li>Confirm you are working on a duplicate or backup before changing theme code.</li><li>Reproduce the issue in theme preview.</li><li>Temporarily disable recently added app embeds or custom scripts when safe to do so, then test again.</li><li>Check the NEXORA Commerce documentation for the relevant setup step.</li><li>Record the exact browser/device and the steps that reproduce the issue.</li>
+    </ol>
+  </section>
+
+  <section class="section">
+    <h2>Updates and modified themes</h2>
+    <p>Theme updates can replace theme files. Keep a record of custom code changes and test updates on an unpublished duplicate before making them live. Support can help identify theme-related issues, but cannot guarantee compatibility with unreviewed third-party modifications.</p>
+  </section>
+
+  <footer class="footer">Product: NEXORA Commerce · Support identity: NEXORA Support · Version 1.0.0</footer>
+</main>
+</body>
+</html>
