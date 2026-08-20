@@ -1,7 +1,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://plainact-crypto.github.io',
-  base: '/plain-act/',
+  site: 'https://plain-act.com',
+  base: '/',
   trailingSlash: 'always'
 });
