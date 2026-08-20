@@ -1,0 +1,46 @@
+name: LinkedIn Post
+
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: "Post text"
+        required: true
+        type: string
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post to LinkedIn
+        env:
+          TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+          TEXT: ${{ inputs.text }}
+        run: |
+          set -e
+          SUB=$(curl -sS https://api.linkedin.com/v2/userinfo \
+            -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)['sub'])")
+
+          BODY=$(python3 - <<'PY'
+          import json, os
+          print(json.dumps({
+            "author": "urn:li:person:" + os.environ["SUB"],
+            "commentary": os.environ["TEXT"],
+            "visibility": "PUBLIC",
+            "distribution": {
+              "feedDistribution": "MAIN_FEED",
+              "targetEntities": [],
+              "thirdPartyDistributionChannels": []
+            },
+            "lifecycleState": "PUBLISHED",
+            "isReshareDisabledByAuthor": False
+          }))
+          PY
+          )
+
+          curl -f -i -X POST https://api.linkedin.com/rest/posts \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "X-Restli-Protocol-Version: 2.0.0" \
+            -H "LinkedIn-Version: 202608" \
+            -H "Content-Type: application/json" \
+            --data "$BODY"
