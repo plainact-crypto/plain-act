@@ -1,0 +1,57 @@
+---
+const supportUrl = '/nexora/support/';
+const sections = [
+  ['1. Install the theme safely', ['In Shopify admin, go to Online Store → Themes.','Add or upload the NEXORA Commerce theme package supplied with your purchase.','Keep the newly added theme unpublished while you configure and test it.','Before changing code in an existing store, duplicate the current live theme so you have a rollback copy.']],
+  ['2. Start with theme settings', ['Open Customize on the unpublished NEXORA Commerce theme. Review global theme settings first. Configure only options actually shown in the editor, such as branding, typography, colors, layout preferences, buttons, social links, cart behavior, or other available controls. Available settings can vary by NEXORA Commerce version; the theme editor is the authoritative list for your installed copy.']],
+  ['3. Configure header and navigation', ['Confirm your logo or store name displays correctly.','Select the intended Shopify navigation menu for the header.','Review desktop and mobile navigation separately.','Check announcement or utility areas if enabled in your installed version.','Verify search, account, and cart links that are present in the theme.']],
+  ['4. Build the home page', ['Use Shopify’s theme editor to add, remove, reorder, and configure the sections supplied by your installed version of NEXORA Commerce. Complete required content fields, images, links, and product or collection selections. Preview desktop and mobile before moving on.']],
+  ['5. Configure product templates', ['Open a representative product in theme preview.','Review product-template sections and blocks available in the editor.','Confirm product media, title, price, variants, quantity controls, purchase controls, product description, and additional supplied blocks render as expected.','Test one image vs. many, one variant vs. multiple, long titles/descriptions, sold-out variants, sale pricing, and missing optional content.','Use alternate template assignments only when required for a real merchandising need and when your installed version exposes them.']],
+  ['6. Collection and search templates', ['Open a populated collection, a small collection, an empty-result state where practical, and storefront search. Configure only sections and filters actually exposed by your installed version. Confirm cards, prices, badges, pagination/loading behavior, sorting, and mobile layouts work with your catalog.']],
+  ['7. Cart behavior', ['Test the cart experience provided by your installed version. Add multiple products and variants, change quantities, remove items, test unavailable changes where practical, and verify totals shown by the storefront agree with Shopify. Checkout itself is controlled by Shopify and your store plan/configuration.']],
+  ['8. Pages, blog, and other templates', ['Review templates your store actually uses, including standard pages, contact content, blog/article content, password page, 404 page, or other templates present in the theme. Complete available settings and check mobile and desktop presentation.']],
+  ['9. Images and content', ['Use appropriately sized, high-quality source images and avoid unnecessarily large uploads.','Add meaningful alt text where Shopify provides an alt-text field.','Keep headings descriptive and preserve a logical heading order in merchant-entered content.','Do not place essential information only inside images.','Check long product names, long menu labels, translated text, and promotional copy for wrapping and overflow.']],
+  ['10. Apps and integrations', ['Install or enable only the app embeds and integrations your store needs. After adding a storefront-affecting app, retest the header, product page, cart, search, and mobile layout. Third-party apps can inject scripts or markup outside the theme’s control, so isolate conflicts by testing a clean duplicate when necessary.']],
+  ['11. Pre-launch checklist', ['Preview the unpublished NEXORA Commerce theme on current desktop and mobile browsers.','Test primary navigation, footer links, search, product selection, variants, add to cart, quantity changes, cart removal, and handoff to Shopify checkout.','Open important products, collections, pages, blog content, search results, 404, and campaign landing pages.','Test realistic catalog data, including missing optional content and unusually long text.','Verify images load, links point to intended destinations, and no test text or placeholder merchant content remains.','Review app embeds and custom scripts.','Confirm store policies, contact information, shipping settings, taxes, markets, payments, domains, and checkout configuration separately in Shopify admin; these are store/platform settings, not theme metadata.']],
+  ['12. Publish safely', ['Publish NEXORA Commerce only after the unpublished preview passes your launch checks. Keep the previous live theme in the library as a rollback option until you are satisfied with the release.']],
+  ['13. Updating NEXORA Commerce', ['Do not overwrite a live customized theme without testing. Add the newer version as a separate unpublished theme, reproduce required settings/customizations, compare custom code, run pre-launch checks, and only then publish it. Keep a record of custom code because upgrades may not preserve merchant or agency modifications.']],
+  ['14. Troubleshooting', ['If something looks wrong, first determine whether the issue reproduces on a clean duplicate of NEXORA Commerce without recent custom code or optional app embeds. Record the exact template, product/page URL, browser/device, expected behavior, actual behavior, and reproduction steps. Then use NEXORA Support with that information.']]
+];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NEXORA Commerce Documentation | NEXORA</title>
+  <meta name="description" content="Official merchant documentation for installing, configuring, testing, updating and troubleshooting NEXORA Commerce." />
+  <link rel="canonical" href="https://plain-act.com/nexora/documentation/" />
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf3;background:#0b0f14;line-height:1.7}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#182332 0,#0b0f14 38rem);color:#e8edf3}a{color:#8ec8ff}main{width:min(980px,calc(100% - 32px));margin:auto;padding:56px 0 72px}.brand{font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;color:#9ca9b8}.hero{padding:28px 0 22px;border-bottom:1px solid #263241}.hero h1{font-size:clamp(2.1rem,6vw,4.6rem);line-height:1;margin:.35rem 0 1rem;letter-spacing:-.04em}.hero p{max-width:780px;color:#b7c1cd;font-size:1.08rem}.section{margin-top:18px;border:1px solid #263241;background:rgba(17,23,31,.82);border-radius:18px;padding:24px}.section h2{margin-top:0;font-size:1.15rem}.section ul{padding-left:1.35rem}.toplink{display:inline-block;margin-top:12px}.footer{margin-top:28px;padding-top:18px;border-top:1px solid #263241;color:#8f9aa8;font-size:.9rem}
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="brand">NEXORA Documentation</div>
+    <h1>NEXORA Commerce</h1>
+    <p>This guide covers safe installation, initial setup, configuration workflow, testing, updates, and support for NEXORA Commerce.</p>
+    <a class="toplink" href={supportUrl}>Need help? Open NEXORA Support →</a>
+  </header>
+
+  {sections.map(([title, items]) => (
+    <section class="section">
+      <h2>{title}</h2>
+      {items.length === 1 ? <p>{items[0]}</p> : <ul>{items.map((item) => <li>{item}</li>)}</ul>}
+    </section>
+  ))}
+
+  <section class="section">
+    <h2>15. Support</h2>
+    <p>For product support, use the official NEXORA Support page.</p>
+    <p><a href={supportUrl}>Open NEXORA Commerce Support →</a></p>
+  </section>
+
+  <footer class="footer">Product: NEXORA Commerce · Release line: 1.x · Current release: 1.0.0</footer>
+</main>
+</body>
+</html>
