@@ -17,9 +17,11 @@ jobs:
           TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
           TEXT: ${{ inputs.text }}
         run: |
-          set -e
-          SUB=$(curl -sS https://api.linkedin.com/v2/userinfo \
+          set -euo pipefail
+
+          SUB=$(curl -fsS https://api.linkedin.com/v2/userinfo \
             -H "Authorization: Bearer $TOKEN" | python3 -c "import sys,json; print(json.load(sys.stdin)['sub'])")
+          export SUB
 
           BODY=$(python3 - <<'PY'
           import json, os
@@ -38,7 +40,7 @@ jobs:
           PY
           )
 
-          curl -f -i -X POST https://api.linkedin.com/rest/posts \
+          curl -fsS -i -X POST https://api.linkedin.com/rest/posts \
             -H "Authorization: Bearer $TOKEN" \
             -H "X-Restli-Protocol-Version: 2.0.0" \
             -H "LinkedIn-Version: 202608" \
