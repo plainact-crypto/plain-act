@@ -1,5 +1,6 @@
 ---
 const documentationUrl = '/nexora/documentation/';
+const supportEmail = 'info@plain-act.com';
 ---
 <!doctype html>
 <html lang="en">
@@ -7,10 +8,10 @@ const documentationUrl = '/nexora/documentation/';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>NEXORA Commerce Support | NEXORA</title>
-  <meta name="description" content="Official support information for merchants using NEXORA Commerce." />
+  <meta name="description" content="Official support and support-request form for merchants using NEXORA Commerce." />
   <link rel="canonical" href="https://plain-act.com/nexora/support/" />
   <style>
-    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf3;background:#0b0f14;line-height:1.65}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#182332 0,#0b0f14 38rem);color:#e8edf3}a{color:#8ec8ff}main{width:min(980px,calc(100% - 32px));margin:auto;padding:56px 0 72px}.brand{font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;color:#9ca9b8}.hero{padding:28px 0 22px;border-bottom:1px solid #263241}.hero h1{font-size:clamp(2.15rem,6vw,4.8rem);line-height:1;margin:.35rem 0 1rem;letter-spacing:-.04em}.hero p{max-width:760px;color:#b7c1cd;font-size:1.08rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}.card,.section{border:1px solid #263241;background:rgba(17,23,31,.82);border-radius:18px;padding:24px}.section{margin-top:18px}.section h2,.card h2{margin-top:0;font-size:1.15rem}.section ul,.section ol{padding-left:1.35rem}.muted{color:#9ca9b8}.notice{border-left:3px solid #8ec8ff;padding-left:16px}.footer{margin-top:28px;padding-top:18px;border-top:1px solid #263241;color:#8f9aa8;font-size:.9rem}@media(max-width:700px){.grid{grid-template-columns:1fr}main{padding-top:36px}}
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#e8edf3;background:#0b0f14;line-height:1.65}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top right,#182332 0,#0b0f14 38rem);color:#e8edf3}a{color:#8ec8ff}main{width:min(1040px,calc(100% - 32px));margin:auto;padding:56px 0 72px}.brand{font-size:.82rem;letter-spacing:.22em;text-transform:uppercase;color:#9ca9b8}.hero{padding:28px 0 22px;border-bottom:1px solid #263241}.hero h1{font-size:clamp(2.15rem,6vw,4.8rem);line-height:1;margin:.35rem 0 1rem;letter-spacing:-.04em}.hero p{max-width:760px;color:#b7c1cd;font-size:1.08rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:28px}.card,.section{border:1px solid #263241;background:rgba(17,23,31,.82);border-radius:18px;padding:24px}.section{margin-top:18px}.section h2,.card h2{margin-top:0;font-size:1.15rem}.section ul,.section ol{padding-left:1.35rem}.muted{color:#9ca9b8}.notice{border-left:3px solid #8ec8ff;padding-left:16px}.support-form{display:grid;gap:18px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.field{display:grid;gap:7px}.field--full{grid-column:1/-1}.field label{font-size:.9rem;font-weight:700;color:#dce5ef}.field input,.field select,.field textarea{width:100%;border:1px solid #344357;border-radius:10px;background:#0b1119;color:#f6f8fb;padding:12px 13px;font:inherit}.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #8ec8ff;outline-offset:2px}.field textarea{min-height:130px;resize:vertical}.field small{color:#8f9aa8}.button{justify-self:start;border:0;border-radius:999px;background:#e8edf3;color:#0b0f14;padding:12px 20px;font:inherit;font-weight:800;cursor:pointer}.button:focus-visible{outline:3px solid #8ec8ff;outline-offset:3px}.privacy{font-size:.9rem;color:#9ca9b8}.honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}.footer{margin-top:28px;padding-top:18px;border-top:1px solid #263241;color:#8f9aa8;font-size:.9rem}@media(max-width:700px){.grid,.form-grid{grid-template-columns:1fr}.field--full{grid-column:auto}main{padding-top:36px}}
   </style>
 </head>
 <body>
@@ -18,48 +19,119 @@ const documentationUrl = '/nexora/documentation/';
   <header class="hero">
     <div class="brand">NEXORA Support</div>
     <h1>NEXORA Commerce Support</h1>
-    <p>Official product support information for merchants using a valid copy of NEXORA Commerce.</p>
+    <p>Official product support for merchants using a valid copy of NEXORA Commerce. Use the form below for a traceable support request.</p>
   </header>
 
   <div class="grid">
     <section class="card">
-      <h2>How to get help</h2>
-      <p>Use the support or contact channel attached to your NEXORA Commerce purchase, order, or delivery record. If you purchased through a marketplace or sales platform, open your order and use the seller or theme-support option available there.</p>
+      <h2>Before you submit</h2>
+      <p>Check the merchant documentation first, reproduce the issue in theme preview, and record the exact page, device, browser, and steps that trigger the problem.</p>
     </section>
     <section class="card">
       <h2>Documentation</h2>
-      <p>Start with the merchant documentation for installation, configuration, testing, updates, and troubleshooting.</p>
+      <p>Installation, setup, configuration, testing, updating, and troubleshooting guidance.</p>
       <p><a href={documentationUrl}>Open NEXORA Commerce Documentation →</a></p>
     </section>
   </div>
 
-  <section class="section">
-    <h2>Include this information</h2>
-    <ul>
-      <li>Your store URL.</li><li>NEXORA Commerce version number.</li><li>A short description of the issue and expected result.</li><li>The page or template affected.</li><li>Steps that reproduce the problem.</li><li>Screenshots or a short screen recording when useful.</li><li>Whether the issue also occurs on a clean duplicate of the theme without recent custom code changes.</li>
-    </ul>
-    <p class="notice">Do not send customer passwords, payment details, API secrets, private access tokens, or other sensitive credentials in a support request.</p>
+  <section class="section" aria-labelledby="support-request-heading">
+    <h2 id="support-request-heading">Submit a support request</h2>
+    <p class="muted">Fields marked required help us reproduce the issue without asking you to repeat basic store and environment information.</p>
+
+    <form class="support-form" action={`https://formsubmit.co/${supportEmail}`} method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_subject" value="NEXORA Commerce support request" />
+      <input type="hidden" name="_template" value="table" />
+      <input type="hidden" name="_next" value="https://plain-act.com/nexora/support-thanks/" />
+      <input type="hidden" name="_autoresponse" value="We received your NEXORA Commerce support request. Keep this email for your records. Never send passwords, payment details, API secrets, private access tokens, or other sensitive credentials in a support request." />
+      <input type="hidden" name="_url" value="https://plain-act.com/nexora/support/" />
+      <div class="honeypot" aria-hidden="true"><label for="website-check">Leave this field empty</label><input id="website-check" type="text" name="_honey" tabindex="-1" autocomplete="off" /></div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="support-name">Name *</label>
+          <input id="support-name" name="name" type="text" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="support-email">Email *</label>
+          <input id="support-email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="support-store">Shopify store URL *</label>
+          <input id="support-store" name="store_url" type="url" inputmode="url" placeholder="https://your-store.myshopify.com" required />
+        </div>
+        <div class="field">
+          <label for="support-version">NEXORA version *</label>
+          <input id="support-version" name="theme_version" type="text" value="1.0.0" required />
+        </div>
+        <div class="field">
+          <label for="support-category">Issue category *</label>
+          <select id="support-category" name="issue_category" required>
+            <option value="">Select one</option>
+            <option>Installation / setup</option>
+            <option>Theme Editor / settings</option>
+            <option>Header / navigation / search</option>
+            <option>Product page / variants / media</option>
+            <option>Collection / filtering / search results</option>
+            <option>Cart / merchandising</option>
+            <option>Mobile / responsive layout</option>
+            <option>Accessibility</option>
+            <option>App or integration conflict</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="support-template">Affected page or template *</label>
+          <input id="support-template" name="affected_page_or_template" type="text" placeholder="Product, collection, home page…" required />
+        </div>
+        <div class="field">
+          <label for="support-browser">Browser / device *</label>
+          <input id="support-browser" name="browser_device" type="text" placeholder="Chrome 140 / Android, Safari / iPhone…" required />
+        </div>
+        <div class="field">
+          <label for="support-clean-copy">Clean duplicate test</label>
+          <select id="support-clean-copy" name="clean_duplicate_result">
+            <option>Not tested</option>
+            <option>Issue also occurs on a clean duplicate</option>
+            <option>Issue does not occur on a clean duplicate</option>
+          </select>
+        </div>
+        <div class="field field--full">
+          <label for="support-summary">Issue summary *</label>
+          <textarea id="support-summary" name="issue_summary" required placeholder="What is happening?"></textarea>
+        </div>
+        <div class="field field--full">
+          <label for="support-steps">Steps to reproduce *</label>
+          <textarea id="support-steps" name="steps_to_reproduce" required placeholder="1. Open… 2. Select… 3. Observe…"></textarea>
+        </div>
+        <div class="field field--full">
+          <label for="support-expected">Expected result *</label>
+          <textarea id="support-expected" name="expected_result" required placeholder="What should happen instead?"></textarea>
+        </div>
+        <div class="field field--full">
+          <label for="support-attachment">Screenshot or supporting file</label>
+          <input id="support-attachment" name="attachment" type="file" accept="image/png,image/jpeg,image/webp,video/mp4,.txt,.pdf" />
+          <small>Optional. Keep attachments focused on reproducing the issue and do not upload secrets or customer data.</small>
+        </div>
+      </div>
+
+      <p class="notice">Do not submit customer passwords, payment details, API secrets, private access tokens, staff credentials, or other sensitive information.</p>
+      <p class="privacy">By submitting this form, you provide the information needed to review and reply to your support request. Form delivery is handled by a form-processing service so the request can reach NEXORA Support from this static website.</p>
+      <button class="button" type="submit">Send support request</button>
+    </form>
   </section>
 
   <section class="section">
     <h2>What theme support covers</h2>
     <ul>
-      <li>Questions about installing and configuring NEXORA Commerce.</li><li>Help locating and using settings provided by the theme.</li><li>Reproducible defects in the supplied NEXORA Commerce theme code.</li><li>Guidance for determining whether an issue originates in the theme, Shopify configuration, or a third-party integration.</li>
+      <li>Questions about installing and configuring NEXORA Commerce.</li><li>Help locating and using settings supplied by the theme.</li><li>Reproducible defects in the supplied NEXORA Commerce theme code.</li><li>Reasonable guidance for determining whether an issue originates in the theme, Shopify configuration, or a third-party integration.</li>
     </ul>
   </section>
 
   <section class="section">
     <h2>Outside standard theme support</h2>
     <ul>
-      <li>Custom feature development or bespoke design work.</li><li>Debugging code added by a merchant, agency, or third party.</li><li>Third-party app support, except reasonable assistance identifying whether an integration conflict is involved.</li><li>Shopify account, billing, payment-provider, checkout-plan, domain, or platform incidents that require Shopify or another service provider.</li><li>Content entry, product catalog administration, or business operations unrelated to the theme itself.</li>
+      <li>Custom feature development or bespoke design work.</li><li>Debugging merchant-, agency-, or third-party-added custom code.</li><li>Third-party app support beyond reasonable conflict isolation.</li><li>Shopify account, billing, payment-provider, checkout-plan, domain, or platform incidents that require Shopify or another service provider.</li><li>Catalog administration or business operations unrelated to the theme itself.</li>
     </ul>
-  </section>
-
-  <section class="section">
-    <h2>Before requesting support</h2>
-    <ol>
-      <li>Confirm you are working on a duplicate or backup before changing theme code.</li><li>Reproduce the issue in theme preview.</li><li>Temporarily disable recently added app embeds or custom scripts when safe to do so, then test again.</li><li>Check the NEXORA Commerce documentation for the relevant setup step.</li><li>Record the exact browser/device and the steps that reproduce the issue.</li>
-    </ol>
   </section>
 
   <section class="section">
@@ -67,7 +139,7 @@ const documentationUrl = '/nexora/documentation/';
     <p>Theme updates can replace theme files. Keep a record of custom code changes and test updates on an unpublished duplicate before making them live. Support can help identify theme-related issues, but cannot guarantee compatibility with unreviewed third-party modifications.</p>
   </section>
 
-  <footer class="footer">Product: NEXORA Commerce · Support identity: NEXORA Support · Version 1.0.0</footer>
+  <footer class="footer">Product: NEXORA Commerce · Support identity: NEXORA Support · Version 1.0.0 · <a href={`mailto:${supportEmail}`}>{supportEmail}</a></footer>
 </main>
 </body>
 </html>
