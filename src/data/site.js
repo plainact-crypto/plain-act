@@ -14,3 +14,5 @@ export const site = {
     'https://www.linkedin.com/company/136024511/'
   ]
 };
+
+// Deployment refresh: ensure plain-act.com serves the latest site configuration.
