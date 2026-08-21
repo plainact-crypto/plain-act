@@ -34,10 +34,13 @@ jobs:
         run: npm run build
 
       - name: Build chess trainer with production patches
+        id: chess_build
+        continue-on-error: true
         working-directory: chess-opening-trainer
         run: bash cloudflare-build.sh
 
-      - name: Add chess trainer to Pages artifact
+      - name: Add chess trainer to Pages artifact when build succeeds
+        if: steps.chess_build.outcome == 'success'
         run: |
           rm -rf dist/chess-opening-trainer
           mkdir -p dist/chess-opening-trainer
@@ -92,4 +95,5 @@ jobs:
           PRODUCTION_URLS: https://plainact-crypto.github.io/plain-act/chess-opening-trainer/,https://chess-opening-trainer-3jh.pages.dev
         run: node scripts/production-performance-smoke.mjs
 
+# Plain Act site deployment must not be blocked by an unrelated chess build failure.
 # Any push to main intentionally triggers this pipeline; Cloudflare Pages should also auto-deploy from its GitHub integration when connected to main.
