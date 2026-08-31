@@ -6,7 +6,8 @@ const replacements = [
   ['https://plainact-crypto.github.io/plain-act/', 'https://plain-act.com/'],
   ['https://plain-act.pages.dev/', 'https://plain-act.com/'],
   ['https://plain-act.pages.dev', 'https://plain-act.com'],
-  ['plainact-crypto.github.io/plain-act', 'plain-act.com']
+  ['plainact-crypto.github.io/plain-act', 'plain-act.com'],
+  ['/plain-act/', '/']
 ];
 
 async function walk(dir) {
@@ -33,10 +34,16 @@ for (const file of await walk(distDir.pathname)) {
       text = pieces.join(to);
     }
   }
+
+  if (file === join(distDir.pathname, 'index.html') && !/<link\s+rel=["']canonical["']/i.test(text)) {
+    text = text.replace('</head>', '  <link rel="canonical" href="https://plain-act.com/" />\n</head>');
+    replacementCount += 1;
+  }
+
   if (text !== before) {
     await writeFile(file, text, 'utf8');
     changedFiles += 1;
   }
 }
 
-console.log(`Normalized stale deployment hosts in ${changedFiles} built files (${replacementCount} replacements).`);
+console.log(`Normalized stale deployment hosts/paths in ${changedFiles} built files (${replacementCount} replacements).`);
