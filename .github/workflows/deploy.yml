@@ -95,5 +95,11 @@ jobs:
           PRODUCTION_URLS: https://plainact-crypto.github.io/plain-act/chess-opening-trainer/,https://chess-opening-trainer-3jh.pages.dev
         run: node scripts/production-performance-smoke.mjs
 
+      - name: Production Plain Act tools smoke — Desktop + Mobile
+        working-directory: chess-opening-trainer
+        env:
+          PLAIN_ACT_URL: https://plain-act.com
+        run: node scripts/plain-act-tools-smoke.mjs
+
 # Plain Act site deployment must not be blocked by an unrelated chess build failure.
 # Any push to main intentionally triggers this pipeline; Cloudflare Pages should also auto-deploy from its GitHub integration when connected to main.
