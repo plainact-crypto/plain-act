@@ -1,13 +1,201 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
-const steps = ['Notice pressure', 'Reduce reaction', 'Take one useful action', 'Stop'];
+
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+
+const steps = [
+  {
+    number: '01',
+    title: 'Notice pressure',
+    signal: 'You feel urgency, embarrassment, uncertainty, defensiveness, or the need to prove yourself.',
+    action: 'Name the pressure before deciding what to do. Separate the event from your reaction to it.',
+    question: 'What exactly is happening, and what part of my response is pressure rather than necessity?'
+  },
+  {
+    number: '02',
+    title: 'Reduce reaction',
+    signal: 'You want to explain more, rescue the work, say yes immediately, delay feedback, or make a large change fast.',
+    action: 'Remove the extra response. Shorten the message, narrow the decision, or wait long enough to see the real problem.',
+    question: 'What can I remove without making the situation less clear?'
+  },
+  {
+    number: '03',
+    title: 'Take one useful action',
+    signal: 'The situation is clear enough to move, but several possible responses compete for attention.',
+    action: 'Choose the smallest concrete action that improves clarity, ownership, timing, or risk.',
+    question: 'What single action changes the situation rather than only changing how I feel about it?'
+  },
+  {
+    number: '04',
+    title: 'Stop',
+    signal: 'You have already acted but still feel the urge to add another message, meeting, correction, or explanation.',
+    action: 'Let the action land. Observe the result before adding more management activity.',
+    question: 'Has the useful action already been taken? If yes, what happens if I leave it alone for now?'
+  }
+];
+
+const examples = [
+  {
+    title: 'Feedback conversation',
+    pressure: 'A report arrives late and you feel irritated because a client commitment moved.',
+    reaction: 'Send a long message explaining why punctuality matters, or wait until the next review because you do not want conflict.',
+    action: 'State the observable miss, the impact, and the next expectation in a short private conversation.',
+    stop: 'Do not keep proving the point after the expectation is understood.'
+  },
+  {
+    title: 'Delegation under deadline pressure',
+    pressure: 'A delegated draft is imperfect and the deadline is close.',
+    reaction: 'Take the file back and rewrite it yourself.',
+    action: 'Restate the definition of done, identify the two changes required, confirm the checkpoint, and leave ownership with the assignee.',
+    stop: 'Do not reopen the task between the agreed checkpoint and deadline unless a real risk appears.'
+  },
+  {
+    title: 'Former-peer boundary',
+    pressure: 'A former peer uses an old social channel to complain about a decision you now manage.',
+    reaction: 'Join the complaint to preserve the friendship, or become cold to prove authority.',
+    action: 'Acknowledge the issue and move the work discussion into the appropriate one-to-one or team channel.',
+    stop: 'Return to normal human warmth without reopening the management issue socially.'
+  }
+];
 ---
-<BaseLayout title="Plain Act Method | Notice pressure, reduce reaction" description="Plain Act's restrained reading and action philosophy for management, responsibility, execution, and decision-making." path="/method/" current="Method">
-  <section class="section"><div class="container">
-    <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Method', url:'/method/'}]} />
-    <p class="eyebrow">Plain Act method</p><h1>Read under pressure. Act with restraint.</h1>
-    <p class="lede">Plain Act uses a simple reading rhythm for management, responsibility, execution, and decision-making. It is not a proprietary method or a guaranteed system.</p>
-    <div class="grid grid-2">{steps.map((step) => <article class="card flat"><h2>{step}</h2><p>{step === 'Notice pressure' && 'Name the moment where authority, uncertainty, urgency, or embarrassment is pulling you into reaction.'}{step === 'Reduce reaction' && 'Lower the amount of explanation, rescue, overcommitment, or delay before it becomes the new pattern.'}{step === 'Take one useful action' && 'Choose the next concrete move: a question, a boundary, a feedback conversation, a decision, or a repair.'}{step === 'Stop' && 'Avoid turning every moment into a performance. Let the action settle before adding more.'}</p></article>)}</div>
-  </div></section>
+<BaseLayout
+  title="The Plain Act Method: A Practical Operating Model for Managers Under Pressure"
+  description="A practical four-step management framework for noticing pressure, reducing reaction, taking one useful action, and stopping before overmanagement begins."
+  path="/method/"
+>
+  <section class="hero method-hero">
+    <div class="container grid grid-2">
+      <div>
+        <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Method', url:'/method/'}]} />
+        <p class="eyebrow">Plain Act Method</p>
+        <h1>A practical operating model for managers under pressure.</h1>
+        <p class="lede">Notice pressure. Reduce reaction. Take one useful action. Stop. The method is a simple editorial framework for making management responses narrower, clearer, and easier to repeat.</p>
+        <div class="button-row">
+          <a class="button" href="#worksheet">Use the worksheet</a>
+          <a class="button secondary" href={href('/guides/new-manager/')}>Open the New Manager Guide</a>
+        </div>
+      </div>
+      <aside class="card flat method-note">
+        <h2>What this is — and is not</h2>
+        <p>This is a practical decision framework used across Plain Act management guidance. It is not presented as a scientifically validated model, a proprietary certification, a clinical method, legal advice, or a guaranteed way to produce a workplace outcome.</p>
+        <p>Use it to slow down unnecessary reaction and make the next management action explicit. Adapt it to the facts, policies, risks, and responsibilities in your workplace.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container method-copy">
+      <p class="eyebrow">When it helps</p>
+      <h2>Use it when pressure is changing your behavior.</h2>
+      <p>The method is most useful when the management problem is not simply lack of information. It is useful when you already know something needs attention but pressure is pushing you toward an oversized response: too much explanation, too much control, too much delay, too much agreement, or too much change at once.</p>
+      <div class="pill-list" aria-label="Common use cases">
+        <span>Giving feedback</span><span>Delegating work</span><span>Managing up</span><span>Former peers</span><span>Difficult conversations</span><span>Capacity trade-offs</span><span>First-week decisions</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container">
+      <p class="eyebrow">The four steps</p>
+      <div class="method-steps">
+        {steps.map((step) => (
+          <article class="card method-step">
+            <span class="step-number">{step.number}</span>
+            <h2>{step.title}</h2>
+            <h3>Pressure signal</h3><p>{step.signal}</p>
+            <h3>Useful response</h3><p>{step.action}</p>
+            <div class="question"><strong>Ask:</strong> {step.question}</div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section method-examples">
+    <div class="container">
+      <p class="eyebrow">Worked applications</p>
+      <h2>Three common management moments.</h2>
+      <div class="grid grid-3">
+        {examples.map((example) => (
+          <article class="card flat example-card">
+            <h3>{example.title}</h3>
+            <dl>
+              <dt>Notice</dt><dd>{example.pressure}</dd>
+              <dt>Reduce</dt><dd>{example.reaction}</dd>
+              <dt>Act</dt><dd>{example.action}</dd>
+              <dt>Stop</dt><dd>{example.stop}</dd>
+            </dl>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Failure modes</p>
+        <h2>Where the method gets misused.</h2>
+      </div>
+      <ul class="list-clean failure-list">
+        <li><strong>Using “stop” to avoid a necessary conversation.</strong> Restraint is not avoidance. If a standard or risk needs action, act.</li>
+        <li><strong>Reducing reaction until the message becomes vague.</strong> Short is useful only when the expectation remains clear.</li>
+        <li><strong>Waiting for perfect certainty.</strong> Some decisions must be made with incomplete information. The method reduces noise; it does not remove responsibility.</li>
+        <li><strong>Treating every problem as a four-step ritual.</strong> Routine work should stay routine. Use the framework when pressure is distorting judgment or behavior.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container">
+      <p class="eyebrow">Quick reference</p>
+      <h2>Pressure → response table</h2>
+      <div class="table-wrap">
+        <table class="table method-table">
+          <thead><tr><th>Pressure pattern</th><th>Reduce</th><th>One useful action</th><th>Stop when</th></tr></thead>
+          <tbody>
+            <tr><td>Overexplaining</td><td>Remove pre-emptive justification</td><td>State decision + deadline</td><td>The instruction is understood</td></tr>
+            <tr><td>Micromanaging</td><td>Remove random check-ins</td><td>Set outcome + checkpoint</td><td>Ownership is clear</td></tr>
+            <tr><td>Feedback avoidance</td><td>Remove character judgment and delay</td><td>State observation + impact + next step</td><td>The expectation is explicit</td></tr>
+            <tr><td>Overcommitting</td><td>Remove the instant yes</td><td>Name the trade-off or decline</td><td>Priority and ownership are clear</td></tr>
+            <tr><td>Week-one overchange</td><td>Remove non-urgent structural fixes</td><td>Listen, map, choose one change</td><td>One change is owned and measurable</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="worksheet">
+    <div class="container worksheet-shell">
+      <div class="worksheet-head">
+        <div><p class="eyebrow">Printable worksheet</p><h2>Run one situation through the method.</h2></div>
+        <button class="button quiet print-button" type="button" onclick="window.print()">Print worksheet</button>
+      </div>
+      <div class="worksheet-grid">
+        <div class="worksheet-box"><strong>1. Notice pressure</strong><p>What happened? What are you feeling pushed to prove, fix, avoid, or control?</p><div class="write-space"></div></div>
+        <div class="worksheet-box"><strong>2. Reduce reaction</strong><p>What explanation, rescue, delay, commitment, meeting, or change can you remove?</p><div class="write-space"></div></div>
+        <div class="worksheet-box"><strong>3. Take one useful action</strong><p>Write one concrete action, owner, or sentence that changes the situation.</p><div class="write-space"></div></div>
+        <div class="worksheet-box"><strong>4. Stop</strong><p>What will tell you the action has landed? When will you review instead of hovering?</p><div class="write-space"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container">
+      <p class="eyebrow">Related guidance</p>
+      <div class="grid grid-3">
+        <article class="card flat"><h3>Overexplaining</h3><p>Practice restraint when a clear decision starts turning into a speech.</p><p><a href={href('/articles/why-new-managers-overexplain/')}>Read the article</a></p></article>
+        <article class="card flat"><h3>Delegation</h3><p>Use outcome, constraints, authority, and a checkpoint instead of hovering.</p><p><a href={href('/articles/delegate-without-micromanaging/')}>Read the article</a></p></article>
+        <article class="card flat"><h3>Difficult conversations</h3><p>Address observable behavior early and keep the next step narrow.</p><p><a href={href('/articles/difficult-conversations-new-manager/')}>Read the article</a></p></article>
+      </div>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  .method-hero h1{max-width:14ch}.method-note{align-self:stretch}.method-copy{max-width:850px}.pill-list{display:flex;flex-wrap:wrap;gap:.55rem;margin-top:1.2rem}.pill-list span{border:1px solid var(--border);border-radius:999px;padding:.45rem .75rem;color:#d5d1ca;background:#1c1f22;font-size:.9rem}.method-steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.method-step{position:relative;padding-top:3.7rem}.step-number{position:absolute;top:1.2rem;right:1.25rem;color:var(--accent);font-size:.8rem;font-weight:800;letter-spacing:.12em}.method-step h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;color:#b8b5ae;margin-top:1.2rem}.question{border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem;color:#ddd8cf}.method-examples{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#121416}.example-card dl{margin:0}.example-card dt{font-weight:800;color:var(--accent);margin-top:1rem}.example-card dt:first-child{margin-top:0}.example-card dd{margin:.25rem 0 0;color:var(--muted)}.failure-list{margin:0}.table-wrap{overflow-x:auto}.method-table th{width:auto}.worksheet-shell{border:1px solid var(--border);border-radius:24px;padding:1.5rem;background:#171a1d}.worksheet-head{display:flex;justify-content:space-between;gap:1rem;align-items:end;margin-bottom:1.25rem}.worksheet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.worksheet-box{border:1px solid var(--border);border-radius:16px;padding:1rem;background:#111315}.worksheet-box p{color:var(--muted);font-size:.95rem}.write-space{height:90px;border-top:1px dashed #555;margin-top:1rem;background:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,#303338 28px)}
+  @media(max-width:800px){.method-steps,.worksheet-grid{grid-template-columns:1fr}.worksheet-head{align-items:flex-start;flex-direction:column}.print-button{display:none}}
+  @media print{.header,.footer,.skip-link,.button-row,.print-button,.method-examples,.section-sm:last-of-type{display:none!important}body{background:#fff!important;color:#111!important}.worksheet-shell{border:0;background:#fff;color:#111}.worksheet-box{background:#fff;color:#111;border-color:#777;break-inside:avoid}.worksheet-box p{color:#333}.write-space{border-color:#999}.section{padding:0}.worksheet-grid{grid-template-columns:1fr 1fr}}
+</style>
