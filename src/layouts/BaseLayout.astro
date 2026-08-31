@@ -20,10 +20,11 @@ const imageUrl = new URL(`${base}${ogImage.replace(/^\//, '')}`, site.siteUrl).t
 const logoUrl = new URL(`${base}${site.logo.replace(/^\//, '')}`, site.siteUrl).toString();
 const nav = [
   ['Home', '/'],
+  ['New Manager Guide', '/guides/new-manager/'],
+  ['Articles', '/articles/'],
+  ['Tools & Resources', '/resources/'],
   ['Books', '/books/'],
-  ['Method', '/method/'],
-  ['About', '/about/'],
-  ['Contact', '/contact/']
+  ['About', '/about/']
 ];
 const websiteSchema = {
   '@context': 'https://schema.org',
@@ -74,7 +75,7 @@ const href = (url) => `${base}${url.replace(/^\//, '')}`;
             <img src={href(site.logo)} alt="Plain Act logo" width="42" height="42" />
             <span>Plain Act</span>
           </a>
-          <nav class="nav-links">
+          <nav class="nav-links" aria-label="Primary">
             {nav.map(([label, url]) => (
               <a href={href(url)} aria-current={current === label ? 'page' : undefined}>{label}</a>
             ))}
@@ -83,25 +84,40 @@ const href = (url) => `${base}${url.replace(/^\//, '')}`;
       </header>
       <main id="main"><slot /></main>
       <footer class="footer">
-        <div class="container footer-grid">
-          <div>
+        <div class="container footer-grid footer-grid-v2">
+          <div class="footer-brand">
             <strong>{site.brand}</strong>
             <p class="small">{site.positioning}</p>
-            <p class="small">Publisher: {site.publisher}. Contact: <a href={`mailto:${site.email}`}>{site.email}</a></p>
+            <p class="small">Publisher: {site.publisher}</p>
+            <p class="small"><a href={`mailto:${site.email}`}>{site.email}</a></p>
           </div>
-          <nav class="footer-links" aria-label="Footer navigation">
-            <a href={href('/')}>Home</a>
-            <a href={href('/books/')}>Books</a>
-            <a href={href('/books/the-first-30-days-as-a-new-manager/')}>The First 30 Days</a>
-            <a href={href('/method/')}>Method</a>
-            <a href={href('/about/')}>About</a>
-            <a href={href('/contact/')}>Contact</a>
-            <a href={href('/resources/')}>Resources</a>
-            <a href={href('/guides/new-manager/')}>New Manager Guide</a>
-            <a href={href('/affiliate-disclosure/')}>Affiliate Disclosure</a>
-            <a href={href('/privacy-policy/')}>Privacy Policy</a>
-            <a href={href('/sitemap/')}>Sitemap</a>
-          </nav>
+
+          <div class="footer-nav-groups">
+            <nav class="footer-group" aria-label="Footer content navigation">
+              <strong>Content</strong>
+              <a href={href('/guides/new-manager/')}>New Manager Guide</a>
+              <a href={href('/articles/')}>Articles</a>
+              <a href={href('/resources/')}>Tools & Resources</a>
+              <a href={href('/method/')}>Method</a>
+            </nav>
+
+            <nav class="footer-group" aria-label="Footer books navigation">
+              <strong>Books</strong>
+              <a href={href('/books/')}>Books</a>
+              <a href={href('/books/the-first-30-days-as-a-new-manager/')}>The First 30 Days</a>
+            </nav>
+
+            <nav class="footer-group" aria-label="Footer trust navigation">
+              <strong>About & trust</strong>
+              <a href={href('/about/')}>About</a>
+              <a href={href('/editorial-policy/')}>Editorial Policy</a>
+              <a href={href('/corrections-policy/')}>Corrections Policy</a>
+              <a href={href('/contact/')}>Contact</a>
+              <a href={href('/privacy-policy/')}>Privacy Policy</a>
+              <a href={href('/affiliate-disclosure/')}>Affiliate Disclosure</a>
+              <a href={href('/sitemap/')}>Sitemap</a>
+            </nav>
+          </div>
         </div>
       </footer>
     </div>
