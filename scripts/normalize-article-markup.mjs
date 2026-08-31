@@ -16,7 +16,7 @@ for (const file of walk(distDir).filter((file) => file.endsWith('.html'))) {
   const original = fs.readFileSync(file, 'utf8');
   let updated = original;
 
-  updated = updated.replace(/(<article\s+class=["']article-body["']>\s*)<h1(?:\s[^>]*)?>[\s\S]*?<\/h1>/i, (_match, prefix) => {
+  updated = updated.replace(/(<article\b[^>]*class=["'][^"']*\barticle-body\b[^"']*["'][^>]*>\s*)<h1(?:\s[^>]*)?>[\s\S]*?<\/h1>/i, (_match, prefix) => {
     removedHeadings += 1;
     return prefix;
   });
