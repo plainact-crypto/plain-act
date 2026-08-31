@@ -98,8 +98,9 @@ jobs:
       - name: Production Plain Act tools smoke — Desktop + Mobile
         working-directory: chess-opening-trainer
         env:
-          PLAIN_ACT_URL: https://plain-act.com
+          PLAIN_ACT_URL: https://plainact-crypto.github.io/plain-act
         run: node scripts/plain-act-tools-smoke.mjs
 
+# This workflow deploys the Plain Act artifact to GitHub Pages. The custom domain is verified separately in the AdSense technical QA because it may be routed through another hosting/CDN layer.
 # Plain Act site deployment must not be blocked by an unrelated chess build failure.
 # Any push to main intentionally triggers this pipeline; Cloudflare Pages should also auto-deploy from its GitHub integration when connected to main.
