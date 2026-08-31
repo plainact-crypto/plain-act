@@ -101,13 +101,22 @@ jobs:
           PLAIN_ACT_URL: https://plainact-crypto.github.io/plain-act
         run: node scripts/plain-act-tools-smoke.mjs
 
-      - name: Plain Act final technical QA — crawl + metadata + responsive + accessibility
-        working-directory: chess-opening-trainer
-        env:
-          PLAIN_ACT_DEPLOY_URL: https://plainact-crypto.github.io/plain-act
-          PLAIN_ACT_CANONICAL_ORIGIN: https://plain-act.com
-        run: node scripts/plain-act-final-qa.mjs
+      - name: Build fresh Plain Act QA artifact
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
 
-# This workflow deploys the Plain Act artifact to GitHub Pages. The custom domain is verified separately in the AdSense technical QA because it may be routed through another hosting/CDN layer.
+      - name: Plain Act final technical QA — fresh build crawl + metadata + responsive + accessibility
+        env:
+          PLAIN_ACT_DEPLOY_URL: http://127.0.0.1:4173
+          PLAIN_ACT_CANONICAL_ORIGIN: https://plain-act.com
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/plain-act-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID' EXIT
+          sleep 2
+          node chess-opening-trainer/scripts/plain-act-final-qa.mjs
+
+# The fresh-build QA is intentionally isolated from custom-domain CDN/cache behavior.
+# Custom-domain HTTP/DNS, Search Console, and AdSense account state are separate external release gates.
 # Plain Act site deployment must not be blocked by an unrelated chess build failure.
-# Any push to main intentionally triggers this pipeline; Cloudflare Pages should also auto-deploy from its GitHub integration when connected to main.
