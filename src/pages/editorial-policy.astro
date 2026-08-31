@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { site } from '../data/site.js';
+---
+<BaseLayout
+  title="Editorial Policy | Plain Act"
+  description="How Plain Act develops, edits, reviews, updates, and corrects practical management content."
+  path="/editorial-policy/"
+>
+  <section class="section">
+    <div class="container">
+      <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Editorial Policy', url:'/editorial-policy/'}]} />
+      <p class="eyebrow">Editorial policy</p>
+      <h1>Useful first. Clear about how it was made.</h1>
+      <p class="lede">Plain Act publishes practical management guidance for first-time and working managers. This page explains the standards used to keep that guidance useful, original, and appropriately cautious.</p>
+
+      <div class="grid grid-2 section-sm">
+        <article class="card flat">
+          <h2>Scope and purpose</h2>
+          <p>Plain Act focuses on day-to-day management problems such as authority, delegation, feedback, difficult conversations, meetings, workload, decision timing, and the transition into a management role.</p>
+          <p>The aim is practical guidance a reader can understand and adapt, not academic certification, legal advice, clinical advice, or a guarantee of workplace outcomes.</p>
+        </article>
+        <article class="card flat">
+          <h2>Originality and utility</h2>
+          <p>Indexable articles and guides are expected to have a distinct purpose and to add practical value through examples, scripts, checklists, decision rules, scenarios, templates, or worked applications.</p>
+          <p>Plain Act does not treat lightly rewritten material, copied definitions, or page-count inflation as an editorial standard.</p>
+        </article>
+        <article class="card flat">
+          <h2>Sources and external claims</h2>
+          <p>When a page relies on an external factual claim, research finding, platform rule, law, or third-party policy, the source should be identified or linked when practical. Opinion, editorial judgment, and illustrative management scenarios are presented as such.</p>
+        </article>
+        <article class="card flat">
+          <h2>AI-assisted production</h2>
+          <p>When AI-assisted or other software tools are used in research, drafting, editing, or production, they are treated as tools rather than named experts or authorities. Publication responsibility remains with {site.publisher}.</p>
+          <p>AI output is not, by itself, treated as evidence for a factual claim.</p>
+        </article>
+        <article class="card flat">
+          <h2>Editing and updates</h2>
+          <p>Material may be revised for accuracy, clarity, usefulness, structure, broken links, changed platform information, or better examples. An “updated” or “reviewed” date should only be shown when an actual review or material update occurred.</p>
+        </article>
+        <article class="card flat">
+          <h2>Commercial independence</h2>
+          <p>Plain Act publishes books and may use clearly disclosed affiliate links. Commercial availability does not change the standard that free editorial pages should remain useful without requiring a purchase.</p>
+        </article>
+      </div>
+
+      <div class="notice">
+        <strong>Report an error.</strong>
+        <p>If you find a factual error, broken source, misleading statement, or material omission, email <a href={`mailto:${site.email}`}>{site.email}</a> and include the page URL and the point that needs review.</p>
+        <p><a href="/corrections-policy/">Read the Corrections Policy</a></p>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
