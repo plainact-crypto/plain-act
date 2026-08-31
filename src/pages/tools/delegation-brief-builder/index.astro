@@ -1,0 +1,95 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<BaseLayout
+  title="Delegation Brief Builder | Free Plain Act Tool"
+  description="Build a clear delegation brief with definition of done, owner, deadline, authority level, constraints, checkpoints, escalation triggers, and confirmation question."
+  path="/tools/delegation-brief-builder/"
+>
+  <section class="hero tool-hero"><div class="container grid grid-2">
+    <div>
+      <Breadcrumbs items={[{name:'Home',url:'/'},{name:'Resources',url:'/resources/'},{name:'Delegation Brief Builder',url:'/tools/delegation-brief-builder/'}]} />
+      <p class="eyebrow">Free management tool</p><h1>Delegation Brief Builder</h1>
+      <p class="lede">Turn “can you handle this?” into a usable handoff: outcome, definition of done, authority, constraints, checkpoint, escalation rule, and final confirmation.</p>
+    </div>
+    <aside class="card flat"><h2>Delegation is not task dumping.</h2><p>A useful handoff makes ownership visible without prescribing every move. Give enough boundary to reduce avoidable risk, then leave space for the owner to do the work.</p><p class="small">This tool runs locally in the browser and does not send or store your entries.</p></aside>
+  </div></section>
+
+  <section class="section-sm"><div class="container tool-grid">
+    <form class="card tool-form" id="delegation-form">
+      <div class="field"><label for="outcome">Outcome required</label><textarea id="outcome" name="outcome" maxlength="500" required placeholder="What result needs to exist when the task is complete?"></textarea></div>
+      <div class="field"><label for="deadline">Deadline</label><input id="deadline" name="deadline" type="text" maxlength="120" required placeholder="Example: Thursday, 3:00 PM" /></div>
+      <div class="field"><label for="owner">Owner / team member</label><input id="owner" name="owner" type="text" maxlength="120" required placeholder="Name or role" /></div>
+      <div class="field"><label for="authority">Decision authority</label><select id="authority" name="authority"><option value="recommend">Recommend — analyze and bring a recommendation</option><option value="decide-check">Decide, then check — choose approach but confirm before commitment</option><option value="decide-inform">Decide and inform — make the decision within constraints and tell me</option><option value="own">Own — full execution within agreed boundary</option></select></div>
+      <div class="field"><label for="constraints">Constraints</label><textarea id="constraints" name="constraints" maxlength="700" required placeholder="Budget, scope, quality, policy, people, client, technical, or approval constraints."></textarea></div>
+      <div class="field"><label for="checkpoints">Checkpoint(s)</label><textarea id="checkpoints" name="checkpoints" maxlength="500" required placeholder="When should you review progress, if at all?"></textarea></div>
+      <div class="field"><label for="escalation">What requires escalation?</label><textarea id="escalation" name="escalation" maxlength="500" required placeholder="What change, risk, delay, cost, quality issue, or dependency should come back to you?"></textarea></div>
+      <button class="button" type="submit">Build delegation brief</button>
+    </form>
+
+    <section class="card tool-output" aria-live="polite" aria-labelledby="brief-title">
+      <p class="eyebrow">Delegation brief</p><h2 id="brief-title">Define the handoff, then build the brief.</h2>
+      <pre id="brief-output" tabindex="0">Your delegation brief will appear here.</pre>
+      <div class="button-row output-actions" hidden><button class="button quiet" type="button" id="copy-brief">Copy brief</button><button class="button quiet" type="button" id="print-brief">Print</button></div>
+      <p class="small" id="copy-status" aria-live="polite"></p>
+    </section>
+  </div></section>
+
+  <section class="section-sm"><div class="container grid grid-3">
+    <article class="card flat"><h3>Outcome</h3><p class="small">Describe the finished result, not every keystroke. A clear finish line makes autonomy safer.</p></article>
+    <article class="card flat"><h3>Authority</h3><p class="small">Say which decisions the owner can make. Hidden approval rules are a common source of rework and hovering.</p></article>
+    <article class="card flat"><h3>Checkpoint</h3><p class="small">Use a planned checkpoint instead of random status requests. If no checkpoint is necessary, do not invent one only to feel in control.</p></article>
+  </div></section>
+
+  <section class="section-sm"><div class="container"><div class="button-row"><a class="button secondary" href={href('/articles/delegate-without-micromanaging/')}>Delegation Article</a><a class="button secondary" href={href('/guides/new-manager/')}>New Manager Guide</a><a class="button secondary" href={href('/method/')}>Plain Act Method</a></div></div></section>
+
+  <script is:inline>
+    const form = document.getElementById('delegation-form');
+    const output = document.getElementById('brief-output');
+    const title = document.getElementById('brief-title');
+    const actions = document.querySelector('.output-actions');
+    const status = document.getElementById('copy-status');
+    const clean = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+    const authorityText = {
+      recommend:'RECOMMEND — Analyze the options and bring a recommendation. Do not make the external/final commitment yet.',
+      'decide-check':'DECIDE, THEN CHECK — Choose the proposed approach within the constraints, then confirm before the final commitment or irreversible step.',
+      'decide-inform':'DECIDE AND INFORM — Make the decision within the agreed constraints and keep me informed of the result.',
+      own:'OWN — You own execution and routine decisions within the agreed boundary. Escalate only when a listed trigger is reached.'
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const outcome = clean(data.get('outcome'));
+      const deadline = clean(data.get('deadline'));
+      const owner = clean(data.get('owner'));
+      const authority = data.get('authority');
+      const constraints = clean(data.get('constraints'));
+      const checkpoints = clean(data.get('checkpoints'));
+      const escalation = clean(data.get('escalation'));
+
+      const brief = `DELEGATION BRIEF\n\nGOAL / DEFINITION OF DONE\n${outcome}\n\nOWNER\n${owner}\n\nDEADLINE\n${deadline}\n\nDECISION AUTHORITY\n${authorityText[authority]}\n\nCONSTRAINTS\n${constraints}\n\nCHECKPOINT SCHEDULE\n${checkpoints}\n\nESCALATION TRIGGERS\n${escalation}\n\nFINAL CONFIRMATION QUESTION\n“Before you start, tell me what you understand the finished outcome to be, what decisions you can make without me, and what would cause you to escalate.”\n\nMANAGER CHECK BEFORE HANDOFF\n- Is the outcome measurable enough to recognize when it is done?\n- Is the deadline real?\n- Is the authority level explicit?\n- Are the constraints necessary, or am I prescribing my preferred method?\n- Is the checkpoint planned rather than random?\n- Are escalation triggers specific enough to avoid constant permission-seeking?\n\nAFTER HANDOFF\nDo not take the work back merely because the owner's method differs from yours. Intervene when the agreed outcome, boundary, checkpoint, or escalation trigger requires it.`;
+
+      output.textContent = brief;
+      title.textContent = 'Your delegation brief';
+      actions.hidden = false;
+      status.textContent = '';
+      output.focus();
+    });
+
+    document.getElementById('copy-brief').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(output.textContent); status.textContent = 'Brief copied.'; }
+      catch { status.textContent = 'Copy was blocked by the browser. Select the text and copy it manually.'; }
+    });
+    document.getElementById('print-brief').addEventListener('click', () => window.print());
+  </script>
+</BaseLayout>
+
+<style>
+  .tool-hero h1{max-width:12ch}.tool-grid{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(0,1.2fr);gap:1rem;align-items:start}.tool-form{display:grid;gap:1rem}.tool-form textarea{min-height:95px}.tool-output{min-height:650px}.tool-output pre{white-space:pre-wrap;font:inherit;font-size:.94rem;line-height:1.65;color:#ddd8cf;background:#111315;border:1px solid var(--border);border-radius:14px;padding:1rem;min-height:460px}.output-actions button{cursor:pointer}
+  @media(max-width:800px){.tool-grid{grid-template-columns:1fr}.tool-output{min-height:auto}}
+  @media print{.header,.footer,.tool-form,.tool-hero,.output-actions{display:none!important}.tool-grid{display:block}.tool-output{border:0;box-shadow:none}.tool-output pre{border:0;background:#fff;color:#111;padding:0}}
+</style>

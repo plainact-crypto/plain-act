@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<BaseLayout
+  title="Difficult Conversation Planner | Free Plain Act Tool"
+  description="Prepare a calm management conversation using observable facts, impact, a neutral question, a clear expectation, and a follow-up step."
+  path="/tools/difficult-conversation-planner/"
+>
+  <section class="hero tool-hero"><div class="container grid grid-2">
+    <div>
+      <Breadcrumbs items={[{name:'Home',url:'/'},{name:'Resources',url:'/resources/'},{name:'Conversation Planner',url:'/tools/difficult-conversation-planner/'}]} />
+      <p class="eyebrow">Free management tool</p><h1>Difficult Conversation Planner</h1>
+      <p class="lede">Turn a vague or emotionally loaded issue into a short preparation brief: observable fact, impact, question, expectation, next step, and follow-up.</p>
+    </div>
+    <aside class="card flat"><h2>Use observable language.</h2><p>Write what happened in terms a reasonable third party could recognize: missed deadline, interrupted colleague, unapproved change, incomplete handoff, repeated absence from a required meeting. Avoid diagnosing motives or character.</p><p class="small">This is a conversation-preparation aid, not employment-law or HR advice. Serious safety, harassment, discrimination, retaliation, legal, or compliance issues may require your employer's formal process or qualified advice.</p></aside>
+  </div></section>
+
+  <section class="section-sm"><div class="container tool-grid">
+    <form class="card tool-form" id="conversation-form">
+      <div class="field"><label for="happened">What happened?</label><textarea id="happened" name="happened" maxlength="500" required placeholder="Example: The client update was sent two days after the agreed date."></textarea></div>
+      <div class="field"><label for="behavior">Observable behavior</label><textarea id="behavior" name="behavior" maxlength="500" required placeholder="Describe what could be observed without guessing intent."></textarea></div>
+      <div class="field"><label for="impact">Impact</label><textarea id="impact" name="impact" maxlength="500" required placeholder="What changed for the work, team, client, deadline, quality, or risk?"></textarea></div>
+      <div class="field"><label for="outcome">Desired outcome</label><textarea id="outcome" name="outcome" maxlength="500" required placeholder="What needs to be different after the conversation?"></textarea></div>
+      <div class="field"><label for="urgency">Conversation urgency</label><select id="urgency" name="urgency"><option value="today">Today / immediate work impact</option><option value="soon" selected>Within 1–2 working days</option><option value="routine">At the next appropriate one-to-one</option></select></div>
+      <button class="button" type="submit">Build conversation brief</button>
+      <p class="small">Your entries are processed in this browser page. This tool does not submit or store the form data.</p>
+    </form>
+
+    <section class="card tool-output" aria-live="polite" aria-labelledby="brief-title">
+      <p class="eyebrow">Preparation brief</p><h2 id="brief-title">Describe the issue, then build the brief.</h2>
+      <pre id="brief-output" tabindex="0">Your conversation structure will appear here.</pre>
+      <div class="button-row output-actions" hidden><button class="button quiet" type="button" id="copy-brief">Copy brief</button><button class="button quiet" type="button" id="print-brief">Print</button></div>
+      <p class="small" id="copy-status" aria-live="polite"></p>
+    </section>
+  </div></section>
+
+  <section class="section-sm"><div class="container">
+    <p class="eyebrow">The structure</p>
+    <div class="grid grid-3">
+      <article class="card flat"><h3>Fact before judgment</h3><p class="small">Start with what was observed. Do not open by assigning motive, attitude, loyalty, or personality.</p></article>
+      <article class="card flat"><h3>Question before conclusion</h3><p class="small">After stating the fact and impact, ask for the other person's perspective. New information can change what the next step should be.</p></article>
+      <article class="card flat"><h3>Expectation before threat</h3><p class="small">State what needs to happen next and how follow-up will work. Escalation should follow real policy and risk, not be used as emotional leverage.</p></article>
+    </div>
+  </div></section>
+
+  <section class="section-sm"><div class="container"><div class="button-row"><a class="button secondary" href={href('/articles/difficult-conversations-new-manager/')}>Difficult Conversations Article</a><a class="button secondary" href={href('/articles/feedback-without-killing-morale/')}>Feedback Article</a><a class="button secondary" href={href('/method/')}>Plain Act Method</a></div></div></section>
+
+  <script is:inline>
+    const form = document.getElementById('conversation-form');
+    const output = document.getElementById('brief-output');
+    const title = document.getElementById('brief-title');
+    const actions = document.querySelector('.output-actions');
+    const status = document.getElementById('copy-status');
+    const urgencyText = {
+      today:'Address this today if the work impact genuinely cannot wait; choose a private setting and avoid sending a long emotional message first.',
+      soon:'Schedule the conversation within 1–2 working days so the facts are still clear and the issue does not accumulate.',
+      routine:'Use the next appropriate one-to-one if there is no immediate risk or deadline impact; do not save unrelated grievances to pile on.'
+    };
+    const clean = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const happened = clean(data.get('happened'));
+      const behavior = clean(data.get('behavior'));
+      const impact = clean(data.get('impact'));
+      const outcome = clean(data.get('outcome'));
+      const urgency = data.get('urgency');
+
+      const brief = `DIFFICULT CONVERSATION PREPARATION BRIEF\n\n1. NEUTRAL OPENING\n“I want to discuss one specific work issue so we can get clear on what happened and what needs to happen next.”\n\n2. OBSERVABLE FACT\nWhat happened: ${happened}\nObservable behavior: ${behavior}\n\nSuggested wording:\n“I observed that ${behavior}. I want to stay with the facts before we decide what it means.”\n\n3. IMPACT\n${impact}\n\nSuggested wording:\n“The impact was: ${impact}.”\n\n4. QUESTION TO ASK\n“What happened from your perspective? Is there context I should understand before we agree the next step?”\n\n5. BOUNDARY / EXPECTATION\nDesired outcome: ${outcome}\n\nSuggested wording:\n“Going forward, the expectation is: ${outcome}.”\n\n6. AGREED NEXT STEP\nWrite the owner, action, and deadline during the conversation. Do not leave with only “we’ll do better.”\n\nOwner: ____________________\nAction: ___________________\nDeadline: __________________\n\n7. FOLLOW-UP\nSet a real follow-up date only if one is useful.\nFollow-up date: ____________\nEvidence/check: ____________\n\nTIMING\n${urgencyText[urgency]}\n\nBEFORE YOU SPEAK\n- Remove labels about attitude, laziness, loyalty, personality, or intent unless a formal process specifically requires and supports them.\n- Do not combine unrelated historical complaints into this conversation.\n- Do not threaten consequences that you do not control or that conflict with policy.\n- If the issue involves safety, harassment, discrimination, retaliation, legal/compliance risk, protected activity, or formal discipline, use the appropriate employer process and qualified guidance.\n\nThis tool prepares a conversation structure. It does not determine guilt, disciplinary action, legal rights, or the correct HR process.`;
+
+      output.textContent = brief;
+      title.textContent = 'Your conversation preparation brief';
+      actions.hidden = false;
+      status.textContent = '';
+      output.focus();
+    });
+
+    document.getElementById('copy-brief').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(output.textContent); status.textContent = 'Brief copied.'; }
+      catch { status.textContent = 'Copy was blocked by the browser. Select the text and copy it manually.'; }
+    });
+    document.getElementById('print-brief').addEventListener('click', () => window.print());
+  </script>
+</BaseLayout>
+
+<style>
+  .tool-hero h1{max-width:12ch}.tool-grid{display:grid;grid-template-columns:minmax(320px,.8fr) minmax(0,1.2fr);gap:1rem;align-items:start}.tool-form{display:grid;gap:1rem}.tool-form textarea{min-height:100px}.tool-output{min-height:650px}.tool-output pre{white-space:pre-wrap;font:inherit;font-size:.94rem;line-height:1.65;color:#ddd8cf;background:#111315;border:1px solid var(--border);border-radius:14px;padding:1rem;min-height:460px}.output-actions button{cursor:pointer}
+  @media(max-width:800px){.tool-grid{grid-template-columns:1fr}.tool-output{min-height:auto}}
+  @media print{.header,.footer,.tool-form,.tool-hero,.section-sm:not(.tool-grid){display:none!important}.tool-grid{display:block}.tool-output{border:0;box-shadow:none}.tool-output pre{border:0;background:#fff;color:#111;padding:0}.output-actions{display:none!important}}
+</style>

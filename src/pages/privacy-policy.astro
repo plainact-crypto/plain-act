@@ -5,7 +5,7 @@ import { site } from '../data/site.js';
 ---
 <BaseLayout
   title="Privacy Policy | Plain Act"
-  description="How Plain Act handles Google Analytics, advertising technologies, cookies, contact messages, third-party platforms, retention, and privacy choices."
+  description="How Plain Act handles local browser tools, Google Analytics, advertising technologies, cookies, contact messages, third-party platforms, retention, and privacy choices."
   path="/privacy-policy/"
 >
   <section class="section">
@@ -13,7 +13,7 @@ import { site } from '../data/site.js';
       <Breadcrumbs items={[{ name: 'Home', url: '/' }, { name: 'Privacy Policy', url: '/privacy-policy/' }]} />
       <p class="eyebrow">Privacy</p>
       <h1>Privacy policy</h1>
-      <p class="lede">This policy explains what information may be processed when you visit the Plain Act website, interact with analytics or advertising technologies, follow an external link, load embedded third-party content, or contact Plain Act.</p>
+      <p class="lede">This policy explains what information may be processed when you visit the Plain Act website, use its browser-based management tools, interact with analytics or advertising technologies, follow an external link, load embedded third-party content, or contact Plain Act.</p>
 
       <div class="grid grid-2 privacy-layout">
         <div>
@@ -21,9 +21,14 @@ import { site } from '../data/site.js';
           <p>Plain Act does not currently offer an active newsletter sign-up, user account, on-site checkout, or comment system. The public site does not intentionally require visitors to submit personal information through a web account or registration flow.</p>
           <p>If you contact Plain Act by email, the information you provide—such as your email address, name, message, and attachments—may be used to review and respond to the inquiry, maintain appropriate business records, investigate a reported error, or protect legal rights.</p>
 
+          <h2>Browser-based management tools</h2>
+          <p>Plain Act currently provides browser-based tools including the New Manager 30-Day Planner, Difficult Conversation Planner, and Delegation Brief Builder. The form values entered into these tools are used by JavaScript running in the page to generate the requested plan or brief.</p>
+          <p>The tools do not intentionally submit or store those form values on a Plain Act server, require an account, or create a Plain Act user profile. Their generated output remains in the current browser page unless you choose to copy, print, save, or otherwise transfer it yourself.</p>
+          <p>The pages that contain the tools still load the same site-level services described elsewhere in this policy, including Google Analytics. Plain Act does not configure the tool scripts to send the text you enter in the tool fields as analytics events. As with any web page, browser extensions, third-party software, device settings, or services outside Plain Act's control may behave differently.</p>
+
           <h2>Google Analytics</h2>
           <p>This website uses Google Analytics 4 to understand how the site is used. Google Analytics may process information such as pages viewed, approximate location, device and browser information, referral source, session activity, IP-derived information, and identifiers associated with analytics cookies or similar technologies.</p>
-          <p>Google may process this information on Plain Act's behalf under Google's own terms and privacy practices. Browser settings, consent controls where applicable, and Google's available opt-out mechanisms can limit some analytics processing. Blocking analytics should not prevent access to the site's public editorial content.</p>
+          <p>Google may process this information on Plain Act's behalf under Google's own terms and privacy practices. Browser settings, consent controls where applicable, and Google's available opt-out mechanisms can limit some analytics processing. Blocking analytics should not prevent access to the site's public editorial content or the browser-based tool logic.</p>
 
           <h2>Advertising and Google AdSense</h2>
           <p>Plain Act may use Google AdSense or other Google advertising services if advertising is enabled on the site. When Google-served advertising is active, Google and participating advertising partners may use cookies, local storage, device identifiers, IP addresses, browser or device information, ad interaction data, and similar technologies to serve, limit, personalize where permitted, measure, and report advertising.</p>
@@ -43,7 +48,7 @@ import { site } from '../data/site.js';
           <p>Plain Act does not sell personal information. Information may be processed by service providers that support hosting, analytics, advertising, email, content delivery, or external platforms. It may also be disclosed when reasonably necessary to comply with law, protect rights or security, investigate misuse, or respond to valid legal process.</p>
 
           <h2>Data retention</h2>
-          <p>Analytics and advertising data are retained according to the applicable settings and policies of Google and other service providers, subject to the controls available to Plain Act. Email correspondence may be retained only as long as reasonably needed to respond, maintain business records, resolve disputes, investigate reported errors, protect legal rights, or meet legal obligations.</p>
+          <p>The three browser-based management tools do not intentionally create server-side Plain Act records of the form values you enter. Analytics and advertising data are retained according to the applicable settings and policies of Google and other service providers, subject to the controls available to Plain Act. Email correspondence may be retained only as long as reasonably needed to respond, maintain business records, resolve disputes, investigate reported errors, protect legal rights, or meet legal obligations.</p>
 
           <h2>Your choices and rights</h2>
           <p>Depending on where you live, you may have rights concerning access to, correction of, deletion of, restriction of, or objection to certain processing of personal information, and in some cases data portability or withdrawal of consent. These rights can be subject to legal limits and identity verification.</p>
@@ -61,7 +66,13 @@ import { site } from '../data/site.js';
           <p>For a privacy question or request, email Plain Act at <a href={`mailto:${site.email}`}>{site.email}</a>. Include enough detail to identify the relevant interaction or message.</p>
           <hr />
           <h3>Current site disclosures</h3>
-          <ul class="list-clean"><li>Google Analytics 4 is used on the website.</li><li>Google advertising services may be enabled as part of site monetization.</li><li>Third-party links and embedded content may process visitor information under their own policies.</li><li>The public site does not currently require a user account or newsletter registration.</li></ul>
+          <ul class="list-clean">
+            <li>The three management tools process their entered form values in the browser and do not intentionally submit or store those values on a Plain Act server.</li>
+            <li>Google Analytics 4 is used on the website.</li>
+            <li>Google advertising services may be enabled as part of site monetization.</li>
+            <li>Third-party links and embedded content may process visitor information under their own policies.</li>
+            <li>The public site does not currently require a user account or newsletter registration.</li>
+          </ul>
           <p class="small">Last reviewed and updated: August 31, 2026.</p>
         </aside>
       </div>
