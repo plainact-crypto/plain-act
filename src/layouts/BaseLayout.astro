@@ -10,7 +10,8 @@ const {
   ogDescription = description,
   ogImage = site.ogImage,
   schema = [],
-  current = ''
+  current = '',
+  robots = 'index,follow'
 } = Astro.props;
 
 const base = import.meta.env.BASE_URL;
@@ -20,7 +21,6 @@ const logoUrl = new URL(`${base}${site.logo.replace(/^\//, '')}`, site.siteUrl).
 const nav = [
   ['Home', '/'],
   ['Books', '/books/'],
-  ['Coming Soon', '/coming-soon/'],
   ['Method', '/method/'],
   ['About', '/about/'],
   ['Contact', '/contact/']
@@ -50,6 +50,7 @@ const href = (url) => `${base}${url.replace(/^\//, '')}`;
     </script>
     <title>{title}</title>
     <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
     <link rel="canonical" href={absoluteUrl} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={site.brand} />
@@ -92,7 +93,6 @@ const href = (url) => `${base}${url.replace(/^\//, '')}`;
             <a href={href('/')}>Home</a>
             <a href={href('/books/')}>Books</a>
             <a href={href('/books/the-first-30-days-as-a-new-manager/')}>The First 30 Days</a>
-            <a href={href('/coming-soon/')}>Coming Soon</a>
             <a href={href('/method/')}>Method</a>
             <a href={href('/about/')}>About</a>
             <a href={href('/contact/')}>Contact</a>
