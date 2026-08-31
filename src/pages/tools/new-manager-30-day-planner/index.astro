@@ -1,0 +1,131 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../../components/Breadcrumbs.astro';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<BaseLayout
+  title="New Manager 30-Day Planner | Free Plain Act Tool"
+  description="Build a practical first 30 days plan for a new management role based on team size, transition, work model, current situation, and management focus."
+  path="/tools/new-manager-30-day-planner/"
+>
+  <section class="hero tool-hero"><div class="container grid grid-2">
+    <div>
+      <Breadcrumbs items={[{name:'Home',url:'/'},{name:'Resources',url:'/resources/'},{name:'30-Day Planner',url:'/tools/new-manager-30-day-planner/'}]} />
+      <p class="eyebrow">Free management tool</p><h1>New Manager 30-Day Planner</h1>
+      <p class="lede">Choose the conditions around your role and generate a four-week operating plan. The tool runs in your browser and does not require signup.</p>
+    </div>
+    <aside class="card flat"><h2>What you get</h2><ul class="list-clean"><li>Week 1–4 priorities</li><li>A “do not do yet” list</li><li>Three conversations to schedule</li><li>Three decisions to delay for more context</li><li>Relevant Plain Act reading</li></ul><p class="small">This is general management guidance, not legal, HR, or employer-specific advice.</p></aside>
+  </div></section>
+
+  <section class="section-sm"><div class="container tool-grid">
+    <form class="card tool-form" id="planner-form">
+      <div class="field"><label for="team-size">Team size</label><select id="team-size" name="teamSize"><option value="small">1–5 people</option><option value="medium">6–12 people</option><option value="large">13+ people</option></select></div>
+      <div class="field"><label for="transition">Role transition</label><select id="transition" name="transition"><option value="external">External hire</option><option value="internal">Promoted internally</option><option value="inherited">Inherited an existing team</option></select></div>
+      <div class="field"><label for="work-model">Work model</label><select id="work-model" name="workModel"><option value="onsite">On-site</option><option value="hybrid">Hybrid</option><option value="remote">Remote</option></select></div>
+      <div class="field"><label for="situation">Current situation</label><select id="situation" name="situation"><option value="stable">Stable</option><option value="unclear">Unclear priorities</option><option value="conflict">Team conflict</option><option value="performance">Performance pressure</option><option value="growth">Rapid growth</option></select></div>
+      <div class="field"><label for="focus">Optional focus</label><select id="focus" name="focus"><option value="trust">Trust</option><option value="delegation">Delegation</option><option value="feedback">Feedback</option><option value="meetings">Meetings</option><option value="managing-up">Managing up</option></select></div>
+      <button class="button" type="submit">Build my 30-day plan</button>
+      <p class="small">Selections are processed locally in this page. This tool does not send or store these form values.</p>
+    </form>
+
+    <section class="card tool-output" aria-live="polite" aria-labelledby="plan-title">
+      <p class="eyebrow">Your plan</p><h2 id="plan-title">Choose your situation, then build the plan.</h2>
+      <pre id="plan-output" tabindex="0">Your four-week plan will appear here.</pre>
+      <div class="button-row output-actions" hidden><button class="button quiet" type="button" id="copy-plan">Copy plan</button><button class="button quiet" type="button" id="print-plan">Print</button></div>
+      <p class="small" id="copy-status" aria-live="polite"></p>
+    </section>
+  </div></section>
+
+  <section class="section-sm"><div class="container grid grid-3">
+    <article class="card flat"><h3>Use the plan as a sequence, not a scorecard.</h3><p class="small">A first month is for learning the system and establishing stable management signals. Do not turn every line into a mandatory task if the context does not require it.</p></article>
+    <article class="card flat"><h3>Delay irreversible changes when you can.</h3><p class="small">When a decision is not urgent, collect enough context to understand the pattern before reorganizing work, changing recurring meetings, or resetting responsibilities.</p></article>
+    <article class="card flat"><h3>Escalate real risk.</h3><p class="small">Safety, legal, compliance, harassment, discrimination, security, or severe performance issues may require immediate employer-specific action rather than the slower rhythm of this planner.</p></article>
+  </div></section>
+
+  <section class="section-sm"><div class="container"><p class="eyebrow">Continue</p><div class="button-row"><a class="button secondary" href={href('/guides/new-manager/')}>New Manager Guide</a><a class="button secondary" href={href('/resources/new-manager-checklist/')}>30-Day Checklist</a><a class="button secondary" href={href('/method/')}>Plain Act Method</a></div></div></section>
+
+  <script is:inline>
+    const form = document.getElementById('planner-form');
+    const output = document.getElementById('plan-output');
+    const title = document.getElementById('plan-title');
+    const actions = document.querySelector('.output-actions');
+    const status = document.getElementById('copy-status');
+
+    const labels = {
+      small:'1–5 people', medium:'6–12 people', large:'13+ people',
+      external:'External hire', internal:'Promoted internally', inherited:'Inherited team',
+      onsite:'On-site', hybrid:'Hybrid', remote:'Remote',
+      stable:'Stable', unclear:'Unclear priorities', conflict:'Team conflict', performance:'Performance pressure', growth:'Rapid growth',
+      trust:'Trust', delegation:'Delegation', feedback:'Feedback', meetings:'Meetings', 'managing-up':'Managing up'
+    };
+
+    const transitionNotes = {
+      external:'Schedule context interviews before changing inherited routines. Ask what history you cannot see yet.',
+      internal:'Name the role change with former peers. Keep warmth, but make decision and confidentiality boundaries explicit.',
+      inherited:'Separate inherited problems from inherited people. Map what is structural before assigning blame.'
+    };
+    const modelNotes = {
+      onsite:'Use short in-person observation and avoid turning visibility into constant interruption.',
+      hybrid:'Define which decisions, updates, and meetings need synchronous time and which do not.',
+      remote:'Make ownership, response expectations, and written recaps more explicit because ambient context is lower.'
+    };
+    const situationNotes = {
+      stable:'Protect what already works. Your first improvement should reduce friction rather than announce a new regime.',
+      unclear:'Create a one-page priority map: current outcomes, owners, deadlines, blockers, and unresolved decisions.',
+      conflict:'Do not begin with a team-wide speech. Identify observable incidents, affected work, and the conversations that need to happen separately.',
+      performance:'Clarify the standard, current gap, evidence, owner, and next checkpoint before increasing pressure.',
+      growth:'Map decision rights and handoffs before adding more meetings. Growth usually exposes ownership gaps first.'
+    };
+    const focusActions = {
+      trust:'Keep promises small and visible. Close loops when you say you will.',
+      delegation:'Delegate one low-risk outcome with a definition of done, constraints, authority level, and checkpoint.',
+      feedback:'Give one narrow piece of factual feedback early instead of collecting a month of frustration.',
+      meetings:'Audit recurring meetings: purpose, owner, decision, attendees, and whether the meeting needs to exist.',
+      'managing-up':'Start a short weekly update: Progress / Risk / Ask / Next.'
+    };
+    const focusReading = {
+      trust:'Build Authority Without Being Harsh — /articles/build-authority-as-new-manager/',
+      delegation:'Delegate Without Micromanaging — /articles/delegate-without-micromanaging/',
+      feedback:'Give Feedback Without Killing Morale — /articles/feedback-without-killing-morale/',
+      meetings:'Run Your First Team Meeting — /articles/first-team-meeting-new-manager/',
+      'managing-up':'Manage Up Without Sounding Insecure — /articles/manage-up-without-sounding-insecure/'
+    };
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const data = new FormData(form);
+      const team = data.get('teamSize');
+      const transition = data.get('transition');
+      const model = data.get('workModel');
+      const situation = data.get('situation');
+      const focus = data.get('focus');
+
+      const teamAction = team === 'small'
+        ? 'Meet every direct report individually during the first 7–10 days.'
+        : team === 'medium'
+          ? 'Meet each direct report and group repeated issues into 3–5 themes instead of solving them one by one.'
+          : 'Map the team through direct reports and operating groups; avoid trying to personally inspect every task.';
+
+      const plan = `NEW MANAGER 30-DAY PLAN\n\nContext\n- Team: ${labels[team]}\n- Transition: ${labels[transition]}\n- Work model: ${labels[model]}\n- Situation: ${labels[situation]}\n- Focus: ${labels[focus]}\n\nWEEK 1 — LEARN BEFORE YOU PERFORM\n1. ${teamAction}\n2. ${transitionNotes[transition]}\n3. ${situationNotes[situation]}\n4. Ask each person: What is working? What is stuck? What should I understand before changing anything?\n5. Write down decisions that look urgent but can safely wait for more context.\n\nWEEK 2 — MAKE OWNERSHIP VISIBLE\n1. Map the main outcomes, owners, deadlines, and recurring blockers.\n2. ${modelNotes[model]}\n3. ${focusActions[focus]}\n4. Clarify one repeated ambiguity: who decides, who executes, who must be consulted, and when escalation is required.\n\nWEEK 3 — SET ONE STANDARD\n1. Choose one recurring management problem and define the expected standard in plain language.\n2. Test the standard in real work before creating a large policy or process.\n3. Give one piece of narrow feedback and close one delegation loop.\n4. Ask what changed because of your first two weeks—and what is still unclear.\n\nWEEK 4 — REVIEW AND STABILIZE\n1. Review the patterns you saw more than once.\n2. Keep what reduced confusion; remove activity that produced no useful change.\n3. Choose one improvement for the next 30 days, with an owner and a measurable finish line.\n4. Send a short upward update: Progress / Risk / Ask / Next.\n\nDO NOT DO YET\n- Do not reorganize the team only to signal authority.\n- Do not replace working routines before you understand why they exist.\n- Do not promise capacity, deadlines, or changes before checking the trade-offs.\n- Do not turn every concern into a team-wide meeting.\n\n3 CONVERSATIONS TO SCHEDULE\n1. Your manager: success measures, decision boundaries, major risks.\n2. Your team members/direct reports: what works, what blocks them, what they need clarified.\n3. A key cross-functional partner: handoffs, expectations, recurring friction.\n\n3 DECISIONS TO DELAY WHEN SAFE\n1. Structural reorganization without repeated evidence.\n2. Removing a recurring process before understanding its purpose and dependencies.\n3. Judging a person from one inherited story instead of observable current work.\n\nRELEVANT PLAIN ACT READING\n- New Manager Guide — /guides/new-manager/\n- ${focusReading[focus]}\n- Plain Act Method — /method/\n\nUse this plan as general guidance. Apply your employer's policies and qualified professional advice where the situation requires it.`;
+
+      output.textContent = plan;
+      title.textContent = 'Your four-week management plan';
+      actions.hidden = false;
+      status.textContent = '';
+      output.focus();
+    });
+
+    document.getElementById('copy-plan').addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(output.textContent); status.textContent = 'Plan copied.'; }
+      catch { status.textContent = 'Copy was blocked by the browser. Select the plan text and copy it manually.'; }
+    });
+    document.getElementById('print-plan').addEventListener('click', () => window.print());
+  </script>
+</BaseLayout>
+
+<style>
+  .tool-hero h1{max-width:13ch}.tool-grid{display:grid;grid-template-columns:minmax(300px,.75fr) minmax(0,1.25fr);gap:1rem;align-items:start}.tool-form{display:grid;gap:1rem}.tool-output{min-height:540px}.tool-output pre{white-space:pre-wrap;word-break:normal;font:inherit;font-size:.95rem;line-height:1.65;color:#ddd8cf;background:#111315;border:1px solid var(--border);border-radius:14px;padding:1rem;min-height:350px}.output-actions button{cursor:pointer}
+  @media(max-width:800px){.tool-grid{grid-template-columns:1fr}.tool-output{min-height:auto}}
+  @media print{.header,.footer,.tool-form,.tool-hero,.section-sm:not(:has(.tool-output)),.output-actions{display:none!important}.tool-grid{display:block}.tool-output{border:0;box-shadow:none}.tool-output pre{border:0;background:#fff;color:#111;padding:0}.section-sm{padding:0}}
+</style>
