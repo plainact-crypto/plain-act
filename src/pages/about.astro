@@ -15,22 +15,86 @@ const organizationSchema = {
   ...(site.sameAs.length ? { sameAs: site.sameAs } : {})
 };
 ---
-<BaseLayout title="About Plain Act | PlainAct Publishing" description="Official identity page for Plain Act and PlainAct Publishing, including author bio and contact email." path="/about/" current="About" schema={[organizationSchema]}>
-  <section class="section"><div class="container grid grid-2">
-    <div>
-      <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'About', url:'/about/'}]} />
-      <p class="eyebrow">About</p><h1>Plain Act is a publishing identity, not a personal biography.</h1>
-      <p>Plain Act publishes quiet management manuals for people carrying authority under pressure.</p>
-      <p>Its books focus on practical judgment, restraint, communication, feedback, delegation, and decision timing — the parts of management that often become difficult before many people feel fully ready.</p>
-      <p>Plain Act is written for first-time managers, newly promoted team leads, supervisors, and middle managers who need clear tools without hype, inflated leadership language, or motivational performance.</p>
-      <p>The goal is simple: to give readers a calmer way to carry responsibility, reduce overreaction, and see the next useful action more clearly.</p>
+<BaseLayout
+  title="About Plain Act | Practical Management Publishing"
+  description="About Plain Act and PlainAct Publishing: what we publish, who it is for, how practical management content is developed, reviewed, updated, and corrected."
+  path="/about/"
+  current="About"
+  schema={[organizationSchema]}
+>
+  <section class="hero about-hero">
+    <div class="container grid grid-2">
+      <div>
+        <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'About', url:'/about/'}]} />
+        <p class="eyebrow">About Plain Act</p>
+        <h1>A publishing identity built around practical management under pressure.</h1>
+        <p class="lede">Plain Act publishes management guides, articles, tools, and books for people carrying authority before the role feels automatic.</p>
+      </div>
+      <aside class="card flat official-details">
+        <h2>Official details</h2>
+        <dl>
+          <dt>Publishing identity</dt><dd>Plain Act</dd>
+          <dt>Publisher</dt><dd>{site.publisher}</dd>
+          <dt>Website</dt><dd><a href={site.fullUrl}>{site.siteUrl}</a></dd>
+          <dt>Contact</dt><dd><a href={`mailto:${site.email}`}>{site.email}</a></dd>
+        </dl>
+      </aside>
     </div>
-    <aside class="card">
-      <h2>Official details</h2>
-      <p>Publisher: PlainAct Publishing</p>
-      <p>Email: <a href={`mailto:${site.email}`}>{site.email}</a></p>
-      <p><a href={href('/books/')}>Plain Act books</a></p>
-      <p><a href={href('/contact/')}>Contact and verification</a></p>
-    </aside>
-  </div></section>
+  </section>
+
+  <section class="section-sm">
+    <div class="container grid grid-2 about-copy">
+      <div>
+        <p class="eyebrow">What we publish</p>
+        <h2>Guidance for ordinary management pressure.</h2>
+        <p>Plain Act focuses on practical situations that appear early and repeatedly in management: setting expectations, giving feedback, delegating work, handling former peers, managing up, protecting capacity, running meetings, making decisions with incomplete information, and responding to problems without turning every issue into a performance.</p>
+        <p>The publication includes free long-form guides, focused articles, practical resources and tools, and paid books. The free material is intended to remain useful on its own; a reader should not need to purchase a book to understand the core action described on an editorial page.</p>
+      </div>
+      <div>
+        <p class="eyebrow">Who it is for</p>
+        <h2>Managers who need clarity more than slogans.</h2>
+        <p>The primary audience is first-time managers, newly promoted team leads, supervisors, and working managers dealing with authority, workload, communication, and decision pressure.</p>
+        <p>Plain Act is not presented as a substitute for an employer's policies, professional HR guidance, employment-law advice, clinical advice, or situation-specific legal advice. Workplace facts and local rules can change what a responsible manager should do.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section trust-process">
+    <div class="container">
+      <p class="eyebrow">Editorial accountability</p>
+      <h2>How material is developed and maintained.</h2>
+      <div class="grid grid-3 process-grid">
+        <article class="card flat"><span>01</span><h3>Start with a defined problem</h3><p>Each indexable guide or article should have a distinct reader need rather than exist only to increase page count. The intended action or decision should be identifiable before publication.</p></article>
+        <article class="card flat"><span>02</span><h3>Add practical application</h3><p>Guidance is built around examples, scripts, checklists, decision rules, scenarios, agendas, templates, or worked applications where those formats help a reader act.</p></article>
+        <article class="card flat"><span>03</span><h3>Separate judgment from factual claims</h3><p>Illustrative management advice is presented as practical guidance. External factual claims, platform rules, research findings, laws, or third-party policies should be sourced or identified when relied upon.</p></article>
+        <article class="card flat"><span>04</span><h3>Review for clarity and overlap</h3><p>Material can be revised when it is unclear, repetitive, outdated, too generic, or too close to another page's purpose. Thin or placeholder pages may be consolidated or removed from indexing instead of padded with filler.</p></article>
+        <article class="card flat"><span>05</span><h3>Correct material errors</h3><p>Readers can report factual errors, broken references, misleading statements, or material omissions. Confirmed issues may be corrected, clarified, expanded, or removed.</p></article>
+        <article class="card flat"><span>06</span><h3>Keep dates truthful</h3><p>A published, updated, or reviewed date should describe a real publication or review event. Plain Act does not use invented review dates or invented reviewer identities to create authority.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Examples and scenarios</p>
+        <h2>Practical examples are teaching devices.</h2>
+        <p>Names, dialogue, schedules, percentages, deadlines, and workplace situations used in management examples may be illustrative unless a page clearly identifies them as sourced facts. Their purpose is to make a decision pattern concrete, not to imply that a fictional scenario is a documented case study.</p>
+        <p>Where a page discusses an actual product, platform, policy, book listing, or external rule, the editorial standard is different: the factual detail should match the source relied upon at the time of review.</p>
+      </div>
+      <aside class="card flat policy-links">
+        <h2>Policies and contact</h2>
+        <p><a href={href('/editorial-policy/')}>Editorial Policy</a> — scope, originality, source use, production tools, updates, and commercial independence.</p>
+        <p><a href={href('/corrections-policy/')}>Corrections Policy</a> — how to report a factual or material error and what happens next.</p>
+        <p><a href={href('/privacy-policy/')}>Privacy Policy</a> — analytics, cookies, third-party services, and data choices.</p>
+        <p><a href={href('/affiliate-disclosure/')}>Affiliate Disclosure</a> — how potential commission-bearing links are handled.</p>
+        <p><a href={href('/contact/')}>Contact Plain Act</a> or email <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
+      </aside>
+    </div>
+  </section>
 </BaseLayout>
+
+<style>
+  .about-hero h1{max-width:14ch}.official-details dl{display:grid;grid-template-columns:150px 1fr;gap:.8rem 1rem;margin:0}.official-details dt{color:var(--muted);font-size:.9rem}.official-details dd{margin:0}.about-copy>div{max-width:60ch}.trust-process{border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#121416}.process-grid{margin-top:1.5rem}.process-grid article span{display:block;color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.12em;margin-bottom:.8rem}.policy-links p{border-bottom:1px solid var(--border);padding-bottom:.8rem}.policy-links p:last-child{border-bottom:0;margin-bottom:0}
+  @media(max-width:800px){.official-details dl{grid-template-columns:1fr;gap:.2rem}.official-details dd{margin-bottom:.75rem}}
+</style>

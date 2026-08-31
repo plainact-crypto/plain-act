@@ -2,43 +2,79 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { site } from '../data/site.js';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
 ---
 <BaseLayout
   title="Corrections Policy | Plain Act"
-  description="How Plain Act receives, reviews, and updates material corrections to published management content."
+  description="How Plain Act receives, reviews, corrects, and documents material errors in published management content."
   path="/corrections-policy/"
 >
-  <section class="section">
+  <section class="hero policy-hero">
     <div class="container">
       <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Corrections Policy', url:'/corrections-policy/'}]} />
       <p class="eyebrow">Corrections policy</p>
       <h1>Errors should be easy to report and clear to fix.</h1>
-      <p class="lede">Plain Act reviews reported factual errors, broken references, misleading wording, and material omissions. This policy describes the correction path without promising real-time response or review.</p>
+      <p class="lede">Plain Act reviews reported factual errors, broken references, outdated details, misleading wording, and material omissions. This policy explains what can be corrected, how reports are evaluated, and how dates are handled.</p>
+      <p class="small">Policy reviewed: August 31, 2026.</p>
+    </div>
+  </section>
 
-      <div class="grid grid-2 section-sm">
-        <article class="card flat">
-          <h2>How to report a correction</h2>
-          <p>Email <a href={`mailto:${site.email}`}>{site.email}</a>. Include the page URL, the specific statement or section, what you believe is wrong, and—when available—the source or evidence supporting the correction.</p>
-        </article>
-        <article class="card flat">
-          <h2>What qualifies</h2>
-          <p>Examples include incorrect facts, outdated platform information, broken or misrepresented sources, wrong product metadata, materially unclear wording, or a statement that creates a misleading impression.</p>
-        </article>
-        <article class="card flat">
-          <h2>How material corrections are handled</h2>
-          <p>When a reported issue is confirmed, the affected page may be corrected, clarified, expanded, or removed. Related internal links or metadata may also be updated when the error affects them.</p>
-        </article>
-        <article class="card flat">
-          <h2>Dates and review notes</h2>
-          <p>A page should not display a fabricated review date. If an actual material review or correction occurs and a date is shown, it should reflect that real event.</p>
-        </article>
-      </div>
+  <section class="section-sm">
+    <div class="container corrections-grid">
+      <article class="card flat">
+        <span class="policy-number">01</span>
+        <h2>How to report a correction</h2>
+        <p>Email <a href={`mailto:${site.email}`}>{site.email}</a> and include:</p>
+        <ul class="list-clean"><li>the page URL</li><li>the exact statement, table, link, or section</li><li>what you believe is incorrect or misleading</li><li>a supporting source or evidence when available</li></ul>
+        <p>A concise report makes the issue easier to reproduce and review.</p>
+      </article>
 
-      <div class="notice">
-        <strong>No real-time guarantee.</strong>
-        <p>Plain Act does not promise immediate correction or continuous monitoring of every page. Reports are reviewed as publishing capacity allows, with priority given to material factual or user-impacting issues.</p>
-        <p><a href="/editorial-policy/">Read the Editorial Policy</a></p>
-      </div>
+      <article class="card flat">
+        <span class="policy-number">02</span>
+        <h2>What qualifies for review</h2>
+        <p>Examples include incorrect facts, outdated platform information, broken or misrepresented references, wrong product or publication metadata, a misleading factual implication, or an omission that materially changes how a factual statement should be understood.</p>
+        <p>Disagreement with an editorial judgment does not automatically make it a factual error. However, unclear wording may still be revised when it creates avoidable confusion.</p>
+      </article>
+
+      <article class="card flat">
+        <span class="policy-number">03</span>
+        <h2>How a report is evaluated</h2>
+        <p>The reported text is checked against the source, current product behavior, or other relevant evidence when that evidence is available. The review may also check whether the same issue appears in related pages, metadata, internal links, or structured data.</p>
+        <p>A report may be closed without a change when the published statement remains supported or when the requested change is an opinion rather than a correction.</p>
+      </article>
+
+      <article class="card flat">
+        <span class="policy-number">04</span>
+        <h2>How material corrections are handled</h2>
+        <p>When an issue is confirmed, the affected page may be corrected, clarified, expanded, noindexed, redirected, or removed depending on the problem. Related links, metadata, or other pages may also be changed if the error affects them.</p>
+        <p>Plain Act does not preserve an error merely to avoid changing an already published page.</p>
+      </article>
+
+      <article class="card flat">
+        <span class="policy-number">05</span>
+        <h2>Dates and change notes</h2>
+        <p>A page should not display a fabricated publication, review, or update date. If a material review or correction occurs and the page carries an updated date, that date should reflect the real event.</p>
+        <p>Not every spelling, formatting, or layout correction requires a public correction note. Material factual changes may be described on the page when doing so helps the reader understand what changed.</p>
+      </article>
+
+      <article class="card flat">
+        <span class="policy-number">06</span>
+        <h2>Response timing</h2>
+        <p>Plain Act does not promise immediate correction, a fixed response time, or continuous monitoring of every page. Reports are reviewed as publishing capacity allows, with priority given to issues that materially affect factual accuracy, user understanding, or a current external rule or product detail.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container notice correction-contact">
+      <h2>Send a correction report</h2>
+      <p>Email <a href={`mailto:${site.email}`}>{site.email}</a> with the page URL and the exact issue. For the wider publication standards, read the <a href={href('/editorial-policy/')}>Editorial Policy</a>.</p>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .policy-hero h1{max-width:15ch}.corrections-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.corrections-grid article{position:relative;padding-top:3.5rem}.policy-number{position:absolute;right:1.2rem;top:1.15rem;color:var(--accent);font-size:.78rem;font-weight:800;letter-spacing:.12em}.corrections-grid h2{max-width:15ch}.correction-contact{max-width:900px}
+  @media(max-width:800px){.corrections-grid{grid-template-columns:1fr}}
+</style>

@@ -2,54 +2,54 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import { site } from '../data/site.js';
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
 ---
 <BaseLayout
   title="Editorial Policy | Plain Act"
-  description="How Plain Act develops, edits, reviews, updates, and corrects practical management content."
+  description="How Plain Act develops, edits, sources, reviews, updates, and corrects practical management content."
   path="/editorial-policy/"
 >
-  <section class="section">
+  <section class="hero policy-hero">
     <div class="container">
       <Breadcrumbs items={[{name:'Home', url:'/'}, {name:'Editorial Policy', url:'/editorial-policy/'}]} />
       <p class="eyebrow">Editorial policy</p>
       <h1>Useful first. Clear about how it was made.</h1>
-      <p class="lede">Plain Act publishes practical management guidance for first-time and working managers. This page explains the standards used to keep that guidance useful, original, and appropriately cautious.</p>
+      <p class="lede">Plain Act publishes practical management guidance for first-time and working managers. This policy explains the standards used for scope, originality, source handling, production tools, editing, updates, corrections, and commercial independence.</p>
+      <p class="small">Policy reviewed: August 31, 2026.</p>
+    </div>
+  </section>
 
-      <div class="grid grid-2 section-sm">
-        <article class="card flat">
-          <h2>Scope and purpose</h2>
-          <p>Plain Act focuses on day-to-day management problems such as authority, delegation, feedback, difficult conversations, meetings, workload, decision timing, and the transition into a management role.</p>
-          <p>The aim is practical guidance a reader can understand and adapt, not academic certification, legal advice, clinical advice, or a guarantee of workplace outcomes.</p>
-        </article>
-        <article class="card flat">
-          <h2>Originality and utility</h2>
-          <p>Indexable articles and guides are expected to have a distinct purpose and to add practical value through examples, scripts, checklists, decision rules, scenarios, templates, or worked applications.</p>
-          <p>Plain Act does not treat lightly rewritten material, copied definitions, or page-count inflation as an editorial standard.</p>
-        </article>
-        <article class="card flat">
-          <h2>Sources and external claims</h2>
-          <p>When a page relies on an external factual claim, research finding, platform rule, law, or third-party policy, the source should be identified or linked when practical. Opinion, editorial judgment, and illustrative management scenarios are presented as such.</p>
-        </article>
-        <article class="card flat">
-          <h2>AI-assisted production</h2>
-          <p>When AI-assisted or other software tools are used in research, drafting, editing, or production, they are treated as tools rather than named experts or authorities. Publication responsibility remains with {site.publisher}.</p>
-          <p>AI output is not, by itself, treated as evidence for a factual claim.</p>
-        </article>
-        <article class="card flat">
-          <h2>Editing and updates</h2>
-          <p>Material may be revised for accuracy, clarity, usefulness, structure, broken links, changed platform information, or better examples. An “updated” or “reviewed” date should only be shown when an actual review or material update occurred.</p>
-        </article>
-        <article class="card flat">
-          <h2>Commercial independence</h2>
-          <p>Plain Act publishes books and may use clearly disclosed affiliate links. Commercial availability does not change the standard that free editorial pages should remain useful without requiring a purchase.</p>
-        </article>
-      </div>
+  <section class="section-sm">
+    <div class="container policy-layout">
+      <nav class="policy-nav" aria-label="Editorial policy sections">
+        <a href="#mission">Mission</a><a href="#scope">Scope</a><a href="#originality">Originality</a><a href="#sources">Sources</a><a href="#production">Production tools</a><a href="#review">Review</a><a href="#updates">Updates</a><a href="#commercial">Commercial independence</a><a href="#errors">Report an error</a>
+      </nav>
 
-      <div class="notice">
-        <strong>Report an error.</strong>
-        <p>If you find a factual error, broken source, misleading statement, or material omission, email <a href={`mailto:${site.email}`}>{site.email}</a> and include the page URL and the point that needs review.</p>
-        <p><a href="/corrections-policy/">Read the Corrections Policy</a></p>
+      <div class="policy-content">
+        <section id="mission"><p class="eyebrow">01 — Mission</p><h2>Make management guidance usable under pressure.</h2><p>Plain Act is built around a narrow editorial purpose: help managers see a workplace problem clearly enough to take a responsible next action without unnecessary noise, hype, or performance.</p><p>A page should still be useful if all advertising, affiliate links, and purchase buttons are ignored.</p></section>
+
+        <section id="scope"><p class="eyebrow">02 — Scope</p><h2>What Plain Act covers.</h2><p>Primary topics include first-time management, authority, delegation, feedback, difficult conversations, meetings, workload and capacity, managing up, former-peer transitions, decision timing, and the first 30–90 days in a management role.</p><p>The publication provides general management guidance. It is not positioned as legal, employment-law, clinical, medical, financial, or employer-specific HR advice. A reader may need qualified professional or internal-policy guidance when a situation carries those risks.</p></section>
+
+        <section id="originality"><p class="eyebrow">03 — Originality and utility</p><h2>Pages need an independent reason to exist.</h2><p>Indexable articles, guides, and tools are expected to solve a distinct reader problem and add practical value through examples, scripts, checklists, decision rules, scenarios, templates, agendas, or worked applications where appropriate.</p><p>Plain Act does not treat copied definitions, lightly rewritten third-party material, synonym replacement, mass page generation, or generic word-count padding as acceptable editorial value. A weak page may be merged, noindexed, rebuilt, or removed instead of expanded with filler.</p></section>
+
+        <section id="sources"><p class="eyebrow">04 — Sources and factual claims</p><h2>External facts should be distinguishable from editorial judgment.</h2><p>When a page materially relies on a research finding, law, platform rule, product specification, price, policy, or other externally verifiable fact, the source should be identified or linked when practical and appropriate.</p><p>Illustrative workplace examples, scripts, and management judgments are not presented as research findings unless a source is explicitly provided. A source supports the factual claim for which it is cited; it does not automatically validate every recommendation on the page.</p></section>
+
+        <section id="production"><p class="eyebrow">05 — Production tools</p><h2>Software assistance is not treated as authority.</h2><p>Plain Act may use software tools, including AI-assisted tools, during research organization, drafting, editing, formatting, coding, or production. These tools are not named as experts, reviewers, or evidence sources merely because they produced text or code.</p><p>Publication responsibility remains with {site.publisher}. AI-generated or software-generated output is not, by itself, treated as proof of a factual claim. Where factual accuracy matters, the relevant source or live product behavior should be checked independently.</p></section>
+
+        <section id="review"><p class="eyebrow">06 — Editing and review</p><h2>Review is tied to the page, not a fictional reviewer identity.</h2><p>Editorial review can include checking the page's user intent, examples, internal links, overlapping topics, claims, structure, metadata, and whether the advice remains useful without a purchase. Technical pages may also be checked against the current production site or source configuration.</p><p>Plain Act does not create fictional experts, named reviewers, credentials, testimonials, or years of experience to make a page appear more authoritative.</p></section>
+
+        <section id="updates"><p class="eyebrow">07 — Updates</p><h2>Dates should describe real events.</h2><p>Material may be revised for factual accuracy, clarity, usefulness, structure, broken links, changed third-party information, stronger examples, or a better distinction from another page.</p><p>An “updated”, “reviewed”, or similar date should be shown only when an actual review or material update occurred. Minor styling or automated deployment changes do not automatically justify presenting an editorial review date.</p></section>
+
+        <section id="commercial"><p class="eyebrow">08 — Commercial independence</p><h2>Commercial links do not decide editorial conclusions.</h2><p>Plain Act publishes paid books and may use clearly disclosed affiliate relationships. Those commercial relationships do not change the standard that free editorial pages should provide a complete core answer without requiring a purchase.</p><p>When a recommendation or outbound link can generate a commission, the relationship should be disclosed in a way that is reasonably visible to the reader. See the <a href={href('/affiliate-disclosure/')}>Affiliate Disclosure</a>.</p></section>
+
+        <section id="errors" class="notice"><p class="eyebrow">09 — Corrections</p><h2>Report an error.</h2><p>If you find a factual error, broken source, misleading statement, outdated detail, or material omission, email <a href={`mailto:${site.email}`}>{site.email}</a>. Include the page URL, the exact point that needs review, and supporting evidence when available.</p><p>Reports are handled under the <a href={href('/corrections-policy/')}>Corrections Policy</a>. Plain Act does not promise real-time review, but confirmed material issues may be corrected, clarified, expanded, or removed.</p></section>
       </div>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .policy-hero h1{max-width:14ch}.policy-layout{display:grid;grid-template-columns:220px minmax(0,760px);gap:3rem;align-items:start;justify-content:center}.policy-nav{position:sticky;top:110px;display:grid;gap:.15rem;border-left:1px solid var(--border);padding-left:1rem}.policy-nav a{text-decoration:none;color:#aaa;padding:.35rem 0;font-size:.9rem}.policy-nav a:hover{color:#fff}.policy-content{display:grid;gap:3.4rem}.policy-content section{scroll-margin-top:120px}.policy-content h2{max-width:18ch}.policy-content p{max-width:70ch}.policy-content .notice{padding:1.4rem;border-left:4px solid var(--accent);background:#1a1d20}
+  @media(max-width:800px){.policy-layout{grid-template-columns:1fr}.policy-nav{position:static;grid-template-columns:repeat(2,minmax(0,1fr));border-left:0;border-bottom:1px solid var(--border);padding:0 0 1rem}}
+</style>
