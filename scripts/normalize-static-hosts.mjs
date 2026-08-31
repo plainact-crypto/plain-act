@@ -40,6 +40,15 @@ for (const file of await walk(distDir.pathname)) {
     replacementCount += 1;
   }
 
+  if (file === join(distDir.pathname, 'manager-toolkit', 'index.html')) {
+    const canonicalFrom = '<link rel="canonical" href="https://plain-act.com/">';
+    const canonicalTo = '<link rel="canonical" href="https://plain-act.com/manager-toolkit/">';
+    const ogFrom = '<meta property="og:url" content="https://plain-act.com/">';
+    const ogTo = '<meta property="og:url" content="https://plain-act.com/manager-toolkit/">';
+    if (text.includes(canonicalFrom)) { text = text.replace(canonicalFrom, canonicalTo); replacementCount += 1; }
+    if (text.includes(ogFrom)) { text = text.replace(ogFrom, ogTo); replacementCount += 1; }
+  }
+
   if (text !== before) {
     await writeFile(file, text, 'utf8');
     changedFiles += 1;
