@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import ArticleDepthLinks from '../components/ArticleDepthLinks.astro';
 import { site } from '../data/site.js';
 
 const {
@@ -35,6 +36,7 @@ const websiteSchema = {
 };
 const allSchema = [websiteSchema, ...schema];
 const href = (url) => `${base}${url.replace(/^\//, '')}`;
+const isArticlePage = path.startsWith('/articles/') && path !== '/articles/';
 ---
 <!doctype html>
 <html lang="en">
@@ -82,7 +84,10 @@ const href = (url) => `${base}${url.replace(/^\//, '')}`;
           </nav>
         </div>
       </header>
-      <main id="main"><slot /></main>
+      <main id="main">
+        <slot />
+        {isArticlePage && <ArticleDepthLinks />}
+      </main>
       <footer class="footer">
         <div class="container footer-grid footer-grid-v2">
           <div class="footer-brand">

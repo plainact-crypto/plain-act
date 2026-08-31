@@ -1,0 +1,73 @@
+---
+const base = import.meta.env.BASE_URL;
+const href = (url) => `${base}${url.replace(/^\//, '')}`;
+---
+<section class="article-depth" aria-labelledby="article-depth-title">
+  <div class="container article-depth-inner">
+    <div>
+      <p class="eyebrow">Keep working the problem</p>
+      <h2 id="article-depth-title">Turn the article into a next action.</h2>
+      <p class="small">
+        Continue with the first-month guide, use a practical resource, or apply the Plain Act framework to the situation you are managing now.
+      </p>
+    </div>
+    <nav class="article-depth-links" aria-label="Article next steps">
+      <a href={href('/guides/new-manager/')}><strong>New Manager Guide</strong><span>Use the week-by-week first 30 days plan.</span></a>
+      <a href={href('/resources/')}><strong>Tools & Resources</strong><span>Use checklists and practical management resources.</span></a>
+      <a href={href('/method/')}><strong>Plain Act Method</strong><span>Apply the pressure → action operating model.</span></a>
+      <a href={href('/articles/')}><strong>More Articles</strong><span>Move to the next management problem.</span></a>
+    </nav>
+  </div>
+</section>
+
+<style>
+  .article-depth {
+    border-top: 1px solid var(--border);
+    background: #14171a;
+    padding: 3rem 0;
+  }
+  .article-depth-inner {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    gap: 2rem;
+    align-items: start;
+  }
+  .article-depth h2 {
+    max-width: 12ch;
+  }
+  .article-depth-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .8rem;
+  }
+  .article-depth-links a {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-height: 132px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: rgba(255,255,255,.025);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .article-depth-links a:hover {
+    border-color: #6e7378;
+    background: rgba(255,255,255,.045);
+  }
+  .article-depth-links span {
+    color: var(--muted);
+    font-size: .93rem;
+    line-height: 1.55;
+  }
+  @media (max-width: 800px) {
+    .article-depth-inner,
+    .article-depth-links {
+      grid-template-columns: 1fr;
+    }
+    .article-depth-links a {
+      min-height: auto;
+    }
+  }
+</style>
