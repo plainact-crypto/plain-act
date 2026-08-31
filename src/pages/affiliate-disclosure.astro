@@ -5,7 +5,7 @@ import { site } from '../data/site.js';
 ---
 <BaseLayout
   title="Affiliate Disclosure | Plain Act"
-  description="Plain Act's disclosure of potential affiliate relationships and how they affect recommendations on this website."
+  description="How Plain Act handles potential affiliate relationships, retailer links, commissions, and editorial independence."
   path="/affiliate-disclosure/"
 >
   <section class="section">
@@ -13,27 +13,41 @@ import { site } from '../data/site.js';
       <Breadcrumbs items={[{ name: 'Home', url: '/' }, { name: 'Affiliate Disclosure', url: '/affiliate-disclosure/' }]} />
       <p class="eyebrow">Disclosure</p>
       <h1>Affiliate disclosure</h1>
-      <p class="lede">Plain Act may earn a commission when a reader purchases through certain links on this website.</p>
+      <p class="lede">Some outbound links on Plain Act may be affiliate links. If a qualifying purchase is made through an affiliate link, Plain Act may receive a commission without increasing the price paid by the reader.</p>
 
-      <div class="grid grid-2">
+      <div class="grid grid-2 disclosure-layout">
         <div>
-          <h2>How affiliate links work</h2>
-          <p>Some links may connect to third-party products, books, tools, or services through an affiliate arrangement. If you follow one of those links and make a qualifying purchase, Plain Act may receive a commission. This does not increase the price you pay.</p>
+          <h2>What an affiliate relationship means</h2>
+          <p>An affiliate relationship allows a publisher to receive a commission or referral fee after a reader follows a qualifying link and completes an eligible action or purchase with a third party. The retailer or service provider controls its own price, availability, terms, returns, privacy practices, and qualification rules.</p>
+          <p>Not every external link on Plain Act is an affiliate link. A link to a retailer, YouTube, LinkedIn, a source, or another third-party page should not be assumed to generate a commission merely because it is external.</p>
 
-          <h2>How recommendations are handled</h2>
-          <p>Affiliate relationships do not determine whether a product is mentioned or how it is described. Plain Act aims to recommend only resources that are relevant to the subject and useful to the intended reader.</p>
-          <p>Not every external link is an affiliate link. Where practical, affiliate links or affiliate-supported sections will be identified clearly.</p>
+          <h2>How affiliate-supported content is disclosed</h2>
+          <p>Where a page or section contains affiliate-supported recommendations or links, Plain Act aims to identify that relationship in a reasonably visible place near the relevant commercial content when practical. The site-wide footer also links to this disclosure for reference.</p>
+          <p>If a specific link is not part of an affiliate arrangement, this policy does not convert that link into one.</p>
 
-          <h2>Your judgment still matters</h2>
-          <p>Product details, availability, prices, and third-party terms can change. Review the seller's current information before making a purchase or relying on a product.</p>
+          <h2>Editorial independence</h2>
+          <p>Affiliate relationships do not determine the editorial conclusion of a guide or article. Free editorial content should remain useful without requiring a purchase, and a commission opportunity is not treated as evidence that a product is better for a reader.</p>
+          <p>Plain Act's own books may be promoted on the site. Because that is a direct commercial interest rather than a neutral third-party recommendation, book pages and purchase sections are presented as commercial publishing content rather than independent product reviews.</p>
+
+          <h2>Prices and product details can change</h2>
+          <p>Third-party prices, availability, formats, shipping terms, subscription terms, and product descriptions can change after a page is published. Readers should confirm the seller's current information before purchasing or relying on a commercial detail.</p>
+
+          <h2>No extra cost claim</h2>
+          <p>When an affiliate program pays a standard referral commission without changing the customer's listed purchase price, the commission is paid by the participating merchant or platform. Plain Act does not control taxes, shipping, currency conversion, discounts, or other charges that a seller may apply.</p>
         </div>
 
-        <aside class="card flat">
-          <h2>Questions</h2>
-          <p>If you have a question about this disclosure or a link on the site, contact Plain Act at <a href={`mailto:${site.email}`}>{site.email}</a>.</p>
-          <p class="small">Last updated: July 12, 2026.</p>
+        <aside class="card flat disclosure-aside">
+          <h2>Questions or link verification</h2>
+          <p>If you want to ask whether a particular link is affiliate-supported, contact Plain Act at <a href={`mailto:${site.email}`}>{site.email}</a> and include the page URL.</p>
+          <p>For the broader publication standard, see the <a href="/editorial-policy/">Editorial Policy</a>.</p>
+          <p class="small">Last reviewed and updated: August 31, 2026.</p>
         </aside>
       </div>
     </div>
   </section>
 </BaseLayout>
+
+<style>
+  .disclosure-layout{align-items:start}.disclosure-layout>div>h2{margin-top:2.5rem}.disclosure-layout>div>h2:first-child{margin-top:0}.disclosure-aside{position:sticky;top:110px}
+  @media(max-width:800px){.disclosure-aside{position:static}}
+</style>
