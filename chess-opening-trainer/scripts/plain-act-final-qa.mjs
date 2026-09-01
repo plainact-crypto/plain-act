@@ -128,7 +128,7 @@ try {
   }
 
   for (const width of widths) {
-    const context = await browser.newContext({ viewport: { width, height: width < 1000 ? 900 : 900 } });
+    const context = await browser.newContext({ viewport: { width, height: 900 } });
     const page = await context.newPage();
     for (const pathname of pagePaths) {
       const scope = `${width}px ${pathname}`;
@@ -139,7 +139,25 @@ try {
           continue;
         }
         const result = await page.evaluate(() => {
-          const overflow = document.documentElement.scrollWidth > document.documentElement.clientWidth + 2;
+          const viewportWidth = document.documentElement.clientWidth;
+          const overflow = document.documentElement.scrollWidth > viewportWidth + 2;
+          const offenders = overflow ? [...document.querySelectorAll('body *')]
+            .map((el) => {
+              const rect = el.getBoundingClientRect();
+              return {
+                tag: el.tagName.toLowerCase(),
+                id: el.id || '',
+                className: typeof el.className === 'string' ? el.className.slice(0, 140) : '',
+                left: Math.round(rect.left * 10) / 10,
+                right: Math.round(rect.right * 10) / 10,
+                width: Math.round(rect.width * 10) / 10,
+                scrollWidth: el.scrollWidth,
+                clientWidth: el.clientWidth,
+                text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 90)
+              };
+            })
+            .filter((item) => item.right > viewportWidth + 2 || item.left < -2 || item.scrollWidth > item.clientWidth + 2)
+            .slice(0, 20) : [];
           const focusables = [...document.querySelectorAll('a[href],button,input,select,textarea,[tabindex]:not([tabindex="-1"])')]
             .filter((el) => !el.hasAttribute('disabled') && el.getClientRects().length > 0);
           let focusWorks = true;
@@ -147,9 +165,9 @@ try {
             focusables[0].focus();
             focusWorks = document.activeElement === focusables[0];
           }
-          return { overflow, focusWorks };
+          return { overflow, offenders, focusWorks, viewportWidth, documentWidth: document.documentElement.scrollWidth };
         });
-        if (result.overflow) fail(scope, 'horizontal overflow detected');
+        if (result.overflow) fail(scope, `horizontal overflow ${result.documentWidth}px > ${result.viewportWidth}px; offenders=${JSON.stringify(result.offenders)}`);
         if (!result.focusWorks) fail(scope, 'basic keyboard focus failed');
       } catch (error) {
         fail(scope, error.message);
