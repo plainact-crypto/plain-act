@@ -56,7 +56,7 @@ try {
     const page = await context.newPage();
     const scope = pathname;
     try {
-      const response = await page.goto(deployUrlForPath(pathname), { waitUntil: 'domcontentloaded', timeout: 45000 });
+      const response = await page.goto(deployUrlForPath(pathname), { waitUntil: 'networkidle', timeout: 45000 });
       if (!response || !response.ok()) {
         fail(scope, `HTTP ${response?.status() ?? 'no response'} on deployed artifact`);
         continue;
@@ -133,7 +133,7 @@ try {
     for (const pathname of pagePaths) {
       const scope = `${width}px ${pathname}`;
       try {
-        const response = await page.goto(deployUrlForPath(pathname), { waitUntil: 'domcontentloaded', timeout: 45000 });
+        const response = await page.goto(deployUrlForPath(pathname), { waitUntil: 'networkidle', timeout: 45000 });
         if (!response || !response.ok()) {
           fail(scope, `HTTP ${response?.status() ?? 'no response'}`);
           continue;
