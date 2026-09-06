@@ -2,19 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": true
-  },
-  "rewrites": [
-    {
-      "source": "/summit",
-      "destination": "https://summit-sat-math.vercel.app/"
-    },
-    {
-      "source": "/summit/:path*",
-      "destination": "https://summit-sat-math.vercel.app/:path*"
-    },
-    {
-      "source": "/progress-tracker.js",
-      "destination": "https://summit-sat-math.vercel.app/progress-tracker.js"
-    }
-  ]
+  }
 }
