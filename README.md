@@ -209,3 +209,5 @@ This site intentionally avoids:
 
 - New Manager Guide breadcrumb is simplified to `Home → New Manager Guide` because no `/guides/` index page exists.
 - `/books/do-the-work/` remains accessible as an in-development status page, but is intentionally omitted from `public/sitemap.xml` while metadata is pending.
+
+Deployment refresh marker: 2026-09-06.
