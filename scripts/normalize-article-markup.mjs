@@ -4,6 +4,7 @@ import path from 'node:path';
 const distDir = path.resolve('dist');
 let changedFiles = 0;
 let removedHeadings = 0;
+let insertedBylines = 0;
 
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -21,10 +22,17 @@ for (const file of walk(distDir).filter((file) => file.endsWith('.html'))) {
     return prefix;
   });
 
+  if (!updated.includes('class="article-byline"')) {
+    updated = updated.replace(/(<header\b[^>]*class=["'][^"']*\barticle-hero\b[^"']*["'][^>]*>[\s\S]*?<h1(?:\s[^>]*)?>[\s\S]*?<\/h1>)/i, (match) => {
+      insertedBylines += 1;
+      return `${match}\n      <p class="article-byline small">Published by <a href="/about/">PlainAct Publishing</a></p>`;
+    });
+  }
+
   if (updated !== original) {
     fs.writeFileSync(file, updated);
     changedFiles += 1;
   }
 }
 
-console.log(`Normalized article markup in ${changedFiles} built file(s); removed ${removedHeadings} duplicate article H1(s).`);
+console.log(`Normalized article markup in ${changedFiles} built file(s); removed ${removedHeadings} duplicate article H1(s); inserted ${insertedBylines} publisher byline(s).`);
