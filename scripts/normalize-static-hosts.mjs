@@ -3,10 +3,10 @@ import { join } from 'node:path';
 
 const distDir = new URL('../dist/', import.meta.url);
 const replacements = [
-  ['https://plainact-crypto.github.io/plain-act/', 'https://plain-act.com/'],
-  ['https://plain-act.pages.dev/', 'https://plain-act.com/'],
-  ['https://plain-act.pages.dev', 'https://plain-act.com'],
-  ['plainact-crypto.github.io/plain-act', 'plain-act.com'],
+  ['https://plainact-crypto.github.io/plain-act/', 'https://www.plain-act.com/'],
+  ['https://plain-act.pages.dev/', 'https://www.plain-act.com/'],
+  ['https://plain-act.pages.dev', 'https://www.plain-act.com'],
+  ['plainact-crypto.github.io/plain-act', 'www.plain-act.com'],
   ['/plain-act/', '/']
 ];
 
@@ -36,15 +36,15 @@ for (const file of await walk(distDir.pathname)) {
   }
 
   if (file === join(distDir.pathname, 'index.html') && !/<link\s+rel=["']canonical["']/i.test(text)) {
-    text = text.replace('</head>', '  <link rel="canonical" href="https://plain-act.com/" />\n</head>');
+    text = text.replace('</head>', '  <link rel="canonical" href="https://www.plain-act.com/" />\n</head>');
     replacementCount += 1;
   }
 
   if (file === join(distDir.pathname, 'manager-toolkit', 'index.html')) {
-    const canonicalFrom = '<link rel="canonical" href="https://plain-act.com/">';
-    const canonicalTo = '<link rel="canonical" href="https://plain-act.com/manager-toolkit/">';
-    const ogFrom = '<meta property="og:url" content="https://plain-act.com/">';
-    const ogTo = '<meta property="og:url" content="https://plain-act.com/manager-toolkit/">';
+    const canonicalFrom = '<link rel="canonical" href="https://www.plain-act.com/">';
+    const canonicalTo = '<link rel="canonical" href="https://www.plain-act.com/manager-toolkit/">';
+    const ogFrom = '<meta property="og:url" content="https://www.plain-act.com/">';
+    const ogTo = '<meta property="og:url" content="https://www.plain-act.com/manager-toolkit/">';
     if (text.includes(canonicalFrom)) { text = text.replace(canonicalFrom, canonicalTo); replacementCount += 1; }
     if (text.includes(ogFrom)) { text = text.replace(ogFrom, ogTo); replacementCount += 1; }
   }
