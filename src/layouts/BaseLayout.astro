@@ -32,9 +32,26 @@ const websiteSchema = {
   '@type': 'WebSite',
   name: site.brand,
   url: site.fullUrl,
-  publisher: { '@type': 'Organization', name: site.brand }
+  publisher: { '@type': 'Organization', name: site.publisher, url: site.fullUrl }
 };
-const allSchema = [websiteSchema, ...schema];
+const normalizedSchema = schema.map((entry) => {
+  if (entry?.['@type'] !== 'Article') return entry;
+  return {
+    ...entry,
+    author: {
+      '@type': 'Organization',
+      name: site.publisher,
+      url: new URL('about/', site.fullUrl).toString()
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: site.publisher,
+      url: site.fullUrl
+    },
+    mainEntityOfPage: absoluteUrl
+  };
+});
+const allSchema = [websiteSchema, ...normalizedSchema];
 const href = (url) => `${base}${url.replace(/^\//, '')}`;
 const isArticlePage = path.startsWith('/articles/') && path !== '/articles/';
 ---
