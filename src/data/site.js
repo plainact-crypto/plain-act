@@ -3,9 +3,9 @@ export const site = {
   publisher: 'PlainAct Publishing',
   author: 'Plain Act',
   email: 'info@plain-act.com',
-  siteUrl: 'https://plain-act.com',
+  siteUrl: 'https://www.plain-act.com',
   basePath: '/',
-  fullUrl: 'https://plain-act.com/',
+  fullUrl: 'https://www.plain-act.com/',
   logo: '/assets/plain-act-logo.png',
   ogImage: '/assets/og-image.jpg',
   positioning: 'Plain Act publishes quiet management manuals for people carrying authority under pressure.',
@@ -15,4 +15,4 @@ export const site = {
   ]
 };
 
-// Deployment refresh: ensure plain-act.com serves the latest site configuration.
+// Deployment refresh: ensure www.plain-act.com serves the latest site configuration.
