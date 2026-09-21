@@ -2,19 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": true
-  },
-  "redirects": [
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "header",
-          "key": "host",
-          "value": "plain-act.com"
-        }
-      ],
-      "destination": "https://www.plain-act.com/:path*",
-      "permanent": true
-    }
-  ]
+  }
 }
