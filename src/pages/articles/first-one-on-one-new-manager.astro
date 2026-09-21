@@ -10,7 +10,7 @@ const schema={
   datePublished:'2026-09-21',dateModified:'2026-09-21',
   author:{'@type':'Organization',name:site.publisher,url:new URL('about/',site.fullUrl).toString()},
   publisher:{'@type':'Organization',name:site.publisher,url:site.fullUrl},
-  mainEntityOfPage:new URL(path.replace(/^\\//,''),site.fullUrl).toString()
+  mainEntityOfPage:new URL(path.startsWith('/') ? path.slice(1) : path,site.fullUrl).toString()
 };
 ---
 <BaseLayout title={title} description={description} path={path} schema={[schema]}>
