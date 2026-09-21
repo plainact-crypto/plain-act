@@ -1,0 +1,59 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { site } from '../../data/site.js';
+const title="How to Introduce Yourself as a New Manager | Plain Act";
+const description="Use a short, credible new-manager introduction for your team meeting, 1:1s, and email. Includes examples and what to avoid saying in your first week.";
+const path="/articles/how-to-introduce-yourself-as-new-manager/";
+const schema={
+  '@context':'https://schema.org','@type':'Article',headline:"How to Introduce Yourself as a New Manager",description,
+  datePublished:'2026-09-21',dateModified:'2026-09-21',
+  author:{'@type':'Organization',name:site.publisher,url:new URL('about/',site.fullUrl).toString()},
+  publisher:{'@type':'Organization',name:site.publisher,url:site.fullUrl},
+  mainEntityOfPage:new URL(path.replace(/^\\//,''),site.fullUrl).toString()
+};
+---
+<BaseLayout title={title} description={description} path={path} schema={[schema]}>
+<article class="seo-article">
+<header>
+<Breadcrumbs items={[{name:'Home',url:'/'},{name:'Articles',url:'/articles/'},{name:"How to Introduce Yourself as a New Manager",url:path}]} />
+<p class="eyebrow">First week</p>
+<h1>How to Introduce Yourself as a New Manager</h1>
+<p class="lede">Your introduction should reduce uncertainty, not prove that you deserve the role. Keep it short, tell people how you plan to work, and leave room to learn the team before making promises.</p>
+</header>
+<div class="body"><section class="quick"><strong>Short answer:</strong> Introduce yourself in three parts: who you are, what you will focus on first, and how people can work with you. Keep the first version under two minutes.</section>
+<h2>What your team actually needs from the introduction</h2>
+<p>Most teams are not waiting for a leadership speech. They want to know what changes now, what does not change yet, and whether you are going to listen before reorganizing everything.</p>
+<p>A useful introduction answers four questions: Who are you? What is your role? What will you focus on first? What should the team expect from you this week?</p>
+<h2>A simple new-manager introduction</h2>
+<div class="script">“I’m glad to be here. My first job is to understand the team, the work, and the commitments already in motion. I’m not planning to change everything in week one. I’ll meet each of you, learn what is working and what is getting in the way, and make priorities and decisions as clear as I can. If something is urgent or blocked, bring it to me early.”</div>
+<p>That is enough. You can add one sentence about your background if it helps the team understand your context, but do not turn the introduction into your biography.</p>
+<h2>How to introduce yourself in the first team meeting</h2>
+<ol><li><strong>Open briefly.</strong> Say who you are and what you are responsible for.</li><li><strong>Name the first-week focus.</strong> Listening, priorities, current commitments, and blockers.</li><li><strong>Explain access.</strong> Tell people how to raise urgent issues and when 1:1s will happen.</li><li><strong>Move to the team.</strong> Spend more time hearing from them than talking about yourself.</li></ol>
+<p>Then use the structure in <a href="/articles/first-team-meeting-new-manager/">your first team meeting agenda</a> instead of filling the hour with an introduction.</p>
+<h2>How to introduce yourself in a 1:1</h2>
+<p>Your 1:1 introduction can be even shorter: “I want to understand your work before I make assumptions. I’ll ask about priorities, blockers, what helps you do good work, and what you need from me.” Then start asking questions.</p>
+<p>Use the <a href="/articles/first-one-on-one-new-manager/">first 1:1 agenda for new managers</a> to structure the conversation.</p>
+<h2>What not to say</h2>
+<ul><li>Do not promise that nothing will change.</li><li>Do not announce a major new vision before you understand the operation.</li><li>Do not say you are “not really the boss” to make former peers comfortable.</li><li>Do not list every achievement that led to your promotion.</li><li>Do not invite unlimited access with “my door is always open” unless you can actually support it.</li></ul>
+<h2>A short email introduction</h2>
+<div class="script">Subject: Looking forward to working with you<br/><br/>Hi team — I’m looking forward to working with you. In the first week I’ll focus on understanding current priorities, commitments, blockers, and how each of you prefers to work. I’ll schedule individual conversations and keep existing work moving while I learn the context. If something is urgent, please flag it early. Thanks — [Name]</div>
+<h2>What to do immediately after the introduction</h2>
+<p>Book individual conversations, review the current commitments, and write down the decisions that already have deadlines. Your introduction matters less than what follows it. The team will judge the role change by your consistency, not by the quality of your opening speech.</p>
+<p>For the wider transition, use the <a href="/guides/new-manager/">New Manager Guide for the first 30, 60 and 90 days</a>.</p></div>
+</article>
+</BaseLayout>
+
+<style>
+  .seo-article{width:min(900px,calc(100% - 32px));margin:0 auto;padding:2.5rem 0 5rem}
+  .seo-article header,.seo-article .body{width:min(100%,720px);margin-inline:auto}
+  .seo-article h1{font-size:clamp(2.4rem,6vw,4rem);line-height:1;letter-spacing:-.045em;margin:.5rem 0 1rem}
+  .seo-article .lede{font-size:1.18rem;line-height:1.65;color:var(--muted)}
+  .seo-article .body{margin-top:3rem}
+  .seo-article .body h2{margin-top:3.5rem;font-size:clamp(1.6rem,3vw,2.25rem);letter-spacing:-.03em}
+  .seo-article .body h3{margin-top:2rem}
+  .seo-article .body p,.seo-article .body li{font-size:1.08rem;line-height:1.75;color:var(--muted)}
+  .seo-article .body strong{color:var(--ink)}
+  .seo-article .script{padding:1.2rem 1.3rem;border-left:3px solid var(--accent);background:var(--paper);color:var(--ink);margin:1.5rem 0}
+  .seo-article .quick{padding:1.2rem;border:1px solid var(--border);border-radius:16px;background:var(--card)}
+</style>

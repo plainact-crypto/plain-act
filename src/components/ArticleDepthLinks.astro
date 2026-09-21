@@ -9,6 +9,23 @@ const conversationArticles = [
   'boundaries-former-peers'
 ];
 const delegationArticles = ['delegate-without-micromanaging'];
+const firstWeeks = ['first-team-meeting-new-manager','fix-everything-week-one','what-should-a-new-manager-do','how-to-introduce-yourself-as-new-manager','first-one-on-one-new-manager','questions-to-ask-your-team-new-manager'];
+const cluster = firstWeeks.some((slug) => path.includes(slug))
+  ? [
+      {title:'Introduce Yourself as a New Manager',text:'A short first-week introduction for meetings, 1:1s, and email.',url:'/articles/how-to-introduce-yourself-as-new-manager/'},
+      {title:'First 1:1 Agenda & Questions',text:'A practical 30-minute first meeting with a direct report.',url:'/articles/first-one-on-one-new-manager/'},
+      {title:'15 Questions to Ask Your Team',text:'Learn priorities, blockers, expectations, and working preferences.',url:'/articles/questions-to-ask-your-team-new-manager/'}
+    ].filter((item)=>!path.includes(item.url.split('/').filter(Boolean).pop()))
+  : conversationArticles.some((slug) => path.includes(slug))
+    ? [
+        {title:'Difficult Conversations',text:'Use a calm structure for facts, impact, expectation, and follow-up.',url:'/articles/difficult-conversations-new-manager/'},
+        {title:'Give Feedback Clearly',text:'Correct observable behavior early without turning it into a lecture.',url:'/articles/feedback-without-killing-morale/'},
+        {title:'Boundaries With Former Peers',text:'Make the role change visible without becoming cold or unfair.',url:'/articles/boundaries-former-peers/'}
+      ].filter((item)=>!path.includes(item.url.split('/').filter(Boolean).pop()))
+    : [
+        {title:'New Manager First 30 Days',text:'Use a week-by-week plan for priorities, delegation, feedback, and decisions.',url:'/articles/what-should-a-new-manager-do/'},
+        {title:'Build Authority',text:'Create authority through consistency, boundaries, and follow-through.',url:'/articles/build-authority-as-new-manager/'}
+      ];
 
 const recommended = delegationArticles.some((slug) => path.includes(slug))
   ? {
@@ -38,7 +55,7 @@ const recommended = delegationArticles.some((slug) => path.includes(slug))
     <nav class="article-depth-links" aria-label="Article next steps">
       <a class="recommended-tool" href={href(recommended.url)}><strong>{recommended.title}</strong><span>{recommended.text}</span></a>
       <a href={href('/guides/new-manager/')}><strong>New Manager Guide</strong><span>Use the week-by-week first 30 days plan.</span></a>
-      <a href={href('/method/')}><strong>Plain Act Method</strong><span>Apply the pressure → action operating model.</span></a>
+      {cluster.slice(0,2).map((item) => <a href={href(item.url)}><strong>{item.title}</strong><span>{item.text}</span></a>)}
       <a href={href('/articles/')}><strong>More Articles</strong><span>Move to the next management problem.</span></a>
     </nav>
   </div>

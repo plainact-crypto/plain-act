@@ -1,0 +1,62 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { site } from '../../data/site.js';
+const title="First 1:1 as a New Manager: Agenda & Questions | Plain Act";
+const description="A practical 30-minute agenda for your first one-on-one with a direct report, including the best questions to ask and the follow-up to send afterward.";
+const path="/articles/first-one-on-one-new-manager/";
+const schema={
+  '@context':'https://schema.org','@type':'Article',headline:"Your First 1:1 as a New Manager: Agenda and Questions",description,
+  datePublished:'2026-09-21',dateModified:'2026-09-21',
+  author:{'@type':'Organization',name:site.publisher,url:new URL('about/',site.fullUrl).toString()},
+  publisher:{'@type':'Organization',name:site.publisher,url:site.fullUrl},
+  mainEntityOfPage:new URL(path.replace(/^\\//,''),site.fullUrl).toString()
+};
+---
+<BaseLayout title={title} description={description} path={path} schema={[schema]}>
+<article class="seo-article">
+<header>
+<Breadcrumbs items={[{name:'Home',url:'/'},{name:'Articles',url:'/articles/'},{name:"Your First 1:1 as a New Manager: Agenda and Questions",url:path}]} />
+<p class="eyebrow">One-on-ones</p>
+<h1>Your First 1:1 as a New Manager: Agenda and Questions</h1>
+<p class="lede">Your first one-on-one is not a status interrogation. It is a working conversation to understand the person, the work, the friction, and what useful support looks like.</p>
+</header>
+<div class="body"><section class="quick"><strong>30-minute agenda:</strong> 3 minutes set the purpose, 15 minutes understand their work, 7 minutes discuss support and expectations, 5 minutes agree the next step.</section>
+<h2>What the first 1:1 should accomplish</h2>
+<p>You do not need complete trust, a career plan, and a management agreement in one meeting. Aim for three outcomes: you understand something important about their work, they understand how you plan to operate, and you both leave with one clear next step.</p>
+<h2>The 30-minute agenda</h2>
+<h3>Minutes 0–3: set the purpose</h3>
+<div class="script">“I want to use this first conversation to understand your work, what matters most right now, what gets in the way, and what support is actually useful. We do not need to solve everything today.”</div>
+<h3>Minutes 3–18: understand the work</h3>
+<ul><li>What are your three most important responsibilities right now?</li><li>What is most likely to miss a deadline or become a problem?</li><li>Where do you lose the most time?</li><li>Which decisions are you waiting for?</li><li>What should I understand before I change anything?</li></ul>
+<h3>Minutes 18–25: understand how to manage the person</h3>
+<ul><li>What kind of manager support helps you most?</li><li>How do you prefer to receive feedback?</li><li>Where do you want more autonomy?</li><li>What do previous managers usually misunderstand about your work?</li></ul>
+<h3>Minutes 25–30: close with one commitment</h3>
+<p>Do not end with “great chat.” Choose one action. You might unblock an approval, clarify a priority, or agree on a checkpoint.</p>
+<div class="script">“The one thing I’m taking away is the approval delay on the client update. I’ll resolve the decision path by Wednesday and we’ll check it in our next 1:1.”</div>
+<h2>Questions to avoid in the first meeting</h2>
+<p>Avoid questions that force political judgments before trust exists, such as “Who is the weakest person here?” or “What is wrong with this team?” Ask about work, friction, decisions, and patterns first.</p>
+<h2>Do not turn the 1:1 into a status meeting</h2>
+<p>Status can usually be written. The conversation should surface context that a dashboard cannot: uncertainty, unclear ownership, recurring friction, hidden dependencies, and the support the person needs from you.</p>
+<p>If you need a larger question bank, use <a href="/articles/questions-to-ask-your-team-new-manager/">15 questions to ask your team as a new manager</a>.</p>
+<h2>What to send after the meeting</h2>
+<p>A short recap is enough: what you heard, what you committed to, and when you will follow up. Do not write a transcript.</p>
+<h2>How often should you meet?</h2>
+<p>Start with a regular rhythm that is frequent enough to learn the team and close loops. You can adjust later based on the work, the person, and the maturity of the relationship.</p>
+<p>For the rest of the transition, follow the <a href="/guides/new-manager/">New Manager Guide</a> and the <a href="/articles/what-should-a-new-manager-do/">first 30 days plan</a>.</p></div>
+</article>
+</BaseLayout>
+
+<style>
+  .seo-article{width:min(900px,calc(100% - 32px));margin:0 auto;padding:2.5rem 0 5rem}
+  .seo-article header,.seo-article .body{width:min(100%,720px);margin-inline:auto}
+  .seo-article h1{font-size:clamp(2.4rem,6vw,4rem);line-height:1;letter-spacing:-.045em;margin:.5rem 0 1rem}
+  .seo-article .lede{font-size:1.18rem;line-height:1.65;color:var(--muted)}
+  .seo-article .body{margin-top:3rem}
+  .seo-article .body h2{margin-top:3.5rem;font-size:clamp(1.6rem,3vw,2.25rem);letter-spacing:-.03em}
+  .seo-article .body h3{margin-top:2rem}
+  .seo-article .body p,.seo-article .body li{font-size:1.08rem;line-height:1.75;color:var(--muted)}
+  .seo-article .body strong{color:var(--ink)}
+  .seo-article .script{padding:1.2rem 1.3rem;border-left:3px solid var(--accent);background:var(--paper);color:var(--ink);margin:1.5rem 0}
+  .seo-article .quick{padding:1.2rem;border:1px solid var(--border);border-radius:16px;background:var(--card)}
+</style>

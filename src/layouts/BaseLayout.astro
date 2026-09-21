@@ -4,17 +4,39 @@ import ArticleDepthLinks from '../components/ArticleDepthLinks.astro';
 import { site } from '../data/site.js';
 
 const {
-  title,
-  description,
+  title: suppliedTitle,
+  description: suppliedDescription,
   path = '/',
-  ogTitle = title,
-  ogDescription = description,
+  ogTitle: suppliedOgTitle,
+  ogDescription: suppliedOgDescription,
   ogImage = site.ogImage,
   schema = [],
   current = '',
   robots = 'index,follow'
 } = Astro.props;
 
+const seoOverrides = {
+  '/': ['New Manager Guide, Tools & Practical Management Advice | Plain Act','Practical guidance for new and first-time managers: first 90 days, delegation, feedback, team meetings, difficult conversations, tools, and checklists.'],
+  '/articles/': ['New Manager Articles: Practical Management Guides | Plain Act','Practical articles for first-time managers on delegation, feedback, authority, meetings, managing up, former peers, and the first 90 days.'],
+  '/guides/new-manager/': ['New Manager Guide: First 30, 60 & 90 Days | Plain Act','A practical first-time manager guide for your first day, first week, first 30 days, and first 90 days: priorities, 1:1s, delegation, feedback, and authority.'],
+  '/articles/why-new-managers-overexplain/': ['Why New Managers Overexplain — and How to Stop | Plain Act','Learn why new managers overexplain under pressure and use a simple restraint framework to communicate decisions with more clarity and authority.'],
+  '/articles/delegate-without-micromanaging/': ['Delegate Without Micromanaging: A New Manager Guide | Plain Act','A practical delegation framework for new managers: define outcomes, authority, checkpoints, and escalation rules without hovering or taking work back.'],
+  '/articles/feedback-without-killing-morale/': ['How to Give Feedback as a New Manager | Plain Act','Give clear feedback without killing morale. A practical method for first-time managers to address behavior early, calmly, and specifically.'],
+  '/articles/build-authority-as-new-manager/': ['How to Build Authority as a New Manager | Plain Act','Build authority as a new manager through clear expectations, consistent decisions, boundaries, and follow-through — without acting harsh or fake.'],
+  '/articles/new-managers-say-yes/': ['Why New Managers Say Yes to Everything | Plain Act','Learn why first-time managers overcommit, how it creates hidden capacity problems, and how to say no or renegotiate priorities without sounding defensive.'],
+  '/articles/manage-up-without-sounding-insecure/': ['Manage Up as a New Manager: Weekly Update Template | Plain Act','A calm way to manage up as a new manager: what to report, what to escalate, what decisions to own, and a simple weekly update format.'],
+  '/articles/difficult-conversations-new-manager/': ['Difficult Conversations for New Managers: Simple Script | Plain Act','A practical script for new managers to handle difficult conversations early: state the fact, explain the impact, ask, set the expectation, and follow up.'],
+  '/articles/first-team-meeting-new-manager/': ['First Team Meeting as a New Manager: 30-Minute Agenda | Plain Act','Run your first team meeting as a new manager with a clear 30-minute agenda, operating rules, blocker capture, and a concise follow-up.'],
+  '/articles/fix-everything-week-one/': ['New Manager First Week: What Not to Change | Plain Act','What should a new manager do in week one? Learn what to observe, what to clarify, what to avoid changing, and where early action is actually necessary.'],
+  '/articles/boundaries-former-peers/': ['Managing Former Peers After Promotion: Boundaries | Plain Act','How to manage former peers after promotion without becoming cold or overfriendly: reset expectations, avoid favoritism, and make role boundaries visible.'],
+  '/articles/what-should-a-new-manager-do/': ['New Manager First 30 Days: Week-by-Week Plan | Plain Act','A practical first 30 days plan for new managers: priorities, 1:1s, delegation, feedback, meetings, decision boundaries, and what not to change too early.'],
+  '/articles/how-to-introduce-yourself-as-new-manager/': ['How to Introduce Yourself as a New Manager | Plain Act','Use a short, credible new-manager introduction for your team meeting, 1:1s, and email. Includes examples and what to avoid saying in your first week.'],
+  '/articles/first-one-on-one-new-manager/': ['First 1:1 as a New Manager: Agenda & Questions | Plain Act','A practical 30-minute agenda for your first one-on-one with a direct report, including the best questions to ask and the follow-up to send afterward.'],
+  '/articles/questions-to-ask-your-team-new-manager/': ['15 Questions to Ask Your Team as a New Manager | Plain Act','Fifteen useful questions for a new manager to ask direct reports about priorities, blockers, communication, feedback, ownership, and team improvement.']
+};
+const [title, description] = seoOverrides[path] || [suppliedTitle, suppliedDescription];
+const ogTitle = suppliedOgTitle || title;
+const ogDescription = suppliedOgDescription || description;
 const base = import.meta.env.BASE_URL;
 const absoluteUrl = new URL(path.replace(/^\//, ''), site.fullUrl).toString();
 const imageUrl = new URL(`${base}${ogImage.replace(/^\//, '')}`, site.siteUrl).toString();
@@ -27,12 +49,34 @@ const nav = [
   ['Books', '/books/'],
   ['About', '/about/']
 ];
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': new URL('#organization', site.fullUrl).toString(),
+  name: site.publisher,
+  alternateName: site.brand,
+  url: site.fullUrl,
+  logo: { '@type': 'ImageObject', url: logoUrl },
+  email: site.email,
+  sameAs: site.sameAs
+};
 const websiteSchema = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
+  '@id': new URL('#website', site.fullUrl).toString(),
   name: site.brand,
   url: site.fullUrl,
-  publisher: { '@type': 'Organization', name: site.publisher, url: site.fullUrl }
+  publisher: { '@id': new URL('#organization', site.fullUrl).toString() }
+};
+const webPageSchema = {
+  '@context': 'https://schema.org',
+  '@type': path.startsWith('/articles/') && path !== '/articles/' ? 'Article' : 'WebPage',
+  '@id': absoluteUrl,
+  url: absoluteUrl,
+  name: title,
+  description,
+  isPartOf: { '@id': new URL('#website', site.fullUrl).toString() },
+  about: { '@id': new URL('#organization', site.fullUrl).toString() }
 };
 const normalizedSchema = schema.map((entry) => {
   if (entry?.['@type'] !== 'Article') return entry;
@@ -51,7 +95,7 @@ const normalizedSchema = schema.map((entry) => {
     mainEntityOfPage: absoluteUrl
   };
 });
-const allSchema = [websiteSchema, ...normalizedSchema];
+const allSchema = [organizationSchema, websiteSchema, webPageSchema, ...normalizedSchema];
 const href = (url) => `${base}${url.replace(/^\//, '')}`;
 const isArticlePage = path.startsWith('/articles/') && path !== '/articles/';
 ---
@@ -74,7 +118,7 @@ const isArticlePage = path.startsWith('/articles/') && path !== '/articles/';
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
     <link rel="canonical" href={absoluteUrl} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={isArticlePage ? 'article' : 'website'} />
     <meta property="og:site_name" content={site.brand} />
     <meta property="og:title" content={ogTitle} />
     <meta property="og:description" content={ogDescription} />

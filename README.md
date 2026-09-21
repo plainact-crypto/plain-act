@@ -1,6 +1,8 @@
 # Plain Act Astro Website
 
-Professional static website for **Plain Act**, published by **PlainAct Publishing**.
+Professional static website for **[Plain Act](https://www.plain-act.com/)**, published by **PlainAct Publishing**.
+
+Start with the **[New Manager Guide](https://www.plain-act.com/guides/new-manager/)** or browse the **[practical management articles](https://www.plain-act.com/articles/)**.
 
 ## Canonical production URL
 
