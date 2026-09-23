@@ -1,0 +1,119 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { site } from '../../data/site.js';
+import { managerScripts } from '../../data/manager-scripts.js';
+
+export function getStaticPaths() {
+  return managerScripts.map((item) => ({
+    params: { slug: item.slug },
+    props: { item }
+  }));
+}
+
+const { item } = Astro.props;
+const path = `/scripts/${item.slug}/`;
+const title = `${item.title} | Plain Act`;
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: item.title,
+  description: item.description,
+  datePublished: '2026-09-23',
+  dateModified: '2026-09-23',
+  author: { '@type': 'Organization', name: site.publisher, url: new URL('about/', site.fullUrl).toString() },
+  publisher: { '@type': 'Organization', name: site.publisher, url: site.fullUrl },
+  mainEntityOfPage: new URL(path.slice(1), site.fullUrl).toString()
+};
+---
+<BaseLayout title={title} description={item.description} path={path} schema={[schema]}>
+  <article class="script-page">
+    <header>
+      <Breadcrumbs items={[
+        { name: 'Home', url: '/' },
+        { name: 'Scripts', url: '/scripts/' },
+        { name: item.title, url: path }
+      ]} />
+      <p class="eyebrow">{item.category} · Manager scripts</p>
+      <h1>{item.title}</h1>
+      <p class="lede">{item.lede}</p>
+    </header>
+
+    <div class="body">
+      <section class="quick"><strong>Quick answer:</strong> {item.quick}</section>
+
+      <h2>What to say</h2>
+      <div class="script-stack">
+        {item.scripts.map((script, index) => (
+          <section class="script-card">
+            <div class="script-head">
+              <h3>{script.label}</h3>
+              <button class="copy-script" type="button" data-copy={script.text} aria-label={`Copy ${script.label} script`}>Copy</button>
+            </div>
+            <blockquote>{script.text}</blockquote>
+          </section>
+        ))}
+      </div>
+
+      <h2>How to handle the conversation</h2>
+      <ul>
+        {item.points.map((point) => <li>{point}</li>)}
+      </ul>
+
+      <h2>What to avoid</h2>
+      <p>{item.avoid}</p>
+
+      <h2>What to do after the conversation</h2>
+      <p>{item.follow}</p>
+
+      <aside class="related">
+        <p class="eyebrow">Go deeper</p>
+        <h2>Related Plain Act resources</h2>
+        <ul>
+          {item.related.map(([url, label]) => <li><a href={url}>{label}</a></li>)}
+          <li><a href="/scripts/">Browse the full Manager Script Library</a></li>
+        </ul>
+      </aside>
+
+      <p class="note"><strong>Note:</strong> These scripts are general management guidance. Follow your employer’s HR, conduct, performance, and legal procedures where they apply.</p>
+    </div>
+  </article>
+
+  <script is:inline>
+    document.querySelectorAll('.copy-script').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const text = button.getAttribute('data-copy') || '';
+        try {
+          await navigator.clipboard.writeText(text.replace(/^“|”$/g, ''));
+          const previous = button.textContent;
+          button.textContent = 'Copied';
+          setTimeout(() => { button.textContent = previous; }, 1400);
+        } catch {
+          button.textContent = 'Select text';
+        }
+      });
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .script-page{width:min(920px,calc(100% - 32px));margin:0 auto;padding:2.5rem 0 5rem}
+  .script-page header,.script-page .body{width:min(100%,740px);margin-inline:auto}
+  .script-page h1{font-size:clamp(2.35rem,6vw,4rem);line-height:1;letter-spacing:-.045em;margin:.5rem 0 1rem}
+  .script-page .lede{font-size:1.18rem;line-height:1.65;color:var(--muted)}
+  .script-page .body{margin-top:3rem}
+  .script-page .body h2{margin-top:3.4rem;font-size:clamp(1.6rem,3vw,2.2rem);letter-spacing:-.03em}
+  .script-page .body p,.script-page .body li{font-size:1.06rem;line-height:1.75;color:var(--muted)}
+  .script-page .body strong{color:var(--ink)}
+  .quick{padding:1.2rem 1.3rem;border:1px solid var(--border);border-radius:16px;background:var(--card)}
+  .script-stack{display:grid;gap:1rem}
+  .script-card{border:1px solid var(--border);border-radius:18px;padding:1.2rem 1.3rem;background:var(--paper)}
+  .script-head{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+  .script-head h3{margin:0;font-size:1rem}
+  .script-card blockquote{margin:1rem 0 0;font-size:1.15rem;line-height:1.65;color:var(--ink);border-left:3px solid var(--accent);padding-left:1rem}
+  .copy-script{border:1px solid var(--border);background:var(--card);color:var(--ink);border-radius:999px;padding:.45rem .8rem;font:inherit;font-size:.82rem;font-weight:800;cursor:pointer}
+  .copy-script:hover{border-color:var(--accent)}
+  .related{margin-top:3.5rem;padding:1.4rem;border:1px solid var(--border);border-radius:18px;background:var(--card)}
+  .related h2{margin-top:.4rem!important}
+  .note{margin-top:2.5rem;font-size:.92rem!important}
+</style>
