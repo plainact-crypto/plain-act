@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { managerScripts } from '../../data/manager-scripts.js';
+import { site } from '../../data/site.js';
+
+const groups = ['Difficult conversations','One-on-ones','Former peers','Delegation'];
+const schema = {
+  '@context':'https://schema.org',
+  '@type':'CollectionPage',
+  name:'Manager Script Library',
+  description:'Exact, practical scripts for new managers handling difficult conversations, one-on-ones, former peers, and delegation.',
+  url:new URL('scripts/',site.fullUrl).toString(),
+  publisher:{'@type':'Organization',name:site.publisher,url:site.fullUrl}
+};
+---
+<BaseLayout
+  title="Manager Script Library: What to Say in Difficult Moments | Plain Act"
+  description="Practical manager scripts for missed deadlines, defensive employees, work quality, 1:1s, former peers, delegation, and other difficult management moments."
+  path="/scripts/"
+  schema={[schema]}
+>
+  <section class="hero script-hero">
+    <div class="container">
+      <p class="eyebrow">Manager Script Library</p>
+      <h1>Know what to say when the moment gets awkward.</h1>
+      <p class="lede">Short, practical scripts for real management situations. Use the wording as a starting point, adapt it to the facts, and keep the conversation clear.</p>
+      <div class="button-row">
+        <a class="button" href="#library">Browse scripts</a>
+        <a class="button secondary" href="/tools/difficult-conversation-planner/">Build a difficult conversation</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="library">
+    <div class="container">
+      {groups.map((group) => (
+        <section class="group">
+          <p class="eyebrow">{group}</p>
+          <div class="grid grid-3">
+            {managerScripts.filter((item) => item.category === group).map((item) => (
+              <article class="card script-card">
+                <h2>{item.title}</h2>
+                <p>{item.description}</p>
+                <p><a href={`/scripts/${item.slug}/`}>Open script →</a></p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </section>
+
+  <section class="section-sm">
+    <div class="container grid grid-2">
+      <div>
+        <p class="eyebrow">Need more than a script?</p>
+        <h2>Use the script for the opening. Use judgment for the conversation.</h2>
+        <p>For a larger framework, use the focused articles and free tools on difficult conversations, delegation, feedback, and new-manager fundamentals.</p>
+      </div>
+      <aside class="card flat">
+        <p><a href="/articles/">Browse management articles →</a></p>
+        <p><a href="/resources/">Open free tools & resources →</a></p>
+        <p><a href="/guides/new-manager/">Read the New Manager Guide →</a></p>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .script-hero h1{max-width:15ch}
+  .group{margin-bottom:4.5rem}
+  .group>.eyebrow{margin-bottom:1rem}
+  .script-card{display:flex;flex-direction:column;min-height:300px}
+  .script-card h2{font-size:1.35rem;line-height:1.15}
+  .script-card p:last-child{margin-top:auto}
+</style>
